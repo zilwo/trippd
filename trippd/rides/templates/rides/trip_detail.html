@@ -1,0 +1,295 @@
+
+{% extends 'rides/base.html' %}
+{% load static %}
+
+{% block style %}
+<style>
+.city-name  { font-size: 20px; font-weight: 800; color: var(--white); line-height: 1; }
+.city-sub   { font-size: 12px; color: var(--muted); margin-top: 3px; font-weight: 500; }
+.addr-line  { font-size: 12px; color: var(--muted); margin-top: 5px; display: flex; align-items: flex-start; gap: 5px; }
+.dot-top    { width: 12px; height: 12px; border-radius: 50%; background: var(--blue); flex-shrink: 0; }
+.dot-stem   { width: 2px; height: 48px; background: linear-gradient(var(--blue), var(--muted2)); }
+.dot-bottom { width: 12px; height: 12px; border-radius: 50%; border: 2px solid var(--blue); background: transparent; flex-shrink: 0; }
+
+.detail-card {
+  background: var(--card);
+  border: 1.5px solid var(--blue-border);
+  border-radius: 20px;
+  padding: 24px;
+}
+.section-label {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 14px;
+}
+.meta-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--blue-border);
+  font-size: 14px;
+  gap: 12px;
+}
+.meta-row:last-child { border-bottom: none; }
+.meta-key { color: var(--muted); font-weight: 500; white-space: nowrap; }
+.meta-val { font-weight: 700; color: var(--white); text-align: right; }
+
+/* membership status badge colours */
+.status-pending  { background: rgba(251,191,36,0.12);  color: #FBBF24; }
+.status-accepted { background: rgba(52,211,153,0.12);  color: #34D399; }
+.status-rejected { background: rgba(244,114,182,0.12); color: #F472B6; }
+</style>
+{% endblock %}
+
+
+{% block content %}
+<div class="max-w-4xl mx-auto px-4 py-10 flex flex-col gap-6">
+
+  <!-- BACK -->
+  <a href="{% url 'trip_list' %}" class="btn btn-ghost btn-sm w-fit gap-1 -ml-2 hover:bg-inherit outline-none border-0"
+     style="color:var(--muted);">
+    ← Back to trips
+  </a>
+
+  <!-- ── ROUTE HERO ── -->
+  <div class="detail-card">
+    <div class="flex items-start gap-6 flex-wrap justify-between">
+
+      <!-- Route visual -->
+      <div class="flex items-start gap-4" style="flex:1;min-width:260px;">
+        <div class="flex flex-col items-center mt-1">
+          <div class="dot-top"></div>
+          <div class="dot-stem"></div>
+          <div class="dot-bottom"></div>
+        </div>
+        <div class="flex flex-col gap-5">
+
+          <!-- Origin -->
+          <div>
+            <div class="city-sub">Departure · {{ trip.departure_time|date:"g:i A" }}</div>
+            <div class="city-name">{{ trip.origin }}</div>
+            {% if trip.from_address != "Undecided" %}
+              <div class="addr-line">
+                <span>📍</span>
+                <span>{{ trip.from_address }}</span>
+              </div>
+            {% endif %}
+          </div>
+
+          <!-- Destination -->
+          <div>
+            <div class="city-sub">Arrival · {{ trip.expected_arrival_time|date:"g:i A" }}</div>
+            <div class="city-name">{{ trip.destination }}</div>
+            {% if trip.to_address != "Undecided" %}
+              <div class="addr-line">
+                <span>📍</span>
+                <span>{{ trip.to_address }}</span>
+              </div>
+            {% endif %}
+          </div>
+
+        </div>
+      </div>
+
+      <!-- Date + duration + price -->
+      <div class="flex flex-col gap-3 text-right shrink-0">
+        <div>
+          <div style="font-size:12px;color:var(--muted);font-weight:500;">Date</div>
+          <div style="font-size:15px;font-weight:800;color:var(--white);">
+            {{ trip.departure_time|date:"D, d M Y" }}
+          </div>
+        </div>
+        {% if trip.duration %}
+        <div>
+          <div style="font-size:12px;color:var(--muted);font-weight:500;">Duration</div>
+          <span class="badge badge-soft bg-(--blue) border-0">{{ trip.duration }}</span>
+        </div>
+        {% endif %}
+        <div>
+          <div style="font-size:12px;color:var(--muted);font-weight:500;">Per person</div>
+          <div class="nun" style="font-size:30px;font-weight:900;color:var(--white);">₹{{ trip.price }}</div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Tags -->
+    {% if trip.tag.all %}
+    <div class="flex flex-wrap gap-2 mt-5 pt-5" style="border-top:1px solid var(--blue-border);">
+      {% for tag in trip.tag.all %}
+        <span class="badge badge-outline">{{ tag.name }}</span>
+      {% endfor %}
+    </div>
+    {% endif %}
+  </div>
+
+
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+
+    <!-- ── LEFT col ── -->
+    <div class="md:col-span-2 flex flex-col gap-6">
+
+      <!-- Trip details -->
+      <div class="detail-card">
+        <div class="section-label">Trip details</div>
+        <div>
+        
+          <div class="meta-row">
+            <span class="meta-key">Starting Address</span>
+            <span class="meta-val">{{ trip.from_address }}</span>
+          </div>
+        
+          <div class="meta-row">
+            <span class="meta-key">Drop address</span>
+            <span class="meta-val">{{ trip.to_address }}</span>
+          </div>
+          <div class="meta-row">
+            <span class="meta-key">Departure</span>
+            <span class="meta-val">{{ trip.departure_time|date:"g:i A, d M Y" }}</span>
+          </div>
+          <div class="meta-row">
+            <span class="meta-key">Arrival</span>
+            <span class="meta-val">{{ trip.expected_arrival_time|date:"g:i A, d M Y" }}</span>
+          </div>
+          <div class="meta-row">
+            <span class="meta-key">Duration</span>
+            <span class="meta-val">{{ trip.duration }}</span>
+          </div>
+          <div class="meta-row">
+            <span class="meta-key">Seats available</span>
+            <span class="meta-val">{{ trip.slots_available }}</span>
+          </div>
+          <div class="meta-row">
+            <span class="meta-key">Members joined</span>
+            <span class="meta-val">{{ trip.get_members_count }}</span>
+          </div>
+        </div>
+
+        <!-- Seat progress -->
+        <div class="mt-4">
+          <div style="font-size:12px;color:var(--muted);margin-bottom:6px;font-weight:600;">
+            {{ trip.get_members_count }} of {{ trip.get_members_count|add:trip.slots_available }} seats filled
+          </div>
+          <progress class="progress bg-(--blue-dim) w-full"
+            value="{{ trip.get_members_count }}"
+            max="{{ trip.get_members_count|add:trip.slots_available }}">
+          </progress>
+        </div>
+      </div>
+
+      <!-- Members (from TripMembership) -->
+      <div class="detail-card">
+        <div class="section-label">Trip mates</div>
+
+        {% with memberships=trip.memberships.all %}
+        {% if memberships %}
+          <div class="flex flex-col gap-3">
+            {% for m in memberships %}
+            <div class="flex items-center justify-between gap-3">
+              <div class="flex items-center gap-3">
+                {% if m.user.profile.profile_picture %}
+                  <div class="avatar">
+                    <div class="w-9 rounded-full">
+                      <img src="{{ m.user.profile.profile_picture.url }}" alt=""/>
+                    </div>
+                  </div>
+                {% else %}
+                  <div class="avatar placeholder">
+                    <div class="bg-primary text-primary-content w-9 rounded-full">
+                      <span>{{ m.user.first_name|first|upper|default:m.user.email|first|upper }}</span>
+                    </div>
+                  </div>
+                {% endif %}
+                <div>
+                  <div style="font-size:14px;font-weight:700;color:var(--white);">
+                    {{ m.user.first_name }} {{ m.user.last_name }}
+                  </div>
+                  <div style="font-size:11px;color:var(--muted);">
+                    Joined {{ m.joined_at|date:"d M Y" }}
+                  </div>
+                </div>
+              </div>
+              <!-- DaisyUI badge for membership status -->
+              <span class="badge status-{{ m.status }}" style="border:none;font-size:11px;font-weight:700;text-transform:capitalize;">
+                {{ m.status }}
+              </span>
+            </div>
+            {% endfor %}
+          </div>
+        {% else %}
+          <p style="font-size:14px;color:var(--muted);">No one has joined yet — be the first!</p>
+        {% endif %}
+        {% endwith %}
+      </div>
+
+    </div>
+
+    <!-- ── RIGHT col ── -->
+    <div class="flex flex-col gap-6">
+
+      <!-- Organiser -->
+      <div class="detail-card">
+        <div class="section-label">Organiser</div>
+        <div class="flex items-center gap-3 mb-4">
+          {% if trip.organizer.profile.profile_picture %}
+            <div class="avatar">
+              <div class="w-12 rounded-full">
+                <img src="{{ trip.organizer.profile.profile_picture.url }}" alt=""/>
+              </div>
+            </div>
+          {% else %}
+            <div class="avatar placeholder">
+              <div class="bg-primary text-primary-content w-12 rounded-full">
+                <span class="text-lg">
+                  {{ trip.organizer.first_name|first|upper|default:trip.organizer.email|first|upper }}
+                </span>
+              </div>
+            </div>
+          {% endif %}
+          <div>
+            <div style="font-size:15px;font-weight:800;color:var(--white);">
+              {{ trip.organizer.first_name }} {{ trip.organizer.last_name }}
+            </div>
+            <div style="font-size:12px;color:var(--muted);">
+              {{ trip.organizer.profile.rating }}★
+              · {{ trip.organizer.profile.trips_completed }} trips
+            </div>
+          </div>
+        </div>
+        <button class="btn btn-outline  w-full hover:bg-(--card2) text-(--black)" style="border-radius:10px;">
+          Message organiser
+        </button>
+      </div>
+
+      <!-- Join action -->
+      <div class="detail-card text-center">
+        <div class="nun" style="font-size:32px;font-weight:900;color:var(--white);">
+          ₹{{ trip.price }}
+        </div>
+        <div style="font-size:12px;color:var(--muted);margin-bottom:16px;">per person</div>
+
+        {% if trip.slots_available > 0 %}
+          <a href=""
+             class="btn bg-(--blue) w-full border-0 hover:bg-(--blue-hover) text-(--black)"
+             style="border-radius:12px;font-weight:800;font-size:15px;">
+            Request to join
+          </a>
+        {% else %}
+          <button class="btn btn-disabled w-full hover:bg-(--card2) text-(--black)" style="border-radius:12px;">
+            Trip is full
+          </button>
+        {% endif %}
+
+        <div class="flex justify-center gap-2 mt-4 flex-wrap">
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+</div>
+{% endblock %}

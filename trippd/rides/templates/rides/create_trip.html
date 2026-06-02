@@ -1,0 +1,23 @@
+{% extends 'rides/base.html' %}
+{% load static %}
+
+
+{% block content %}
+ <h2 class="text-2xl font-bold mb-4">Create a New Trip</h2>
+    <form method="post" class="max-w-md mx-auto">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit" class="btn btn-primary">Create Trip</button>
+    </form>    
+    <label class="form-control">
+    <div class="label">
+        <span class="label-text">Departure Time</span>
+    </div>
+
+    <input
+        type="datetime-local"
+        name="departure_time"
+        class="input input-bordered w-full"
+    >
+</label>
+{% endblock %}

@@ -1,0 +1,6 @@
+@import "tailwindcss";
+
+@source "../../trippd/rides/templates/**/*.html";
+@source "../../trippd/**/templates/**/*.html";
+
+@plugin "daisyui";

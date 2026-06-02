@@ -1,0 +1,104 @@
+{% extends 'rides/base.html' %}
+{% load static %}
+{% load socialaccount %}
+
+
+{% block content %}
+
+
+{% if form.errors %}
+<div class="alert alert-error flex justify-between items-center">
+    <div>
+        {% for error in form.non_field_errors %}
+            <div>{{ error }}</div>
+        {% endfor %}
+
+        {% for field in form %}
+            {% for error in field.errors %}
+                <div>{{ field.label }}: {{ error }}</div>
+            {% endfor %}
+        {% endfor %}
+    </div>
+
+    <button
+        type="button"
+        onclick="this.parentElement.remove()"
+        class="btn btn-ghost btn-xs">
+        ✕
+    </button>
+</div>
+{% endif %}
+
+
+<div class="min-h-screen flex items-start justify-center m-0">
+    <div class="card w-full max-w-4xl shadow-xl bg-(--card) border-1.5 border-(--blue-border) rounded-2xl">
+        <div class="card-body">
+            <h2 class="card-title text-2xl">Welcome back</h2>
+            <span class="text-sm text-(--muted) mt-1">Don't have an account? <a href="{% url 'signup' %}" class="text-(--blue)">Sign Up</a></span>
+<form method="post" class="flex flex-col gap-4 mt-4">
+    {% csrf_token %}
+
+    <label class="label" for="email">Email</label>
+    <input
+        id="email"
+        name="username"
+    class="input input-bordered w-full rounded-xl
+           focus:border-(--blue) outline-none"
+                   style="background: var(--bg);"
+        placeholder="Email"
+        autocomplete="email" 
+        required />
+
+    <label class="label mt-3" for="password">Password</label>
+   
+
+        <input
+        id="password"
+        type="password"
+        name="password"
+    class="input input-bordered w-full rounded-xl
+           focus:border-(--blue) outline-none"
+             placeholder="Password"
+        autocomplete="current-password"
+        required    >
+
+    <button
+        type="submit"
+        class="btn w-full border-0 mt-6"
+        style="background: var(--blue);">
+        Login
+    </button>
+</form>
+{% for message in messages %}
+{% if message.tags == 'error' %}
+    <div class="alert alert-error">
+        <span>{{ message }}</span>
+         <button
+        type="button"
+        onclick="this.parentElement.remove()"
+        class="btn btn-ghost btn-xs">
+        ✕
+    </button>
+    </div>
+{% endif %}
+{% endfor %}
+
+<a href="{% provider_login_url 'google' %}"class="btn bg-(--bg) w-full border-0 mt-4 hover:bg-(--blue-hover) text-(--black)" style="border-radius:12px;">
+  <svg aria-label="Google logo" width="16" height="16" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><g><path d="m0 0H512V512H0" fill="#fff"></path><path fill="#34a853" d="M153 292c30 82 118 95 171 60h62v48A192 192 0 0190 341"></path><path fill="#4285f4" d="m386 400a140 175 0 0053-179H260v74h102q-7 37-38 57"></path><path fill="#fbbc02" d="m90 341a208 200 0 010-171l63 49q-12 37 0 73"></path><path fill="#ea4335" d="m153 219c22-69 116-109 179-50l55-54c-78-75-230-72-297 55"></path></g></svg>
+  Login with Google
+</a>
+        </div>
+    </div>
+</div>
+
+
+
+
+
+
+
+
+
+
+    
+{% endblock %}

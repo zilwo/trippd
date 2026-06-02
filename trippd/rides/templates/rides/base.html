@@ -1,0 +1,50 @@
+{% load static %}
+<!doctype html>
+<html lang="en" data-theme="light">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+    <link href="{% static 'css/output.css' %}" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:ital,wght@0,400;0,600;0,700;0,800;0,900;1,800&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+
+    
+    <style>
+        :root {
+  --bg:      #F9F9F9;
+  --surface: #0F1326;
+  --card:    #F9F9F9;
+  --card2:   #F7F5F2;
+  --blue:    #4F8EFF;
+  --blue-dim: rgba(79,142,255,0.12);
+  --blue-border: rgba(79,142,255,0.18);
+  --blue-border2: rgba(79,142,255,0.35);
+  --text:    #000000;
+  --muted:   #2C3947;
+  --muted2:  #2C3947;
+  --black:   #0F0E0E;
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  min-height: 100vh;
+}
+
+    </style>
+
+   {% block style %} {% endblock %}
+
+  </head>
+  <body>
+    
+    
+    {% block content %}
+
+    
+    
+    
+    {% endblock %}
+  </body>
+</html>

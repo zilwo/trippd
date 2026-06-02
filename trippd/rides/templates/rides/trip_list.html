@@ -1,0 +1,279 @@
+{% extends 'rides/base.html' %}
+{% load static %}
+
+{% block style %}
+<style>
+.trip-card {
+  background: var(--card);
+  border: 1.5px solid var(--blue-border);
+  border-radius: 20px;
+  overflow: hidden;
+  display: grid;
+  grid-template-columns: 4px 1fr;
+  width: 100%;
+}
+.trip-card:hover {
+  border-color: var(--blue-border2);
+  background: var(--card2);
+  transform: translateY(-1px);
+}
+.trip-card-body {
+  display: grid;
+  grid-template-columns: 200px 1fr auto auto;
+  align-items: stretch;
+}
+
+.route-col {
+  padding: 24px 20px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  border-right: 1px solid var(--blue-border);
+}
+.route-dots { display: flex; flex-direction: column; align-items: center; }
+.dot-top  { width: 10px; height: 10px; border-radius: 50%; }
+.dot-stem { width: 1.5px; height: 22px; }
+.dot-bottom { width: 10px; height: 10px; border-radius: 50%; border: 2px solid var(--muted2); }
+.city-name { font-size: 17px; font-weight: 800; color: var(--black); line-height: 1; }
+
+.info-col {
+  padding: 22px 24px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 10px;
+}
+.trip-time { font-size: 15px; font-weight: 800; color: var(--black); }
+.trip-date { font-size: 13px; color: var(--muted); }
+.sep { color: var(--muted2); }
+.driver-name { font-size: 13px; font-weight: 700; color: var(--black); }
+.driver-meta { font-size: 11px; color: var(--muted); }
+
+.mates-col {
+  padding: 22px 20px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 10px;
+  border-left: 1px solid var(--blue-border);
+  min-width: 150px;
+}
+.mates-label { font-size: 11px; font-weight: 600; color: var(--muted); }
+
+.action-col {
+  padding: 22px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 8px;
+  border-left: 1px solid var(--blue-border);
+  min-width: 130px;
+}
+
+.search-bar {
+  display: flex;
+  align-items: stretch;
+  background: var(--card);
+  border: 1.5px solid var(--blue-border);
+  border-radius: 16px;
+  overflow: visible;
+  transition: border-color .2s, box-shadow .2s;
+}
+.search-bar:focus-within {
+  border-color: var(--blue-border2);
+  box-shadow: 0 0 0 4px rgba(79,142,255,0.08);
+}
+.sf {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 14px 20px;
+  flex: 1;
+  border-right: 1px solid var(--blue-border);
+  position: relative;
+  min-width: 0;
+}
+.sf-label {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 4px;
+}
+.sf-input, .sf-select {
+  background: transparent;
+  border: none;
+  outline: none;
+  color: var(--black);
+  font-family: 'Nunito', sans-serif;
+  font-weight: 700;
+  font-size: 15px;
+  width: 100%;
+  cursor: pointer;
+  appearance: none;
+}
+
+@media (max-width: 900px) {
+  .trip-card-body { grid-template-columns: 1fr; }
+  .route-col { border-right: none; border-bottom: 1px solid var(--blue-border); }
+  .mates-col { border-left: none; border-top: 1px solid var(--blue-border); }
+  .action-col { border-left: none; border-top: 1px solid var(--blue-border); flex-direction: row; justify-content: space-between; }
+}
+@media (max-width: 720px) {
+  .search-bar { flex-direction: column; }
+  .sf { border-right: none; border-bottom: 1px solid var(--blue-border); }
+  .sf-submit { padding: 16px; border-radius: 0 0 14px 14px; }
+}
+@media (max-width: 560px) {
+  .trip-card { grid-template-columns: 1fr; }
+}
+</style>
+{% endblock %}
+
+
+{% block content %}
+<div class="list-container flex flex-col items-center gap-6">
+
+  <h1 class="text-5xl font-bold">Available Trips</h1>
+
+  <div class="w-full max-w-3xl">
+    <div class="search-bar">
+
+      <div class="sf max-w-full" id="sf-from-wrap">
+        <div class="sf-label">From</div>
+        <input class="sf-input" id="sf-from" type="text" placeholder="Leaving from…" autocomplete="off"/>
+        <div class="suggestions" id="sugg-from"></div>
+      </div>
+
+      <div class="sf max-w-full" id="sf-to-wrap">
+        <div class="sf-label">To</div>
+        <input class="sf-input" id="sf-to" type="text" placeholder="Going to…" autocomplete="off"/>
+        <div class="suggestions" id="sugg-to"></div>
+      </div>
+
+      <div class="sf max-w-full">
+        <div class="sf-label">Date</div>
+        <input class="sf-input" type="date" id="sf-date"/>
+      </div>
+
+      <div class="sf max-w-full">
+        <div class="sf-label">Passengers</div>
+        <select class="sf-select">
+          <option>1 passenger</option>
+          <option>2 passengers</option>
+          <option>3 passengers</option>
+          <option>4 passengers</option>
+        </select>
+      </div>
+
+<button class="sf hover:bg-(--card2)!" style="border-right: 0;  border-radius: 0 16px 16px 0;">
+        Search
+      </button>
+
+    </div>
+  </div>
+
+  {% for t in trips %}
+  <div class="trip-card max-w-5xl w-full">
+    <div class="trip-card-bar bg-blue"></div>
+
+    <div class="trip-card-body">
+
+      <div class="route-col">
+        <div class="route-dots ">
+          <div class="dot-top" style="background:var(--blue);"></div>
+          <div class="dot-stem" style="background:linear-gradient(var(--blue),var(--muted2));"></div>
+          <div class="dot-bottom" style="border-color:var(--blue);"></div>
+        </div>
+        <div class="flex flex-col gap-4">
+          <div class="city-name">{{ t.origin }}</div>
+          <div class="city-name">{{ t.destination }}</div>
+        </div>
+      </div>
+
+      <div class="info-col">
+        <div class="flex items-center flex-wrap gap-2">
+          <span class="trip-time">{{ t.departure_time|date:"g:i A" }}</span>
+          <span class="sep">·</span>
+          <span class="trip-date">{{ t.departure_time|date:"d M Y" }}</span>
+          <span class="sep">·</span>
+          <span class="badge bg-(--blue) border-0">{{ t.duration }}</span>
+        </div>
+
+        <div class="flex flex-wrap gap-2">
+          {% for tag in t.tag.all %}
+            <span class="badge badge-outline">{{ tag.name }}</span>
+          {% endfor %}
+        </div>
+
+        <div class="flex items-center gap-3">
+          {% if t.organizer.profile.profile_picture %}
+            <div class="avatar">
+              <div class="w-8 rounded-full">
+                <img src="{{ t.organizer.profile.profile_picture.url }}" alt=""/>
+              </div>
+            </div>
+          {% else %}
+            <div class="avatar placeholder">
+              <div class="bg-primary text-primary-content w-8 rounded-full">
+                <span>{{ t.organizer.first_name|first|upper|default:t.organizer.email|first|upper }}</span>
+              </div>
+            </div>
+          {% endif %}
+          <div>
+            <div class="driver-name">{{ t.organizer.first_name }} {{ t.organizer.last_name }}</div>
+            <div class="driver-meta">{{ t.organizer.profile.rating }}★ · {{ t.organizer.profile.trips_completed }} trips</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="mates-col">
+        <span class="mates-label">{{ t.get_members_count }} joined · {{ t.slots_available }} seats</span>
+        <div class="avatar-group -space-x-4">
+          {% for member in t.members.all|slice:":3" %}
+            <div class="avatar">
+              <div class="w-8 rounded-full">
+                {% if member.profile.profile_picture %}
+                  <img src="{{ member.profile.profile_picture.url }}" alt=""/>
+                {% else %}
+                  <div class="bg-neutral text-neutral-content w-8 rounded-full flex items-center justify-center text-xs font-bold">
+                    {{ member.first_name|first|upper }}
+                  </div>
+                {% endif %}
+              </div>
+            </div>
+          {% endfor %}
+          {% if t.slots_available > 0 %}
+            <div class="avatar placeholder">
+              <div class="w-8 rounded-full bg-base-300 border border-dashed border-base-content/20"></div>
+            </div>
+          {% endif %}
+        </div>
+        <progress class="progress bg-(--blue-dim) w-full"
+          value="{{ t.get_members_count }}"
+          max="{{ t.get_members_count|add:t.slots_available }}">
+        </progress>
+      </div>
+
+      <div class="action-col">
+        <a href="{% url 'trip_detail' t.pk %}" class="btn btn-sm w-full bg-(--blue)" style="border-radius:10px;font-weight:800; outline:none; border:none;">
+          View Details
+        </a>
+     
+      </div>
+
+    </div>
+  </div>
+
+  {% empty %}
+  <div class="empty-box">
+    <p class="text-lg font-bold text-(--black) mb-1">No trips found</p>
+    <p class="text-sm" style="color:var(--muted);">Be the first — create a trip!</p>
+  </div>
+  {% endfor %}
+
+</div>
+
+
+{% endblock %}

@@ -1,0 +1,28 @@
+# Editor config
+.prettierignore
+.vscode/
+
+# Python-generated files
+__pycache__/
+*.py[oc]
+build/
+dist/
+wheels/
+*.egg-info
+
+# Django-specific files
+*.log
+*.db
+*.sqlite3
+media/
+staticfiles/
+*.env
+
+# Virtual environments
+.venv
+.python-version
+frontend/node_modules/
+
+# Node.js files
+node_modules/
+dist/
