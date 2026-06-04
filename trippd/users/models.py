@@ -23,7 +23,7 @@ class Profile(models.Model):
     
 
     def __str__(self):
-        return f"{self.user.email}'s Profile"
+        return f"{self.user.username}'s Profile"
     
     def average_rating(self):
         ratings = self.user.received_ratings.all()

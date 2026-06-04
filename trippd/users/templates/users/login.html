@@ -7,7 +7,7 @@
 
 
 {% if form.errors %}
-<div class="alert alert-error flex justify-between items-center">
+<div class="alert alert-error flex justify-between items-center" id="alerting-message">
     <div>
         {% for error in form.non_field_errors %}
             <div>{{ error }}</div>
@@ -30,7 +30,7 @@
 {% endif %}
 
 
-<div class="min-h-screen flex items-start justify-center m-0">
+<div class="min-h-screen flex items-start justify-center pt-8 ">
     <div class="card w-full max-w-4xl shadow-xl bg-(--card) border-1.5 border-(--blue-border) rounded-2xl">
         <div class="card-body">
             <h2 class="card-title text-2xl">Welcome back</h2>

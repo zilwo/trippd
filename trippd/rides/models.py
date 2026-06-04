@@ -9,13 +9,18 @@ class Trip(models.Model):
     organizer = models.ForeignKey(User, on_delete=models.CASCADE, related_name="organized_trips")
     origin = models.CharField(max_length=255)
     destination = models.CharField(max_length=255)
-    from_address = models.CharField(max_length=255,default="Undecided") 
-    to_address = models.CharField(max_length=255,default="Undecided")
+    description = models.TextField(blank=True)
+    from_address = models.CharField(max_length=255) 
+    to_address = models.CharField(max_length=255)
     departure_time = models.DateTimeField()
     expected_arrival_time = models.DateTimeField()
-    price = models.DecimalField(max_digits=10, decimal_places=2,default=0.00)
+    price = models.DecimalField(max_digits=10, decimal_places=2)
     slots_available = models.PositiveIntegerField()
-    duration = models.CharField(max_length=50,default="1 week")
+    duration = models.CharField(max_length=50, choices=[
+        ("days", "Days"),
+        ("weeks", "Weeks"),
+        ("months", "Months"),
+    ])
     tag = TaggableManager(blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     completed = models.BooleanField(default=False)

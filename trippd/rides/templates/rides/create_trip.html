@@ -1,23 +1,280 @@
 {% extends 'rides/base.html' %}
 {% load static %}
 
-
 {% block content %}
- <h2 class="text-2xl font-bold mb-4">Create a New Trip</h2>
-    <form method="post" class="max-w-md mx-auto">
-        {% csrf_token %}
-        {{ form.as_p }}
-        <button type="submit" class="btn btn-primary">Create Trip</button>
-    </form>    
-    <label class="form-control">
-    <div class="label">
-        <span class="label-text">Departure Time</span>
+{% if form.errors %}
+<div class="alert alert-error flex justify-between items-center">
+    <div>
+        {% for error in form.non_field_errors %}
+            <div>{{ error }}</div>
+        {% endfor %}
+
+        {% for field in form %}
+            {% for error in field.errors %}
+                <div>{{ field.label }}: {{ error }}</div>
+            {% endfor %}
+        {% endfor %}
+        
+    <button
+        type="button"
+        onclick="this.parentElement.remove()"
+        class="btn btn-ghost btn-xs">
+        ✕
+    </button>
     </div>
 
-    <input
-        type="datetime-local"
-        name="departure_time"
-        class="input input-bordered w-full"
-    >
-</label>
+ 
+</div>
+{% endif %}
+
+<div class="min-h-screen bg-(--bg) p-6">
+    <div class="max-w-4xl mx-auto">
+
+        <div class="card bg-(--card) shadow-lg border border-(--blue-border)">
+            <div class="card-body">
+
+                <h2 class="card-title text-2xl mb-4">
+                    Create Trip
+                </h2>
+
+                <form method="POST">
+                    {% csrf_token %}
+
+                    <!-- Route Information -->
+                    <div>
+
+                        <h3 class="font-semibold mb-4">
+                            Route Information
+                        </h3>
+
+                        <div class="grid md:grid-cols-2 gap-4">
+
+                            <div>
+                                <label class="label" for="origin">
+                                    <span class="label-text">Origin</span>
+                                </label>
+
+                                <input
+                                    type="text"
+                                    name="origin"
+                                    id="origin"
+                                    class="input input-bordered w-full"
+                                    value="{{ form.origin.value|default:'' }}"
+                                    required>
+                            </div>
+
+                            <div>
+                                <label class="label" for="destination">
+                                    <span class="label-text">Destination</span>
+                                </label>
+
+                                <input
+                                    type="text"
+                                    name="destination"
+                                    id="destination"
+                                    class="input input-bordered w-full"
+                                    value="{{ form.destination.value|default:'' }}"
+                                    required>
+                            </div>
+
+                            <div>
+                                <label class="label" for="from_address">
+                                    <span class="label-text">Pickup Address</span>
+                                </label>
+
+                                <input
+                                    type="text"
+                                    name="from_address"
+                                    id="from_address"
+                                    value="{{ form.from_address.value|default:'Undecided' }}"
+                                    class="input input-bordered w-full">
+                            </div>
+
+                            <div>
+                                <label class="label" for="to_address">
+                                    <span class="label-text">Drop Address</span>
+                                </label>
+
+                                <input
+                                    type="text"
+                                    name="to_address"
+                                    id="to_address"
+                                    value="{{ form.to_address.value|default:'Undecided' }}"
+                                    class="input input-bordered w-full">
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                    <div class="divider"></div>
+
+                    <!-- Schedule -->
+                    <div>
+
+                        <h3 class="font-semibold mb-4">
+                            Schedule
+                        </h3>
+
+                        <div class="grid md:grid-cols-2 gap-4">
+
+                            <div>
+                                <label class="label" for="departure_time">
+                                    <span class="label-text">Departure Time</span>
+                                </label>
+
+                                <input
+                                    type="datetime-local"
+                                    id="departure_time"
+                                    name="departure_time"
+                                    value="{{ form.departure_time.value|default:'' }}"
+                                    class="input input-bordered w-full"
+                                    required>
+                            </div>
+
+                            <div>
+                                <label class="label" for="expected_arrival_time">
+                                    <span class="label-text">Expected Arrival</span>
+                                </label>
+
+                                <input
+                                    type="datetime-local"
+                                    id="expected_arrival_time"
+                                    name="expected_arrival_time"
+                                    value="{{ form.expected_arrival_time.value|default:'' }}"
+                                    class="input input-bordered w-full"
+                                    required>
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                    <div class="divider"></div>
+
+                    <!-- Trip Details -->
+                    <div>
+
+                        <h3 class="font-semibold mb-4">
+                            Trip Details
+                        </h3>
+
+                        <div class="grid md:grid-cols-2 gap-4">
+
+                            <div>
+                                <label class="label" for="price">
+                                    <span class="label-text">Price</span>
+                                </label>
+
+                                <input
+                                    type="number"
+                                    id="price"
+                                    name="price"
+                                    value="{{ form.price.value|default:'' }}"
+                                    class="input input-bordered w-full"
+                                    required>
+                            </div>
+
+                            <div>
+                                <label class="label" for="slots_available">
+                                    <span class="label-text">Available Seats</span>
+                                </label>
+
+                                <input
+                                    type="number"
+                                    id="slots_available"
+                                    name="slots_available"
+                                    value="{{ form.slots_available.value|default:'3' }}"
+                                    class="input input-bordered w-full"
+                                    required>
+                            </div>
+
+                        </div>
+
+                        <div class="mt-4">
+                    <label class="label" for="duration">
+                        <span class="label-text">Duration</span>
+                    </label>
+                           
+
+                    <div class="flex gap-2">
+                        <input
+                            type="number"
+                            min="1"
+                            class="input input-bordered w-24"
+                            name="duration_value"
+                            id="duration"
+                            value="{{ form.duration_value.value|default:'' }}"
+                        >
+
+                        <select
+                            class="select select-bordered"
+                            name="duration_unit"
+                        >
+                            <option value="days">Days</option>
+                            <option value="weeks">Weeks</option>
+                            <option value="months">Months</option>
+                        </select>
+                    </div>
+                        </div>
+
+                        
+
+                        <div class="mt-4">
+
+                            <label class="label" for="tag">
+                                <span class="label-text">Tags</span>
+                            </label>
+
+                            <input
+                                type="text"
+                                id="tag"
+                                name="tag"
+                                class="input input-bordered w-full"
+                                placeholder="beach, nature, camping">
+
+                        </div>
+
+                        <div class="mt-4">
+
+                            <label class="label" for="description">
+                                <span class="label-text">Description</span>
+                            </label>
+
+
+                            <textarea
+                                name="description"
+                                id="description"
+                                class="textarea textarea-bordered w-full h-32"
+                                placeholder="Tell passengers about this trip..."></textarea>
+
+                        </div>
+
+                    </div>
+
+                    <div class="divider"></div>
+
+                    <div class="flex justify-end gap-3">
+
+                        <a href="{% url 'home' %}"
+                           class="btn btn-ghost">
+                            Cancel
+                        </a>
+
+                        <button
+                            type="submit"
+                            class="btn bg-(--blue) text-white border-0 hover:bg-(--blue)">
+                            Create Trip
+                        </button>
+
+                    </div>
+
+                </form>
+
+            </div>
+        </div>
+
+    </div>
+</div>
+
 {% endblock %}

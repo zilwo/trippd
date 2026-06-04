@@ -133,37 +133,40 @@
 
 
 {% block content %}
-<div class="list-container flex flex-col items-center gap-6">
+<div class="list-container flex flex-col items-center gap-6 pt-8">
 
   <h1 class="text-5xl font-bold">Available Trips</h1>
 
+  <form method ="GET">
   <div class="w-full max-w-3xl">
     <div class="search-bar">
-
+  
       <div class="sf max-w-full" id="sf-from-wrap">
         <div class="sf-label">From</div>
-        <input class="sf-input" id="sf-from" type="text" placeholder="Leaving from…" autocomplete="off"/>
+        <input class="sf-input" id="sf-from" type="text" placeholder="Leaving from…" autocomplete="off" name="origin"/>
         <div class="suggestions" id="sugg-from"></div>
       </div>
 
       <div class="sf max-w-full" id="sf-to-wrap">
         <div class="sf-label">To</div>
-        <input class="sf-input" id="sf-to" type="text" placeholder="Going to…" autocomplete="off"/>
+        <input class="sf-input" id="sf-to" type="text" placeholder="Going to…" autocomplete="off" name="destination"/>
         <div class="suggestions" id="sugg-to"></div>
       </div>
 
       <div class="sf max-w-full">
         <div class="sf-label">Date</div>
-        <input class="sf-input" type="date" id="sf-date"/>
+        <input class="sf-input" type="date" id="sf-date" name="departure"/>
       </div>
 
       <div class="sf max-w-full">
         <div class="sf-label">Passengers</div>
-        <select class="sf-select">
-          <option>1 passenger</option>
-          <option>2 passengers</option>
-          <option>3 passengers</option>
-          <option>4 passengers</option>
+        <select class="sf-select" name="passengers">
+          <option value="" selected>Any</option>
+
+          <option>1</option>
+          <option>2</option>
+          <option>3</option>
+          <option>4</option>
         </select>
       </div>
 
@@ -173,8 +176,9 @@
 
     </div>
   </div>
+  </form>
 
-  {% for t in trips %}
+  {% for t in page_obj %}
   <div class="trip-card max-w-5xl w-full">
     <div class="trip-card-bar bg-blue"></div>
 
@@ -198,7 +202,14 @@
           <span class="sep">·</span>
           <span class="trip-date">{{ t.departure_time|date:"d M Y" }}</span>
           <span class="sep">·</span>
-          <span class="badge bg-(--blue) border-0">{{ t.duration }}</span>
+          <span class="badge bg-(--blue) border-0">
+
+            {% if t.duration %}
+              {{ t.duration }}
+            {% else %}
+              N/A
+            {% endif %}
+          </span>
         </div>
 
         <div class="flex flex-wrap gap-2">
@@ -217,12 +228,17 @@
           {% else %}
             <div class="avatar placeholder">
               <div class="bg-primary text-primary-content w-8 rounded-full">
-                <span>{{ t.organizer.first_name|first|upper|default:t.organizer.email|first|upper }}</span>
               </div>
             </div>
           {% endif %}
           <div>
-            <div class="driver-name">{{ t.organizer.first_name }} {{ t.organizer.last_name }}</div>
+
+            {% if t.organizer.first_name and t.organizer.last_name %}
+             <span class="driver-name">{{ t.organizer.first_name }} {{ t.organizer.last_name }}</span>
+            {% else %}
+             <span class="driver-name">{{ t.organizer.username }}</span>
+            {% endif %}
+
             <div class="driver-meta">{{ t.organizer.profile.rating }}★ · {{ t.organizer.profile.trips_completed }} trips</div>
           </div>
         </div>
@@ -272,6 +288,42 @@
     <p class="text-sm" style="color:var(--muted);">Be the first — create a trip!</p>
   </div>
   {% endfor %}
+
+
+  {% if is_paginated %}
+
+  <div class="flex justify-center mt-6">
+
+  <div class="join">
+    {% if page_obj.has_previous %}
+      <a href="?page=1" class="join-item btn">« First</a>
+      <a href="?page={{ page_obj.previous_page_number }}" class="join-item btn">
+        Previous
+      </a>
+    {% else %}
+      <button class="join-item btn btn-disabled">« First</button>
+      <button class="join-item btn btn-disabled">Previous</button>
+    {% endif %}
+
+    <button class="join-item btn btn-active">
+      {{ page_obj.number }} / {{ page_obj.paginator.num_pages }}
+    </button>
+
+    {% if page_obj.has_next %}
+      <a href="?page={{ page_obj.next_page_number }}" class="join-item btn">
+        Next
+      </a>
+      <a href="?page={{ page_obj.paginator.num_pages }}" class="join-item btn">
+        Last »
+      </a>
+    {% else %}
+      <button class="join-item btn btn-disabled">Next</button>
+      <button class="join-item btn btn-disabled">Last »</button>
+    {% endif %}
+  </div>
+</div>
+{% endif %}
+
 
 </div>
 

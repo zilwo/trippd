@@ -28,15 +28,30 @@
 .meta-row {
   display: flex;
   justify-content: space-between;
-  align-items: center;
+  align-items: flex-start;
+  gap: 12px;
   padding: 12px 0;
   border-bottom: 1px solid var(--blue-border);
   font-size: 14px;
-  gap: 12px;
+  flex-wrap: wrap;
 }
-.meta-row:last-child { border-bottom: none; }
-.meta-key { color: var(--muted); font-weight: 500; white-space: nowrap; }
-.meta-val { font-weight: 700; color: var(--white); text-align: right; }
+
+.meta-row:last-child {
+  border-bottom: none;
+}
+
+.meta-key {
+  color: var(--muted);
+  font-weight: 500;
+}
+
+.meta-val {
+  font-weight: 700;
+  color: var(--text);
+  text-align: right;
+  word-break: break-word;
+  max-width: 60%;
+}
 
 /* membership status badge colours */
 .status-pending  { background: rgba(251,191,36,0.12);  color: #FBBF24; }
@@ -47,6 +62,9 @@
 
 
 {% block content %}
+
+
+
 <div class="max-w-4xl mx-auto px-4 py-10 flex flex-col gap-6">
 
   <!-- BACK -->
@@ -60,8 +78,8 @@
     <div class="flex items-start gap-6 flex-wrap justify-between">
 
       <!-- Route visual -->
-      <div class="flex items-start gap-4" style="flex:1;min-width:260px;">
-        <div class="flex flex-col items-center mt-1">
+<div class="flex items-start gap-4 flex-1 min-w-0">
+          <div class="flex flex-col items-center mt-1">
           <div class="dot-top"></div>
           <div class="dot-stem"></div>
           <div class="dot-bottom"></div>
@@ -93,10 +111,13 @@
           </div>
 
         </div>
+
+    
       </div>
+          
 
       <!-- Date + duration + price -->
-      <div class="flex flex-col gap-3 text-right shrink-0">
+      <div class="flex flex-col gap-3 text-right">
         <div>
           <div style="font-size:12px;color:var(--muted);font-weight:500;">Date</div>
           <div style="font-size:15px;font-weight:800;color:var(--white);">
@@ -108,6 +129,12 @@
           <div style="font-size:12px;color:var(--muted);font-weight:500;">Duration</div>
           <span class="badge badge-soft bg-(--blue) border-0">{{ trip.duration }}</span>
         </div>
+
+        {% else %}
+         <div>
+          <div style="font-size:12px;color:var(--muted);font-weight:500;">Duration</div>
+          <span class="badge badge-soft bg-(--blue) border-0">N/A</span>
+        </div>
         {% endif %}
         <div>
           <div style="font-size:12px;color:var(--muted);font-weight:500;">Per person</div>
@@ -116,6 +143,19 @@
       </div>
 
     </div>
+
+    <div class="trip-description">
+          {% if trip.description %}
+            <div style="font-size:14px;color:var(--text);">
+              {{ trip.description }}
+            </div>
+          {% else %}
+            <div style="font-size:14px;color:var(--muted);font-style:italic;">
+              No description provided.
+            </div>
+          {% endif %}
+
+        </div>
 
     <!-- Tags -->
     {% if trip.tag.all %}
@@ -199,7 +239,7 @@
                   </div>
                 {% else %}
                   <div class="avatar placeholder">
-                    <div class="bg-primary text-primary-content w-9 rounded-full">
+                    <div class="bg-primary text-primary-content w-9 rounded-full items">
                       <span>{{ m.user.first_name|first|upper|default:m.user.email|first|upper }}</span>
                     </div>
                   </div>
@@ -251,9 +291,16 @@
             </div>
           {% endif %}
           <div>
-            <div style="font-size:15px;font-weight:800;color:var(--white);">
+            {% if trip.organizer.first_name and trip.organizer.last_name %}
+<div style="font-size:15px;font-weight:800;color:var(--white);">
               {{ trip.organizer.first_name }} {{ trip.organizer.last_name }}
             </div>
+                        {% else %}
+<div style="font-size:15px;font-weight:800;color:var(--white);">
+              {{ trip.organizer.username }}
+            </div>
+            {% endif %}
+            
             <div style="font-size:12px;color:var(--muted);">
               {{ trip.organizer.profile.rating }}★
               · {{ trip.organizer.profile.trips_completed }} trips
@@ -273,7 +320,7 @@
         <div style="font-size:12px;color:var(--muted);margin-bottom:16px;">per person</div>
 
         {% if trip.slots_available > 0 %}
-          <a href=""
+          <a href="{% url 'join_trip' trip.pk %}"
              class="btn bg-(--blue) w-full border-0 hover:bg-(--blue-hover) text-(--black)"
              style="border-radius:12px;font-weight:800;font-size:15px;">
             Request to join

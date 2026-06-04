@@ -11,9 +11,25 @@ class SocialAccountAdapter(DefaultSocialAccountAdapter):
             return
         
         email = sociallogin.user.email
-        
+
         if email:
             user_exists = User.objects.filter(email=email).exists()
             if user_exists:
                 messages.error(request, "An account with this email already exists. Please log in using your email and password.")
                 raise ImmediateHttpResponse(redirect("login"))
+            
+    def save_user(self, request, sociallogin, form=None):
+        user = super().save_user(request, sociallogin, form)
+        user.is_verified = True
+        user.save()
+        return user
+            
+           
+            
+
+
+        
+            
+
+
+    
