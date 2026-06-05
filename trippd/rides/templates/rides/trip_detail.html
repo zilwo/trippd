@@ -64,10 +64,45 @@
 <div class="max-w-4xl mx-auto px-4 py-10 flex flex-col gap-6">
 
   <!-- BACK -->
-  <a href="{% url 'trip_list' %}" class="btn btn-ghost btn-sm w-fit gap-1 -ml-2 hover:bg-inherit outline-none border-0"
+<div class="options-settings flex items-center justify-between">
+   <a href="{% url 'trip_list' %}" class="btn btn-ghost btn-sm w-fit gap-1 -ml-2 hover:bg-inherit outline-none border-0"
      style="color:var(--muted);">
     ← Back to trips
   </a>
+  {% if user == trip.organizer %}
+
+  <details class="dropdown dropdown-end">
+    <summary class="btn btn-ghost btn-sm btn-circle">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
+  <path stroke-linecap="round" stroke-linejoin="round" d="M8.625 12a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm0 0H8.25m4.125 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm0 0H12m4.125 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm0 0h-.375M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+</svg>
+
+    </summary>
+
+    <ul class="menu dropdown-content bg-base-100 rounded-box z-10 w-40 p-2 shadow">
+        <li>
+            <a href="{% url 'edit_trip' trip.pk %}">
+                Edit Trip
+            </a>
+        </li>
+
+        <li>
+            <button onclick="delete_trip_modal.showModal()">
+                Delete Trip
+            </button>
+        </li>
+    </ul>
+</details>
+  {% endif %}
+
+  
+
+
+
+</div>
+ 
+
+  
 
   <!-- ── ROUTE HERO ── -->
   <div class="detail-card">
@@ -332,11 +367,14 @@
         <div style="font-size:12px;color:var(--muted);margin-bottom:16px;">per person</div>
 
         {% if trip.slots_available > 0 %}
-          <a href="{% url 'join_trip' trip.pk %}"
-             class="btn bg-(--blue) w-full border-0 hover:bg-(--blue-hover) text-(--black)"
-             style="border-radius:12px;font-weight:800;font-size:15px;">
-            Request to join
-          </a>
+            <form method="post" action="{% url 'join_trip' trip.id %}">
+                {% csrf_token %}
+                <button type="submit" class="btn bg-(--blue) w-full hover:bg-(--blue-border) text-white" style="border-radius:12px;">
+                    Join Trip
+                </button>
+            </form>
+          
+         
         {% else %}
           <button class="btn btn-disabled w-full hover:bg-(--card2) text-(--black)" style="border-radius:12px;">
             Trip is full
@@ -349,6 +387,30 @@
 
     </div>
   </div>
+
+  <dialog id="delete_trip_modal" class="modal">
+    <div class="modal-box">
+        <h3 class="font-bold text-lg">Delete Trip?</h3>
+
+        <p class="py-4">
+            This action cannot be undone.
+        </p>
+
+        <div class="modal-action">
+            <form method="dialog">
+                <button class="btn">Cancel</button>
+            </form>
+
+            <form method="post"
+                  action="{% url 'delete_trip' trip.pk %}">
+                {% csrf_token %}
+                <button class="btn btn-error">
+                    Delete
+                </button>
+            </form>
+        </div>
+    </div>
+</dialog>
 
 </div>
 {% endblock %}

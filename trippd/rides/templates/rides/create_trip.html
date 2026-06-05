@@ -1,29 +1,31 @@
 {% extends 'rides/base.html' %}
 {% load static %}
 
-{% block content %}
+    {% block content %}
 {% if form.errors %}
-<div class="alert alert-error flex justify-between items-center">
-    <div>
-        {% for error in form.non_field_errors %}
-            <div>{{ error }}</div>
-        {% endfor %}
+<div class="alert alert-error flex justify-between items-start" id="alerting-message">
+    <div class="flex justify-between items-start w-full">
 
-        {% for field in form %}
-            {% for error in field.errors %}
-                <div>{{ field.label }}: {{ error }}</div>
+        <div>
+            {% for error in form.non_field_errors %}
+                <div>{{ error }}</div>
             {% endfor %}
-        {% endfor %}
-        
-    <button
-        type="button"
-        onclick="this.parentElement.remove()"
-        class="btn btn-ghost btn-xs">
-        ✕
-    </button>
-    </div>
 
- 
+            {% for field in form %}
+                {% for error in field.errors %}
+                    <div>{{ field.label }}: {{ error }}</div>
+                {% endfor %}
+            {% endfor %}
+        </div>
+
+        <button
+            type="button"
+            onclick="this.closest('.alert').remove()"
+            class="btn btn-ghost btn-xs">
+            ✕
+        </button>
+
+    </div>
 </div>
 {% endif %}
 
@@ -34,7 +36,11 @@
             <div class="card-body">
 
                 <h2 class="card-title text-2xl mb-4">
-                    Create Trip
+                    {% if trip %}
+                        Update Trip
+                    {% else %}
+                        Create Trip
+                    {% endif %}
                 </h2>
 
                 <form method="POST">
@@ -128,6 +134,7 @@
                                 id="departure_time"
                                 name="departure_time"
                                 class="input input-bordered w-full"
+                                value="{{ object.departure_time|date:'Y-m-d H:i' }}"
                                 required>
                             </div>
 
@@ -141,6 +148,7 @@
                                 id="expected_arrival_time"
                                 name="expected_arrival_time"
                                 class="input input-bordered w-full"
+                                value="{{ object.expected_arrival_time|date:'Y-m-d H:i' }}"
                                 required>
                             </div>
 
@@ -209,6 +217,7 @@
                         <select
                             class="select select-bordered"
                             name="duration_unit"
+                            value="{{ form.duration_unit.value|default:'' }}"
                         >
                             
                             <option value="days">Days</option>
@@ -231,6 +240,7 @@
                                 id="tag"
                                 name="tag"
                                 class="input input-bordered w-full"
+                                value="{% for tag in object.tag.all %}{{ tag.name }}{% if not forloop.last %}, {% endif %}{% endfor %}"
                                 placeholder="beach, nature, camping">
 
                         </div>
@@ -246,7 +256,7 @@
                                 name="description"
                                 id="description"
                                 class="textarea textarea-bordered w-full h-32"
-                                placeholder="Tell passengers about this trip..."></textarea>
+                                placeholder="Tell passengers about this trip...">{{ form.description.value|default:'' }}</textarea>
 
                         </div>
 
@@ -256,15 +266,29 @@
 
                     <div class="flex justify-end gap-3">
 
-                        <a href="{% url 'home' %}"
+                        
+                    {% if trip %}
+                        <a href="{% url 'trip_detail' trip.pk %}"
+                           class="btn btn-ghost">
+                            Cancel
+                        </a>
+                        {% else %}
+                        <a href="{% url 'trip_list' %}"
                            class="btn btn-ghost">
                             Cancel
                         </a>
 
+                    {% endif %}
+
                         <button
                             type="submit"
                             class="btn bg-(--blue) text-white border-0 hover:bg-(--blue)">
-                            Create Trip
+
+                            {% if trip %}
+                                Update Trip
+                            {% else %}
+                                Create Trip
+                            {% endif %}
                         </button>
 
                     </div>

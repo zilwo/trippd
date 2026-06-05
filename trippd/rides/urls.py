@@ -10,5 +10,7 @@ urlpatterns = [
     path("ride/dashboard/", views.DashboardView.as_view(), name="trip_dashboard"),
     path("ride/accept/<int:pk>/", views.accept_request, name="accept_request"),
     path("ride/reject/<int:pk>/", views.reject_request, name="reject_request"),
+    path("ride/<int:pk>/delete-ride/", views.delete_trip, name="delete_trip"),
+    path("ride/<int:pk>/edit/", views.EditTripView.as_view(), name="edit_trip"),
 
 ]

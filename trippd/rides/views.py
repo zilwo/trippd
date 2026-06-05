@@ -1,10 +1,11 @@
 from django.shortcuts import redirect, render
 from django.urls import reverse, reverse_lazy
-from django.views.generic import CreateView, DetailView, ListView, TemplateView
+from django.views.generic import CreateView, DetailView, ListView, TemplateView, UpdateView
 from django import forms
 from .models import Trip, TripMembership, TripMembership
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
+from django.views.decorators.http import require_POST
 from django.contrib.auth.mixins import LoginRequiredMixin
 
 # Create your views here.
@@ -99,7 +100,7 @@ class TripListView(ListView):
 
         return queryset.order_by("-created_at")
 
-
+@require_POST
 @login_required
 def join_trip(request, pk):
     trip = Trip.objects.get(pk=pk)
@@ -150,7 +151,32 @@ class DashboardView(LoginRequiredMixin, TemplateView):
         ).select_related("user", "trip").order_by("-joined_at")
 
         return context
+    
 
+class EditTripView(LoginRequiredMixin, UpdateView):
+    model = Trip
+    form_class = TripCreateForm
+    template_name = "rides/create_trip.html"
+
+    def get_queryset(self):
+        return Trip.objects.filter(organizer=self.request.user)
+
+    def get_success_url(self):
+        return reverse("trip_detail", kwargs={"pk": self.object.pk})
+ 
+@require_POST
+@login_required
+def delete_trip(request, pk):
+    trip = Trip.objects.get(pk=pk)
+    if trip.organizer != request.user:
+        messages.error(request, "You are not authorized to delete this trip.")
+        return redirect("trip_detail", pk=pk)
+
+    trip.delete()
+    messages.success(request, "Trip deleted successfully.")
+    return redirect("home")
+
+@require_POST
 @login_required
 def accept_request(request, pk):
     membership = TripMembership.objects.get(pk=pk)
@@ -163,7 +189,7 @@ def accept_request(request, pk):
     messages.success(request, f"You have accepted {membership.user.username}'s request to join {membership.trip}.")
     return redirect("trip_dashboard")
 
-
+@require_POST
 @login_required
 def reject_request(request, pk):
     membership = TripMembership.objects.get(pk=pk)
@@ -175,3 +201,5 @@ def reject_request(request, pk):
     membership.save()
     messages.success(request, f"You have rejected {membership.user.username}'s request to join {membership.trip}.")
     return redirect("trip_dashboard")
+
+
