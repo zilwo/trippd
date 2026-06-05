@@ -8,7 +8,7 @@
 .city-sub   { font-size: 12px; color: var(--muted); margin-top: 3px; font-weight: 500; }
 .addr-line  { font-size: 12px; color: var(--muted); margin-top: 5px; display: flex; align-items: flex-start; gap: 5px; }
 .dot-top    { width: 12px; height: 12px; border-radius: 50%; background: var(--blue); flex-shrink: 0; }
-.dot-stem   { width: 2px; height: 48px; background: linear-gradient(var(--blue), var(--muted2)); }
+.dot-stem   { width: 2px; height: 98px; background: linear-gradient(var(--blue), var(--muted2)); }
 .dot-bottom { width: 12px; height: 12px; border-radius: 50%; border: 2px solid var(--blue); background: transparent; flex-shrink: 0; }
 
 .detail-card {
@@ -53,10 +53,6 @@
   max-width: 60%;
 }
 
-/* membership status badge colours */
-.status-pending  { background: rgba(251,191,36,0.12);  color: #FBBF24; }
-.status-accepted { background: rgba(52,211,153,0.12);  color: #34D399; }
-.status-rejected { background: rgba(244,114,182,0.12); color: #F472B6; }
 </style>
 {% endblock %}
 
@@ -92,7 +88,11 @@
             <div class="city-name">{{ trip.origin }}</div>
             {% if trip.from_address != "Undecided" %}
               <div class="addr-line">
-                <span>📍</span>
+                <span ><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-4">
+  <path stroke-linecap="round" stroke-linejoin="round" d="M15 10.5a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
+  <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1 1 15 0Z" />
+</svg>
+</span>
                 <span>{{ trip.from_address }}</span>
               </div>
             {% endif %}
@@ -104,7 +104,11 @@
             <div class="city-name">{{ trip.destination }}</div>
             {% if trip.to_address != "Undecided" %}
               <div class="addr-line">
-                <span>📍</span>
+                <span><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-4">
+  <path stroke-linecap="round" stroke-linejoin="round" d="M15 10.5a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
+  <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1 1 15 0Z" />
+</svg>
+</span>
                 <span>{{ trip.to_address }}</span>
               </div>
             {% endif %}
@@ -124,10 +128,10 @@
             {{ trip.departure_time|date:"D, d M Y" }}
           </div>
         </div>
-        {% if trip.duration %}
+        {% if trip.duration_value %}
         <div>
           <div style="font-size:12px;color:var(--muted);font-weight:500;">Duration</div>
-          <span class="badge badge-soft bg-(--blue) border-0">{{ trip.duration }}</span>
+          <span class="badge badge-soft bg-(--blue) border-0">{{ trip.duration_value }} {{ trip.duration_unit }}</span>
         </div>
 
         {% else %}
@@ -144,7 +148,7 @@
 
     </div>
 
-    <div class="trip-description">
+    <div class="trip-description p-4">
           {% if trip.description %}
             <div style="font-size:14px;color:var(--text);">
               {{ trip.description }}
@@ -197,7 +201,7 @@
           </div>
           <div class="meta-row">
             <span class="meta-key">Duration</span>
-            <span class="meta-val">{{ trip.duration }}</span>
+            <span class="meta-val">{{ trip.duration_value }} {{ trip.duration_unit }}</span>
           </div>
           <div class="meta-row">
             <span class="meta-key">Seats available</span>
@@ -205,18 +209,18 @@
           </div>
           <div class="meta-row">
             <span class="meta-key">Members joined</span>
-            <span class="meta-val">{{ trip.get_members_count }}</span>
+            <span class="meta-val">{{ trip.get_accepted_members.count }}</span>
           </div>
         </div>
 
         <!-- Seat progress -->
         <div class="mt-4">
           <div style="font-size:12px;color:var(--muted);margin-bottom:6px;font-weight:600;">
-            {{ trip.get_members_count }} of {{ trip.get_members_count|add:trip.slots_available }} seats filled
+            {{ trip.get_accepted_members.count }} of {{ trip.slots_available }} seats filled
           </div>
           <progress class="progress bg-(--blue-dim) w-full"
-            value="{{ trip.get_members_count }}"
-            max="{{ trip.get_members_count|add:trip.slots_available }}">
+            value="{{ trip.get_accepted_members.count }}"
+            max="{{ trip.slots_available }}">
           </progress>
         </div>
       </div>
@@ -229,6 +233,7 @@
         {% if memberships %}
           <div class="flex flex-col gap-3">
             {% for m in memberships %}
+              {% if m.status == 'accepted' %}
             <div class="flex items-center justify-between gap-3">
               <div class="flex items-center gap-3">
                 {% if m.user.profile.profile_picture %}
@@ -238,11 +243,12 @@
                     </div>
                   </div>
                 {% else %}
-                  <div class="avatar placeholder">
-                    <div class="bg-primary text-primary-content w-9 rounded-full items">
-                      <span>{{ m.user.first_name|first|upper|default:m.user.email|first|upper }}</span>
+                  <div class="avatar">
+                    <div class="w-9 rounded-full">
+                      <img src="https://ui-avatars.com/api/?name={{ m.user.username }}" alt="Default Profile"/>
                     </div>
                   </div>
+                
                 {% endif %}
                 <div>
                   <div style="font-size:14px;font-weight:700;color:var(--white);">
@@ -254,10 +260,11 @@
                 </div>
               </div>
               <!-- DaisyUI badge for membership status -->
-              <span class="badge status-{{ m.status }}" style="border:none;font-size:11px;font-weight:700;text-transform:capitalize;">
-                {{ m.status }}
+              <span class="badge status-{{ m.status }} btn bg-(--blue)" style="border:none;font-size:11px;font-weight:700;text-transform:capitalize;">
+                {{ m.get_status_display }}
               </span>
             </div>
+              {% endif %}
             {% endfor %}
           </div>
         {% else %}
@@ -282,13 +289,12 @@
               </div>
             </div>
           {% else %}
-            <div class="avatar placeholder">
-              <div class="bg-primary text-primary-content w-12 rounded-full">
-                <span class="text-lg">
-                  {{ trip.organizer.first_name|first|upper|default:trip.organizer.email|first|upper }}
-                </span>
-              </div>
+            <div class="avatar">
+              <div class="w-12 rounded-full">
+                <img src="https://ui-avatars.com/api/?name={{ trip.organizer.username }}" alt="Default Profile"/>
+                </div>
             </div>
+           
           {% endif %}
           <div>
             {% if trip.organizer.first_name and trip.organizer.last_name %}
@@ -302,8 +308,14 @@
             {% endif %}
             
             <div style="font-size:12px;color:var(--muted);">
-              {{ trip.organizer.profile.rating }}★
-              · {{ trip.organizer.profile.trips_completed }} trips
+              {% if trip.organizer.profile.rating %}
+                {{ trip.organizer.profile.rating }}★
+              {% else %}
+                No ratings yet
+              {% endif %}
+               · 
+                {{ trip.organizer.profile.trips_completed }} trips
+              
             </div>
           </div>
         </div>

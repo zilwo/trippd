@@ -8,6 +8,8 @@
     <link href="{% static 'css/output.css' %}" rel="stylesheet" />
     <link href="https://fonts.googleapis.com/css2?family=Nunito:ital,wght@0,400;0,600;0,700;0,800;0,900;1,800&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet"/>
 <script src="https://cdn.jsdelivr.net/npm/htmx.org@2.0.10/dist/htmx.min.js" integrity="sha384-H5SrcfygHmAuTDZphMHqBJLc3FhssKjG7w/CeCpFReSfwBWDTKpkzPP8c+cLsK+V" crossorigin="anonymous"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
     
     <style>
         :root {
@@ -50,26 +52,31 @@ body {
             Find Trip
         </a>
 
-        <details class="dropdown dropdown-end">
-            <summary class="btn btn-ghost">
-                {% if user.is_authenticated and user.profile.profile_picture %}
+        <details class="dropdown dropdown-end ">
+            <summary class="btn btn-ghost btn-circle">
+
+               {% if user.is_authenticated %}
+                {% if user.profile.profile_picture %}
                     <div class="avatar">
                         <div class="w-10 rounded-full ring ring-(--blue) ring-offset-2">
                             <img src="{{ user.profile.profile_picture.url }}" alt="Profile Picture">
                         </div>
                     </div>
                 {% else %}
-                <svg xmlns="http://www.w3.org/2000/svg"
-                     fill="none"
-                     viewBox="0 0 24 24"
-                     stroke-width="1.5"
-                     stroke="currentColor"
-                     class="size-6">
-                    <path stroke-linecap="round"
-                          stroke-linejoin="round"
-                          d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z" />
-                </svg>
+                    <div class="avatar">
+                        <div class="w-10 rounded-full ring ring-(--blue) ring-offset-2">
+                            <img src="https://ui-avatars.com/api/?name={{ user.username }}" alt="Default Profile">
+                        </div>
+                    </div>
+              
                 {% endif %}
+
+                {% else %}
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
+  <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z" />
+</svg>
+                {% endif %}
+                
             </summary>
 
             <ul class="menu dropdown-content bg-base-100 rounded-box z-10 mt-2 w-40 p-2 shadow">
@@ -83,6 +90,11 @@ Profile</a></li>
   <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v6m3-3H9m12 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
 </svg>
 Create Trip</a></li>
+
+<li><a href="{% url 'trip_dashboard' %}"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
+  <path stroke-linecap="round" stroke-linejoin="round" d="M6 12 3.269 3.125A59.769 59.769 0 0 1 21.485 12 59.768 59.768 0 0 1 3.27 20.875L5.999 12Zm0 0h7.5" />
+</svg>
+My Trips</a></li>
 
               <li>
     <a href="#"
@@ -164,6 +176,19 @@ Create Trip</a></li>
                 alert.remove();
             }
         }, 5000);
+
+
+ document.addEventListener("DOMContentLoaded", function () { // datetime picker
+    flatpickr("#departure_time", {
+        enableTime: true,
+        dateFormat: "Y-m-d H:i",
+    });
+
+    flatpickr("#expected_arrival_time", {
+        enableTime: true,
+        dateFormat: "Y-m-d H:i",
+    });
+});
     </script>
   </body>
 </html>

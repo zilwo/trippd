@@ -1,10 +1,11 @@
 from django.shortcuts import redirect, render
 from django.urls import reverse, reverse_lazy
-from django.views.generic import CreateView, DetailView, ListView
+from django.views.generic import CreateView, DetailView, ListView, TemplateView
 from django import forms
-from .models import Trip
+from .models import Trip, TripMembership, TripMembership
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
+from django.contrib.auth.mixins import LoginRequiredMixin
 
 # Create your views here.
 
@@ -27,6 +28,8 @@ class TripCreateForm(forms.ModelForm):
             "price",
             "slots_available",
             "tag",
+            "duration_value",
+            "duration_unit",
         ]
 
     def clean(self):
@@ -43,7 +46,7 @@ class TripCreateForm(forms.ModelForm):
         return cleaned_data
 
 
-class CreateTripView(CreateView):
+class CreateTripView(LoginRequiredMixin, CreateView):
     model = Trip
     form_class = TripCreateForm
     template_name = "rides/create_trip.html"
@@ -51,12 +54,15 @@ class CreateTripView(CreateView):
     def form_valid(self, form):
         print("Form is valid, setting organizer to:", self.request.user)
         form.instance.organizer = self.request.user
+        response = super().form_valid(form)
+        TripMembership.objects.create(
+            trip=self.object, user=self.request.user, status="accepted"
+        )
         messages.success(self.request, "Trip created successfully!")
-        return super().form_valid(form)
+        return response
 
     def form_invalid(self, form):
         print("Form is invalid. Errors:", form.errors)
-        messages.error(self.request, "There were errors in the form. Please correct them and try again.")
         return super().form_invalid(form)
 
     def get_success_url(self):
@@ -73,7 +79,7 @@ class TripListView(ListView):
     model = Trip
     template_name = "rides/trip_list.html"
     context_object_name = "trips"
-    paginate_by = 2
+    paginate_by = 5
 
     def get_queryset(self):
         queryset = super().get_queryset()
@@ -97,18 +103,75 @@ class TripListView(ListView):
 @login_required
 def join_trip(request, pk):
     trip = Trip.objects.get(pk=pk)
+    existing_membership = TripMembership.objects.filter(
+        trip=trip, user=request.user
+    ).first()
 
     if trip.organizer == request.user:
         messages.error(request, "You are already the organizer of this trip.")
         return redirect("trip_detail", pk=pk)
-    if trip.slots_available > 0:
-        trip.slots_available -= 1
-        trip.save()
-        messages.success(
-            request,
-            "You have successfully joined the trip! Wait for the organizer to accept your request.",
-        )
+
+    if existing_membership:
+        if existing_membership.status == "pending":
+            messages.info(request, "Your request to join this trip is already pending.")
+        elif existing_membership.status == "accepted":
+            messages.info(request, "You are already a member of this trip.")
+        elif existing_membership.status == "rejected":
+            messages.info(
+                request,
+                "Your previous request to join this trip was rejected. Please contact the organizer for more information.",
+            )
     else:
-        messages.error(request, "Sorry, no slots available for this trip.")
+        TripMembership.objects.create(trip=trip, user=request.user)
+        messages.success(
+            request, "Your request to join the trip has been sent to the organizer."
+        )
 
     return redirect("trip_detail", pk=pk)
+
+
+class DashboardView(LoginRequiredMixin, TemplateView):
+    template_name = "rides/trip_dashboard.html"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["organized_trips"] = Trip.objects.filter(
+            organizer=self.request.user
+        ).order_by("-departure_time")
+    
+        context["joined_trips"] = (
+            TripMembership.objects.filter(user=self.request.user)
+            .exclude(trip__organizer=self.request.user)
+            .select_related("trip")
+            .order_by("-joined_at")
+        )
+        context["pending_requests"] = TripMembership.objects.filter(
+            trip__organizer=self.request.user, status="pending"
+        ).select_related("user", "trip").order_by("-joined_at")
+
+        return context
+
+@login_required
+def accept_request(request, pk):
+    membership = TripMembership.objects.get(pk=pk)
+    if membership.trip.organizer != request.user:
+        messages.error(request, "You are not authorized to accept this request.")
+        return redirect("trip_dashboard")
+
+    membership.status = "accepted"
+    membership.save()
+    messages.success(request, f"You have accepted {membership.user.username}'s request to join {membership.trip}.")
+    return redirect("trip_dashboard")
+
+
+@login_required
+def reject_request(request, pk):
+    membership = TripMembership.objects.get(pk=pk)
+    if membership.trip.organizer != request.user:
+        messages.error(request, "You are not authorized to reject this request.")
+        return redirect("trip_dashboard")
+
+    membership.status = "rejected"
+    membership.save()
+    messages.success(request, f"You have rejected {membership.user.username}'s request to join {membership.trip}.")
+    return redirect("trip_dashboard")

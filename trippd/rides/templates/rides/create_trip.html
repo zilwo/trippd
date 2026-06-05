@@ -123,13 +123,12 @@
                                     <span class="label-text">Departure Time</span>
                                 </label>
 
-                                <input
-                                    type="datetime-local"
-                                    id="departure_time"
-                                    name="departure_time"
-                                    value="{{ form.departure_time.value|default:'' }}"
-                                    class="input input-bordered w-full"
-                                    required>
+                               <input
+                                type="text"
+                                id="departure_time"
+                                name="departure_time"
+                                class="input input-bordered w-full"
+                                required>
                             </div>
 
                             <div>
@@ -137,13 +136,12 @@
                                     <span class="label-text">Expected Arrival</span>
                                 </label>
 
-                                <input
-                                    type="datetime-local"
-                                    id="expected_arrival_time"
-                                    name="expected_arrival_time"
-                                    value="{{ form.expected_arrival_time.value|default:'' }}"
-                                    class="input input-bordered w-full"
-                                    required>
+                            <input
+                                type="text"
+                                id="expected_arrival_time"
+                                name="expected_arrival_time"
+                                class="input input-bordered w-full"
+                                required>
                             </div>
 
                         </div>
@@ -170,7 +168,8 @@
                                     type="number"
                                     id="price"
                                     name="price"
-                                    value="{{ form.price.value|default:'' }}"
+                                    value="{{ form.price.value|default:'0' }}"
+                                    placeholder="Amount per person"
                                     class="input input-bordered w-full"
                                     required>
                             </div>
@@ -211,6 +210,7 @@
                             class="select select-bordered"
                             name="duration_unit"
                         >
+                            
                             <option value="days">Days</option>
                             <option value="weeks">Weeks</option>
                             <option value="months">Months</option>
@@ -276,5 +276,6 @@
 
     </div>
 </div>
+
 
 {% endblock %}

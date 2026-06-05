@@ -1,0 +1,144 @@
+{% extends 'rides/base.html' %}
+{% load static %}
+
+
+{% block content %}
+
+    <div class="max-w-5xl mx-auto px-4 py-8">
+
+      
+
+    <div role="tablist" class="tabs tabs-box bg-(--bg)">
+
+        <input type="radio" name="dashboard_tabs" role="tab"
+               class="tab" aria-label="Trips Joined" checked />
+
+        <div role="tabpanel" class="tab-content bg-b border-(--blue-border) rounded-box p-6">
+
+            <h2 class="text-xl font-bold mb-4">Trips Joined</h2>
+
+            {% for membership in joined_trips %}
+            <div class="card bg-(--card) mb-3">
+                <div class="card-body py-4">
+                    <div class="flex justify-between items-center">
+                        <div>
+                            <h3 class="font-semibold">
+                                {{ membership.trip.origin }}
+                                →
+                                {{ membership.trip.destination }}
+                            </h3>
+
+                            <p class="text-sm opacity-70">
+                                {{ membership.trip.departure_time }}
+                            </p>
+                        </div>
+
+                        <span class="badge btn bg-(--blue)">
+                            {{ membership.get_status_display }}
+                        </span>
+                    </div>
+                </div>
+            </div>
+            {% empty %}
+                <p>No trips joined yet.</p>
+            {% endfor %}
+
+        </div>
+
+
+        <input type="radio" name="dashboard_tabs" role="tab"
+               class="tab" aria-label="Trips Organized" />
+
+        <div role="tabpanel" class="tab-content bg-(--card) border-(--blue-border) rounded-box p-6">
+
+            <h2 class="text-xl font-bold mb-4">Trips Organized</h2>
+
+            {% for trip in organized_trips %}
+            <div class="card mb-3">
+                <div class="card-body py-4">
+                    <div class="flex justify-between items-center">
+
+                        <div>
+                            <h3 class="font-semibold">
+                                {{ trip.origin }}
+                                →
+                                {{ trip.destination }}
+                            </h3>
+
+                            <p class="text-sm opacity-70">
+                                {{ trip.departure_time }}
+                            </p>
+                        </div>
+
+                        <a href="#" class="btn bg-(--blue) text-(--white) btn-sm">
+                            Manage
+                        </a>
+
+                    </div>
+                </div>
+            </div>
+            {% empty %}
+                <p>You haven't organized any trips yet.</p>
+            {% endfor %}
+
+        </div>
+
+
+        <input type="radio" name="dashboard_tabs" role="tab"
+               class="tab" aria-label="Join Requests" />
+
+        <div role="tabpanel" class="tab-content bg-(--card) border-(--blue-border) rounded-box p-6">
+
+            <h2 class="text-xl font-bold mb-4">Pending Join Requests</h2>
+
+            {% for membership in pending_requests %}
+            <div class="card bg-(--card) mb-3">
+                <div class="card-body py-4">
+
+                    <div class="flex justify-between items-center">
+
+                        <div>
+                            <h3 class="font-semibold">
+                                {{ membership.user.username }}
+                            </h3>
+
+                            <p class="text-sm opacity-70">
+                                Wants to join
+                                {{ membership.trip.origin }}
+                                →
+                                {{ membership.trip.destination }}
+                            </p>
+                        </div>
+
+                        <div class="flex gap-2">
+
+                            <form method="post" action="{% url 'accept_request' membership.id %}">
+                                {% csrf_token %}
+                                <button class="btn btn-success btn-sm">
+                                    Accept
+                                </button>
+                            </form>
+
+                            <form method="post" action="{% url 'reject_request' membership.id %}">
+                                {% csrf_token %}
+                                <button class="btn btn-error btn-sm">
+                                    Reject
+                                </button>
+                            </form>
+
+                        </div>
+
+                    </div>
+
+                </div>
+            </div>
+            {% empty %}
+                <p>No pending requests.</p>
+            {% endfor %}
+
+        </div>
+
+    </div>
+
+</div>
+{% endblock %}

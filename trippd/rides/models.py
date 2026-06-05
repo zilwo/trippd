@@ -16,7 +16,8 @@ class Trip(models.Model):
     expected_arrival_time = models.DateTimeField()
     price = models.DecimalField(max_digits=10, decimal_places=2)
     slots_available = models.PositiveIntegerField()
-    duration = models.CharField(max_length=50, choices=[
+    duration_value = models.PositiveIntegerField(null=True, blank=True)
+    duration_unit = models.CharField(max_length=50, choices=[
         ("days", "Days"),
         ("weeks", "Weeks"),
         ("months", "Months"),
@@ -25,10 +26,8 @@ class Trip(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     completed = models.BooleanField(default=False)
 
-
-    def get_members_count(self):
-        return self.memberships.filter(status="accepted").count()
-
+    def get_accepted_members(self):
+        return self.memberships.filter(status="accepted")
 
     def __str__(self):
         return f"{self.origin} to {self.destination} on {self.departure_time.strftime("%Y-%m-%d %H:%M")}"
@@ -39,11 +38,16 @@ class TripMembership(models.Model):
     joined_at = models.DateTimeField(auto_now_add=True)
     status = models.CharField(max_length=20, choices=[
         ("pending", "Pending"),
-        ("accepted", "Accepted"),
+        ("accepted", "Onboard"),
         ("rejected", "Rejected")
     ], default="pending")
 
-    def __str__(self):
-        return f"{self.user.email} in {self.trip}"
-    
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(fields=["trip", "user"], name="unique_trip_user")
+        ]
+        
 
+    def __str__(self):
+        return f"{self.user.username} in {self.trip}"
+    
