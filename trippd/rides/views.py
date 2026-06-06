@@ -75,6 +75,18 @@ class TripDetailView(DetailView):
     template_name = "rides/trip_detail.html"
     context_object_name = "trip"
 
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        trip = self.get_object()
+        user = self.request.user
+
+        if user.is_authenticated:
+            context["is_member"] = TripMembership.objects.filter(trip=trip, user=user, status="accepted").exists()
+            context["is_organizer"] = trip.organizer == user
+            context["is_pending"] = TripMembership.objects.filter(trip=trip, user=user, status="pending").exists()
+
+        return context
+
 
 class TripListView(ListView):
     model = Trip
@@ -102,7 +114,7 @@ class TripListView(ListView):
 
 @require_POST
 @login_required
-def join_trip(request, pk):
+def join_trip_request(request, pk):
     trip = Trip.objects.get(pk=pk)
     existing_membership = TripMembership.objects.filter(
         trip=trip, user=request.user
@@ -127,6 +139,22 @@ def join_trip(request, pk):
         messages.success(
             request, "Your request to join the trip has been sent to the organizer."
         )
+
+    return redirect("trip_detail", pk=pk)
+
+@require_POST
+@login_required
+def cancel_trip_joining_request(request, pk):
+    trip = Trip.objects.get(pk=pk)
+    membership = TripMembership.objects.filter(trip=trip, user=request.user).first()
+
+    if not membership:
+        messages.error(request, "You are not a member of this trip.")
+        return redirect("trip_detail", pk=pk)
+
+    if membership.status == "pending":
+        membership.delete()
+        messages.success(request, "Your request to join the trip has been cancelled.")
 
     return redirect("trip_detail", pk=pk)
 
@@ -203,3 +231,21 @@ def reject_request(request, pk):
     return redirect("trip_dashboard")
 
 
+
+class ChatView(LoginRequiredMixin, DetailView):
+    model = Trip
+    template_name = "rides/trip_chat.html"
+    context_object_name = "trip"
+
+
+class InboxView(LoginRequiredMixin, TemplateView):
+    template_name = "rides/inbox.html"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["joined_trips"] = (
+            TripMembership.objects.filter(user=self.request.user, status="accepted")
+            .select_related("trip", "trip__organizer")
+            .order_by("-joined_at")
+        )
+        return context

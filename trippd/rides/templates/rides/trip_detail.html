@@ -367,12 +367,41 @@
         <div style="font-size:12px;color:var(--muted);margin-bottom:16px;">per person</div>
 
         {% if trip.slots_available > 0 %}
-            <form method="post" action="{% url 'join_trip' trip.id %}">
+
+          
+          {% if not is_member %}
+
+          <div class="trip_requests flex flex-col gap-3">
+
+
+            <form method="post" action="{% url 'join_trip_request' trip.id %}">
                 {% csrf_token %}
+
                 <button type="submit" class="btn bg-(--blue) w-full hover:bg-(--blue-border) text-white" style="border-radius:12px;">
-                    Join Trip
+                  Join Trip
                 </button>
+
+              
             </form>
+              {% if is_pending %}
+              <form method="post" action="{% url 'cancel_trip_joining_request' trip.id %}">
+                {% csrf_token %}
+                 <button type="submit" class="btn bg-(--blue) w-full hover:bg-(--blue-border) text-white" style="border-radius:12px;">
+                  Cancel Request
+                </button>
+
+              </form>
+                  
+                {% endif %}
+
+                          </div>
+
+            {% else %}
+
+             <a href="{% url 'trip_chat' trip.pk %}" class="btn btn-outline w-full hover:bg-(--card2) text-(--black)" style="border-radius:12px;">
+                View Group
+            </a>
+            {% endif %}
           
          
         {% else %}
