@@ -1,3 +1,5 @@
+from time import timezone
+
 from django.shortcuts import redirect, render
 from django.urls import reverse, reverse_lazy
 from django.views.generic import CreateView, DetailView, ListView, TemplateView, UpdateView
@@ -37,12 +39,39 @@ class TripCreateForm(forms.ModelForm):
         cleaned_data = super().clean()
         departure_time = cleaned_data.get("departure_time")
         expected_arrival_time = cleaned_data.get("expected_arrival_time")
+        origin = cleaned_data.get("origin")
+        destination = cleaned_data.get("destination")
+        to_address = cleaned_data.get("to_address")
+        from_address = cleaned_data.get("from_address")
+        price = cleaned_data.get("price")
+        slots_available = cleaned_data.get("slots_available")
 
-        if departure_time and expected_arrival_time:
-            if expected_arrival_time <= departure_time:
-                raise forms.ValidationError(
-                    "Expected arrival time must be after departure time."
-                )
+        if origin == destination:
+            raise forms.ValidationError("Origin and destination cannot be the same.")
+        
+        if from_address == to_address:
+            raise forms.ValidationError("From and To addresses cannot be the same.")
+
+        if price is not None and price < 0:
+            raise forms.ValidationError("Price cannot be negative.")
+        
+        if slots_available is not None and slots_available <= 0:
+            raise forms.ValidationError("Slots available must be greater than zero.")
+
+        if departure_time and expected_arrival_time and expected_arrival_time <= departure_time:
+            raise forms.ValidationError(
+                "Expected arrival time must be after departure time."
+            )
+
+        if departure_time and departure_time <= timezone.now():
+            raise forms.ValidationError(
+                "Departure time must be in the future."
+            )
+        
+        if expected_arrival_time and expected_arrival_time <= timezone.now():
+            raise forms.ValidationError(
+                "Expected arrival time must be in the future."
+            )
 
         return cleaned_data
 
