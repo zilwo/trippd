@@ -92,7 +92,7 @@ class TripListView(ListView):
     model = Trip
     template_name = "rides/trip_list.html"
     context_object_name = "trips"
-    paginate_by = 5
+    paginate_by = 3
 
     def get_queryset(self):
         queryset = super().get_queryset()
@@ -111,6 +111,12 @@ class TripListView(ListView):
             queryset = queryset.filter(slots_available__gte=passengers)
 
         return queryset.order_by("-created_at")
+    
+
+    def get_template_names(self):
+        if self.request.headers.get("HX-Request"):
+            return ["rides/partials/trip_cards.html"]
+        return super().get_template_names()
 
 @require_POST
 @login_required
