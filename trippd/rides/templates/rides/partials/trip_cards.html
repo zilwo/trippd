@@ -25,8 +25,8 @@
           <span class="sep">·</span>
           <span class="badge bg-(--blue) border-0">
 
-            {% if t.duration %}
-              {{ t.duration }}
+            {% if t.duration_value and t.duration_unit %}
+              {{ t.duration_value }} {{ t.duration_unit }}
             {% else %}
               N/A
             {% endif %}
@@ -120,8 +120,8 @@
   
  {% empty %}
   <div class="empty-box">
-    <p class="text-lg font-bold text-(--black) mb-1">No trips found</p>
-    <p class="text-sm" style="color:var(--muted);">Be the first — create a trip!</p>
+    <p class="text-lg font-bold text-(--black) mb-1">Find a Trip</p>
+    <p class="text-sm" style="color:var(--muted);">Browse available trips or create your own!</p>
   </div>
   
   {% endfor %}

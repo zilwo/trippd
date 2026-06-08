@@ -287,7 +287,11 @@
                 {% endif %}
                 <div>
                   <div style="font-size:14px;font-weight:700;color:var(--white);">
-                    {{ m.user.first_name }} {{ m.user.last_name }}
+                    {% if m.user.first_name and m.user.last_name %}
+                     {{ m.user.first_name }} {{ m.user.last_name }}
+                    {% else %}
+                     {{ m.user.username }}
+                    {% endif %}
                   </div>
                   <div style="font-size:11px;color:var(--muted);">
                     Joined {{ m.joined_at|date:"d M Y" }}

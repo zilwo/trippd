@@ -170,6 +170,7 @@ SOCIALACCOUNT_ADAPTER = "users.adapters.SocialAccountAdapter"
 
 USE_X_FORWARDED_HOST = True
 SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+GEOAPIFY_API_KEY = os.getenv("GEOAPIFY_API_KEY")
 
 
 MEDIA_URL = "/media/"

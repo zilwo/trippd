@@ -1,7 +1,15 @@
 {% extends 'rides/base.html' %}
 {% load static %}
 
-    {% block content %}
+{% block style %}
+<link href="https://cdn.jsdelivr.net/npm/tom-select@2.6.1/dist/css/tom-select.css" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/tom-select@2.6.1/dist/js/tom-select.complete.min.js"></script>
+
+
+
+{% endblock %}
+
+{% block content %}
 {% if form.errors %}
 <div class="alert alert-error flex justify-between items-start" id="alerting-message">
     <div class="flex justify-between items-start w-full">
@@ -55,18 +63,59 @@
 
                         <div class="grid md:grid-cols-2 gap-4">
 
+                              <div>
+                                <label class="label" for="from_address">
+                                    <span class="label-text">Pickup Address</span>
+                                </label>
+
+                               
+
+                        <input
+                            id="from_address"
+                            name="from_address"
+                            class="address-auto"
+                            value="{{ form.from_address.value|default:'' }}"
+                            class="input input-bordered w-full"
+
+                            required>
+
+                            </div>
+
                             <div>
                                 <label class="label" for="origin">
                                     <span class="label-text">Origin</span>
                                 </label>
 
+                               
                                 <input
                                     type="text"
                                     name="origin"
                                     id="origin"
-                                    class="input input-bordered w-full"
                                     value="{{ form.origin.value|default:'' }}"
+                                    class="input input-bordered w-full"
+
+                                    
                                     required>
+
+
+                    
+                            </div>
+
+                              <div>
+                                <label class="label" for="to_address">
+                                    <span class="label-text">Drop Address</span>
+                                </label>
+
+                                
+
+                            <input
+                                id="to_address"
+                                name="to_address"
+                                class="address-auto"
+                                class="input input-bordered w-full"
+
+                                value="{{ form.to_address.value|default:'' }}"
+                                required>
                             </div>
 
                             <div>
@@ -78,36 +127,15 @@
                                     type="text"
                                     name="destination"
                                     id="destination"
-                                    class="input input-bordered w-full"
+                                                                    class="input input-bordered w-full"
+
                                     value="{{ form.destination.value|default:'' }}"
                                     required>
                             </div>
 
-                            <div>
-                                <label class="label" for="from_address">
-                                    <span class="label-text">Pickup Address</span>
-                                </label>
+                          
 
-                                <input
-                                    type="text"
-                                    name="from_address"
-                                    id="from_address"
-                                    value="{{ form.from_address.value|default:'Undecided' }}"
-                                    class="input input-bordered w-full">
-                            </div>
-
-                            <div>
-                                <label class="label" for="to_address">
-                                    <span class="label-text">Drop Address</span>
-                                </label>
-
-                                <input
-                                    type="text"
-                                    name="to_address"
-                                    id="to_address"
-                                    value="{{ form.to_address.value|default:'Undecided' }}"
-                                    class="input input-bordered w-full">
-                            </div>
+                       
 
                         </div>
 
@@ -231,17 +259,13 @@
 
                         <div class="mt-4">
 
-                            <label class="label" for="tag">
+                            <label class="label" for="input-tags">
                                 <span class="label-text">Tags</span>
                             </label>
 
-                            <input
-                                type="text"
-                                id="tag"
-                                name="tag"
-                                class="input input-bordered w-full"
-                                value="{% for tag in object.tag.all %}{{ tag.name }}{% if not forloop.last %}, {% endif %}{% endfor %}"
-                                placeholder="beach, nature, camping">
+
+                            <input id="input-tags" autocomplete="off" placeholder="How cool is this?"  name="tag" type="text" value="{% for tag in object.tag.all %}{{ tag.name }}{% if not forloop.last %}, {% endif %}{% endfor %}" placeholder="Add tags">
+
 
                         </div>
 
@@ -301,5 +325,55 @@
     </div>
 </div>
 
+<script>
+document.querySelectorAll('.address-auto').forEach(el => {
+    new TomSelect(el,{
+    maxItems: 1,
+    create: true,
+	valueField: "addr",
+    labelField: "addr",
+    searchField: "addr",
+    hideSelected: true,
+    clearAfterSelect: true,
 
+
+    load: function(query, callback) {
+        fetch(`{% url 'autopopulate' %}?query=${encodeURIComponent(query)}`)
+            .then(response => response.json())
+            .then(data => {
+                console.log(data.results);
+                callback(data.results);
+            });
+    },
+
+    onItemAdd: function(value) {
+        const selectedOption = this.options[value];
+        if (selectedOption) {
+            const city = selectedOption.city || value;
+            console.log("Selected city:", city);
+            if (this.input.id === "from_address") {
+                document.getElementById("origin").value = city;
+            } else if (this.input.id === "to_address") {
+                document.getElementById("destination").value = city;
+            }
+
+        }
+    }
+
+
+
+});
+
+});
+
+   new TomSelect("#input-tags", {
+        persist: false,
+        createOnBlur: true,
+        create: true
+    });
+
+
+
+  
+</script>
 {% endblock %}

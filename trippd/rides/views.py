@@ -1,5 +1,5 @@
-from time import timezone
-
+from django.utils import timezone
+from django.http import JsonResponse
 from django.shortcuts import redirect, render
 from django.urls import reverse, reverse_lazy
 from django.views.generic import CreateView, DetailView, ListView, TemplateView, UpdateView
@@ -9,6 +9,7 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.http import require_POST
 from django.contrib.auth.mixins import LoginRequiredMixin
+from .services.autocomplete_location import autocomplete_location
 
 # Create your views here.
 
@@ -97,6 +98,17 @@ class CreateTripView(LoginRequiredMixin, CreateView):
 
     def get_success_url(self):
         return reverse("trip_detail", kwargs={"pk": self.object.pk})
+    
+
+def auto_populate(request):
+    query = request.GET.get("query", "")
+
+    if query:
+        results = autocomplete_location(query)
+        return JsonResponse({"results": results})
+    
+    else:
+        return JsonResponse({"results": []})
 
 
 class TripDetailView(DetailView):
