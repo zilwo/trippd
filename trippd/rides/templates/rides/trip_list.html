@@ -2,195 +2,243 @@
 {% load static %}
 
 {% block style %}
-<style>
-.trip-card {
-  background: var(--card);
-  border: 1.5px solid var(--blue-border);
-  border-radius: 20px;
-  overflow: hidden;
-  display: grid;
-  grid-template-columns: 4px 1fr;
-  width: 100%;
-}
-.trip-card:hover {
-  border-color: var(--blue-border2);
-  background: var(--card2);
-  transform: translateY(-1px);
-}
-.trip-card-body {
-  display: grid;
-  grid-template-columns: 200px 1fr auto auto;
-  align-items: stretch;
-}
-
-.route-col {
-  padding: 24px 20px;
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  border-right: 1px solid var(--blue-border);
-}
-.route-dots { display: flex; flex-direction: column; align-items: center; }
-.dot-top  { width: 10px; height: 10px; border-radius: 50%; }
-.dot-stem { width: 1.5px; height: 22px; }
-.dot-bottom { width: 10px; height: 10px; border-radius: 50%; border: 2px solid var(--muted2); }
-.city-name { font-size: 17px; font-weight: 800; color: var(--black); line-height: 1; }
-
-.info-col {
-  padding: 22px 24px;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  gap: 10px;
-}
-.trip-time { font-size: 15px; font-weight: 800; color: var(--black); }
-.trip-date { font-size: 13px; color: var(--muted); }
-.sep { color: var(--muted2); }
-.driver-name { font-size: 13px; font-weight: 700; color: var(--black); }
-.driver-meta { font-size: 11px; color: var(--muted); }
-
-.mates-col {
-  padding: 22px 20px;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  gap: 10px;
-  border-left: 1px solid var(--blue-border);
-  min-width: 150px;
-}
-.mates-label { font-size: 11px; font-weight: 600; color: var(--muted); }
-
-.action-col {
-  padding: 22px;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  gap: 8px;
-  border-left: 1px solid var(--blue-border);
-  min-width: 130px;
-}
-
-.search-bar {
-  display: flex;
-  align-items: stretch;
-  background: var(--card);
-  border: 1.5px solid var(--blue-border);
-  border-radius: 16px;
-  overflow: visible;
-  transition: border-color .2s, box-shadow .2s;
-}
-.search-bar:focus-within {
-  border-color: var(--blue-border2);
-  box-shadow: 0 0 0 4px rgba(79,142,255,0.08);
-}
-.sf {
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  padding: 14px 20px;
-  flex: 1;
-  border-right: 1px solid var(--blue-border);
-  position: relative;
-  min-width: 0;
-}
-.sf-label {
-  font-size: 10px;
-  font-weight: 700;
-  letter-spacing: .1em;
-  text-transform: uppercase;
-  color: var(--muted);
-  margin-bottom: 4px;
-}
-.sf-input, .sf-select {
-  background: transparent;
-  border: none;
-  outline: none;
-  color: var(--black);
-  font-family: 'Nunito', sans-serif;
-  font-weight: 700;
-  font-size: 15px;
-  width: 100%;
-  cursor: pointer;
-  appearance: none;
-}
-
-@media (max-width: 900px) {
-  .trip-card-body { grid-template-columns: 1fr; }
-  .route-col { border-right: none; border-bottom: 1px solid var(--blue-border); }
-  .mates-col { border-left: none; border-top: 1px solid var(--blue-border); }
-  .action-col { border-left: none; border-top: 1px solid var(--blue-border); flex-direction: row; justify-content: space-between; }
-}
-@media (max-width: 720px) {
-  .search-bar { flex-direction: column; }
-  .sf { border-right: none; border-bottom: 1px solid var(--blue-border); }
-  .sf-submit { padding: 16px; border-radius: 0 0 14px 14px; }
-}
-@media (max-width: 560px) {
-  .trip-card { grid-template-columns: 1fr; }
-}
-</style>
+  <style>
+    .trip-card {
+      background: var(--card);
+      border: 1.5px solid var(--blue-border);
+      border-radius: 20px;
+      overflow: hidden;
+      display: grid;
+      grid-template-columns: 4px 1fr;
+      width: 100%;
+    }
+    .trip-card:hover {
+      border-color: var(--blue-border2);
+      background: var(--card2);
+      transform: translateY(-1px);
+    }
+    .trip-card-body {
+      display: grid;
+      grid-template-columns: 200px 1fr auto auto;
+      align-items: stretch;
+    }
+    
+    .route-col {
+      padding: 24px 20px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      border-right: 1px solid var(--blue-border);
+    }
+    .route-dots {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    .dot-top {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+    }
+    .dot-stem {
+      width: 1.5px;
+      height: 22px;
+    }
+    .dot-bottom {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      border: 2px solid var(--muted2);
+    }
+    .city-name {
+      font-size: 17px;
+      font-weight: 800;
+      color: var(--black);
+      line-height: 1;
+    }
+    
+    .info-col {
+      padding: 22px 24px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      gap: 10px;
+    }
+    .trip-time {
+      font-size: 15px;
+      font-weight: 800;
+      color: var(--black);
+    }
+    .trip-date {
+      font-size: 13px;
+      color: var(--muted);
+    }
+    .sep {
+      color: var(--muted2);
+    }
+    .driver-name {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--black);
+    }
+    .driver-meta {
+      font-size: 11px;
+      color: var(--muted);
+    }
+    
+    .mates-col {
+      padding: 22px 20px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      gap: 10px;
+      border-left: 1px solid var(--blue-border);
+      min-width: 150px;
+    }
+    .mates-label {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--muted);
+    }
+    
+    .action-col {
+      padding: 22px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      gap: 8px;
+      border-left: 1px solid var(--blue-border);
+      min-width: 130px;
+    }
+    
+    .search-bar {
+      display: flex;
+      align-items: stretch;
+      background: var(--card);
+      border: 1.5px solid var(--blue-border);
+      border-radius: 16px;
+      overflow: visible;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    .search-bar:focus-within {
+      border-color: var(--blue-border2);
+      box-shadow: 0 0 0 4px rgba(79, 142, 255, 0.08);
+    }
+    .sf {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      padding: 14px 20px;
+      flex: 1;
+      border-right: 1px solid var(--blue-border);
+      position: relative;
+      min-width: 0;
+    }
+    .sf-label {
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 4px;
+    }
+    .sf-input,
+    .sf-select {
+      background: transparent;
+      border: none;
+      outline: none;
+      color: var(--black);
+      font-family: 'Nunito', sans-serif;
+      font-weight: 700;
+      font-size: 15px;
+      width: 100%;
+      cursor: pointer;
+      appearance: none;
+    }
+    
+    @media (max-width: 900px) {
+      .trip-card-body {
+        grid-template-columns: 1fr;
+      }
+      .route-col {
+        border-right: none;
+        border-bottom: 1px solid var(--blue-border);
+      }
+      .mates-col {
+        border-left: none;
+        border-top: 1px solid var(--blue-border);
+      }
+      .action-col {
+        border-left: none;
+        border-top: 1px solid var(--blue-border);
+        flex-direction: row;
+        justify-content: space-between;
+      }
+    }
+    @media (max-width: 720px) {
+      .search-bar {
+        flex-direction: column;
+      }
+      .sf {
+        border-right: none;
+        border-bottom: 1px solid var(--blue-border);
+      }
+      .sf-submit {
+        padding: 16px;
+        border-radius: 0 0 14px 14px;
+      }
+    }
+    @media (max-width: 560px) {
+      .trip-card {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
 {% endblock %}
 
-
 {% block content %}
-<div class="list-container flex flex-col items-center gap-6 px-4 py-8">
+  <div class="list-container flex flex-col items-center gap-6 px-4 py-8">
+    <h1 class="text-5xl font-bold">Available Trips</h1>
 
-  <h1 class="text-5xl font-bold">Available Trips</h1>
+    <form method="GET" class="w-full max-w-3xl" hx-get="{% url 'trip_list' %}" hx-target=".trip-results" hx-swap="innerHTML" hx-trigger="keyup changed delay:500ms">
+      <div class="w-full max-w-3xl">
+        <div class="search-bar">
+          <div class="sf max-w-full" id="sf-from-wrap">
+            <div class="sf-label">From</div>
+            <input class="sf-input" id="sf-from" type="text" placeholder="Leaving from…" autocomplete="off" name="origin" />
+            <div class="suggestions" id="sugg-from"></div>
+          </div>
 
-  <form method ="GET" class="w-full max-w-3xl" hx-get="{% url 'trip_list' %}" hx-target=".trip-results" hx-swap="innerHTML" hx-trigger="keyup changed delay:500ms"> 
-  <div class="w-full max-w-3xl">
-    <div class="search-bar">
-  
-      <div class="sf max-w-full" id="sf-from-wrap">
-        <div class="sf-label">From</div>
-        <input class="sf-input" id="sf-from" type="text" placeholder="Leaving from…" autocomplete="off" name="origin"/>
-        <div class="suggestions" id="sugg-from"></div>
+          <div class="sf max-w-full" id="sf-to-wrap">
+            <div class="sf-label">To</div>
+            <input class="sf-input" id="sf-to" type="text" placeholder="Going to…" autocomplete="off" name="destination" />
+            <div class="suggestions" id="sugg-to"></div>
+          </div>
+
+          <div class="sf max-w-full">
+            <div class="sf-label">Date</div>
+            <input class="sf-input" type="date" id="sf-date" name="departure" />
+          </div>
+
+          <div class="sf max-w-full">
+            <div class="sf-label">Passengers</div>
+            <select class="sf-select" name="passengers">
+              <option value="" selected>Any</option>
+
+              <option>1</option>
+              <option>2</option>
+              <option>3</option>
+              <option>4</option>
+            </select>
+          </div>
+
+          <button class="sf hover:bg-(--card2)!" style="border-right: 0;  border-radius: 0 16px 16px 0;">Search</button>
+        </div>
       </div>
+    </form>
 
-      <div class="sf max-w-full" id="sf-to-wrap">
-        <div class="sf-label">To</div>
-        <input class="sf-input" id="sf-to" type="text" placeholder="Going to…" autocomplete="off" name="destination"/>
-        <div class="suggestions" id="sugg-to"></div>
-      </div>
-
-      <div class="sf max-w-full">
-        <div class="sf-label">Date</div>
-        <input class="sf-input" type="date" id="sf-date" name="departure"/>
-      </div>
-
-      <div class="sf max-w-full">
-        <div class="sf-label">Passengers</div>
-        <select class="sf-select" name="passengers">
-          <option value="" selected>Any</option>
-
-          <option>1</option>
-          <option>2</option>
-          <option>3</option>
-          <option>4</option>
-        </select>
-      </div>
-
-<button class="sf hover:bg-(--card2)!" style="border-right: 0;  border-radius: 0 16px 16px 0;">
-        Search
-      </button>
-
+    <div class="trip-results m-0 p-0 flex flex-col items-center gap-6 w-full">
+      {% include 'rides/partials/trip_cards.html' %}
     </div>
   </div>
-  </form>
-  
-    <div class="trip-results m-0 p-0 flex flex-col items-center gap-6 w-full">
-
-    {% include 'rides/partials/trip_cards.html' %}
-  
-    </div>
-
-
-  
-
-
- 
-
-</div>
-</div>
-
 {% endblock %}

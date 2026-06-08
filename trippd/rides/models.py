@@ -2,26 +2,31 @@ from django.db import models
 from users.models import User
 from taggit.managers import TaggableManager
 
-
 # Create your models here.
 
+
 class Trip(models.Model):
-    organizer = models.ForeignKey(User, on_delete=models.CASCADE, related_name="organized_trips")
+    organizer = models.ForeignKey(
+        User, on_delete=models.CASCADE, related_name="organized_trips"
+    )
     origin = models.CharField(max_length=255)
     destination = models.CharField(max_length=255)
     description = models.TextField(blank=True)
-    from_address = models.CharField(max_length=255) 
+    from_address = models.CharField(max_length=255)
     to_address = models.CharField(max_length=255)
     departure_time = models.DateTimeField()
     expected_arrival_time = models.DateTimeField()
     price = models.DecimalField(max_digits=10, decimal_places=2)
     slots_available = models.PositiveIntegerField()
     duration_value = models.PositiveIntegerField(null=True, blank=True)
-    duration_unit = models.CharField(max_length=50, choices=[
-        ("days", "Days"),
-        ("weeks", "Weeks"),
-        ("months", "Months"),
-    ])
+    duration_unit = models.CharField(
+        max_length=50,
+        choices=[
+            ("days", "Days"),
+            ("weeks", "Weeks"),
+            ("months", "Months"),
+        ],
+    )
     tag = TaggableManager(blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     completed = models.BooleanField(default=False)
@@ -30,24 +35,46 @@ class Trip(models.Model):
         return self.memberships.filter(status="accepted")
 
     def __str__(self):
-        return f"{self.origin} to {self.destination} on {self.departure_time.strftime("%Y-%m-%d %H:%M")}"
-    
+        return f"{self.origin} to {self.destination}"
+
+
 class TripMembership(models.Model):
     trip = models.ForeignKey(Trip, on_delete=models.CASCADE, related_name="memberships")
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="trip_memberships")
+    user = models.ForeignKey(
+        User, on_delete=models.CASCADE, related_name="trip_memberships"
+    )
     joined_at = models.DateTimeField(auto_now_add=True)
-    status = models.CharField(max_length=20, choices=[
-        ("pending", "Pending"),
-        ("accepted", "Onboard"),
-        ("rejected", "Rejected")
-    ], default="pending")
+    status = models.CharField(
+        max_length=20,
+        choices=[
+            ("pending", "Pending"),
+            ("accepted", "Onboard"),
+            ("rejected", "Rejected"),
+        ],
+        default="pending",
+    )
 
     class Meta:
         constraints = [
             models.UniqueConstraint(fields=["trip", "user"], name="unique_trip_user")
         ]
-        
 
     def __str__(self):
         return f"{self.user.username} in {self.trip}"
-    
+
+
+class TripGroup(models.Model):
+    trip = models.OneToOneField(Trip, on_delete=models.CASCADE, primary_key=True)
+    name = models.CharField(max_length=255)
+
+    def __str__(self):
+        return self.name
+
+
+class TripGroupMessage(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="messages")
+    group = models.ForeignKey(
+        TripGroup, on_delete=models.CASCADE, related_name="chat_messages"
+    )
+    body = models.TextField(max_length=500)
+    created_at = models.DateTimeField(auto_now_add=True)

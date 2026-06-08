@@ -2,378 +2,215 @@
 {% load static %}
 
 {% block style %}
-<link href="https://cdn.jsdelivr.net/npm/tom-select@2.6.1/dist/css/tom-select.css" rel="stylesheet">
-<script src="https://cdn.jsdelivr.net/npm/tom-select@2.6.1/dist/js/tom-select.complete.min.js"></script>
-
-
-
+  <link href="https://cdn.jsdelivr.net/npm/tom-select@2.6.1/dist/css/tom-select.css" rel="stylesheet" />
+  <script src="https://cdn.jsdelivr.net/npm/tom-select@2.6.1/dist/js/tom-select.complete.min.js"></script>
 {% endblock %}
 
 {% block content %}
-{% if form.errors %}
-<div class="alert alert-error flex justify-between items-start" id="alerting-message">
-    <div class="flex justify-between items-start w-full">
-
+  {% if form.errors %}
+    <div class="alert alert-error flex justify-between items-start" id="alerting-message">
+      <div class="flex justify-between items-start w-full">
         <div>
-            {% for error in form.non_field_errors %}
-                <div>{{ error }}</div>
-            {% endfor %}
+          {% for error in form.non_field_errors %}
+            <div>{{ error }}</div>
+          {% endfor %}
 
-            {% for field in form %}
-                {% for error in field.errors %}
-                    <div>{{ field.label }}: {{ error }}</div>
-                {% endfor %}
+          {% for field in form %}
+            {% for error in field.errors %}
+              <div>{{ field.label }}: {{ error }}</div>
             {% endfor %}
+          {% endfor %}
         </div>
 
-        <button
-            type="button"
-            onclick="this.closest('.alert').remove()"
-            class="btn btn-ghost btn-xs">
-            ✕
-        </button>
-
+        <button type="button" onclick="this.closest('.alert').remove()" class="btn btn-ghost btn-xs">✕</button>
+      </div>
     </div>
-</div>
-{% endif %}
+  {% endif %}
 
-<div class="min-h-screen bg-(--bg) p-6">
+  <div class="min-h-screen bg-(--bg) p-6">
     <div class="max-w-4xl mx-auto">
-
-        <div class="card bg-(--card) shadow-lg border border-(--blue-border)">
-            <div class="card-body">
-
-                <h2 class="card-title text-2xl mb-4">
-                    {% if trip %}
-                        Update Trip
-                    {% else %}
-                        Create Trip
-                    {% endif %}
-                </h2>
-
-                <form method="POST">
-                    {% csrf_token %}
-
-                    <!-- Route Information -->
-                    <div>
-
-                        <h3 class="font-semibold mb-4">
-                            Route Information
-                        </h3>
-
-                        <div class="grid md:grid-cols-2 gap-4">
-
-                              <div>
-                                <label class="label" for="from_address">
-                                    <span class="label-text">Pickup Address</span>
-                                </label>
-
-                               
-
-                        <input
-                            id="from_address"
-                            name="from_address"
-                            class="address-auto"
-                            value="{{ form.from_address.value|default:'' }}"
-                            class="input input-bordered w-full"
-
-                            required>
-
-                            </div>
-
-                            <div>
-                                <label class="label" for="origin">
-                                    <span class="label-text">Origin</span>
-                                </label>
-
-                               
-                                <input
-                                    type="text"
-                                    name="origin"
-                                    id="origin"
-                                    value="{{ form.origin.value|default:'' }}"
-                                    class="input input-bordered w-full"
-
-                                    
-                                    required>
-
-
-                    
-                            </div>
-
-                              <div>
-                                <label class="label" for="to_address">
-                                    <span class="label-text">Drop Address</span>
-                                </label>
-
-                                
-
-                            <input
-                                id="to_address"
-                                name="to_address"
-                                class="address-auto"
-                                class="input input-bordered w-full"
-
-                                value="{{ form.to_address.value|default:'' }}"
-                                required>
-                            </div>
-
-                            <div>
-                                <label class="label" for="destination">
-                                    <span class="label-text">Destination</span>
-                                </label>
-
-                                <input
-                                    type="text"
-                                    name="destination"
-                                    id="destination"
-                                                                    class="input input-bordered w-full"
-
-                                    value="{{ form.destination.value|default:'' }}"
-                                    required>
-                            </div>
-
-                          
-
-                       
-
-                        </div>
-
-                    </div>
-
-                    <div class="divider"></div>
-
-                    <!-- Schedule -->
-                    <div>
-
-                        <h3 class="font-semibold mb-4">
-                            Schedule
-                        </h3>
-
-                        <div class="grid md:grid-cols-2 gap-4">
-
-                            <div>
-                                <label class="label" for="departure_time">
-                                    <span class="label-text">Departure Time</span>
-                                </label>
-
-                               <input
-                                type="text"
-                                id="departure_time"
-                                name="departure_time"
-                                class="input input-bordered w-full"
-                                value="{{ object.departure_time|date:'Y-m-d H:i' }}"
-                                required>
-                            </div>
-
-                            <div>
-                                <label class="label" for="expected_arrival_time">
-                                    <span class="label-text">Expected Arrival</span>
-                                </label>
-
-                            <input
-                                type="text"
-                                id="expected_arrival_time"
-                                name="expected_arrival_time"
-                                class="input input-bordered w-full"
-                                value="{{ object.expected_arrival_time|date:'Y-m-d H:i' }}"
-                                required>
-                            </div>
-
-                        </div>
-
-                    </div>
-
-                    <div class="divider"></div>
-
-                    <!-- Trip Details -->
-                    <div>
-
-                        <h3 class="font-semibold mb-4">
-                            Trip Details
-                        </h3>
-
-                        <div class="grid md:grid-cols-2 gap-4">
-
-                            <div>
-                                <label class="label" for="price">
-                                    <span class="label-text">Price</span>
-                                </label>
-
-                                <input
-                                    type="number"
-                                    id="price"
-                                    name="price"
-                                    value="{{ form.price.value|default:'0' }}"
-                                    placeholder="Amount per person"
-                                    class="input input-bordered w-full"
-                                    required>
-                            </div>
-
-                            <div>
-                                <label class="label" for="slots_available">
-                                    <span class="label-text">Available Seats</span>
-                                </label>
-
-                                <input
-                                    type="number"
-                                    id="slots_available"
-                                    name="slots_available"
-                                    value="{{ form.slots_available.value|default:'3' }}"
-                                    class="input input-bordered w-full"
-                                    required>
-                            </div>
-
-                        </div>
-
-                        <div class="mt-4">
-                    <label class="label" for="duration">
-                        <span class="label-text">Duration</span>
-                    </label>
-                           
-
-                    <div class="flex gap-2">
-                        <input
-                            type="number"
-                            min="1"
-                            class="input input-bordered w-24"
-                            name="duration_value"
-                            id="duration"
-                            value="{{ form.duration_value.value|default:'' }}"
-                        >
-
-                        <select
-                            class="select select-bordered"
-                            name="duration_unit"
-                            value="{{ form.duration_unit.value|default:'' }}"
-                        >
-                            
-                            <option value="days">Days</option>
-                            <option value="weeks">Weeks</option>
-                            <option value="months">Months</option>
-                        </select>
-                    </div>
-                        </div>
-
-                        
-
-                        <div class="mt-4">
-
-                            <label class="label" for="input-tags">
-                                <span class="label-text">Tags</span>
-                            </label>
-
-
-                            <input id="input-tags" autocomplete="off" placeholder="How cool is this?"  name="tag" type="text" value="{% for tag in object.tag.all %}{{ tag.name }}{% if not forloop.last %}, {% endif %}{% endfor %}" placeholder="Add tags">
-
-
-                        </div>
-
-                        <div class="mt-4">
-
-                            <label class="label" for="description">
-                                <span class="label-text">Description</span>
-                            </label>
-
-
-                            <textarea
-                                name="description"
-                                id="description"
-                                class="textarea textarea-bordered w-full h-32"
-                                placeholder="Tell passengers about this trip...">{{ form.description.value|default:'' }}</textarea>
-
-                        </div>
-
-                    </div>
-
-                    <div class="divider"></div>
-
-                    <div class="flex justify-end gap-3">
-
-                        
-                    {% if trip %}
-                        <a href="{% url 'trip_detail' trip.pk %}"
-                           class="btn btn-ghost">
-                            Cancel
-                        </a>
-                        {% else %}
-                        <a href="{% url 'trip_list' %}"
-                           class="btn btn-ghost">
-                            Cancel
-                        </a>
-
-                    {% endif %}
-
-                        <button
-                            type="submit"
-                            class="btn bg-(--blue) text-white border-0 hover:bg-(--blue)">
-
-                            {% if trip %}
-                                Update Trip
-                            {% else %}
-                                Create Trip
-                            {% endif %}
-                        </button>
-
-                    </div>
-
-                </form>
-
+      <div class="card bg-(--card) shadow-lg border border-(--blue-border)">
+        <div class="card-body">
+          <h2 class="card-title text-2xl mb-4">
+            {% if trip %}
+              Update Trip
+            {% else %}
+              Create Trip
+            {% endif %}
+          </h2>
+
+          <form method="POST">
+            {% csrf_token %}
+
+            <!-- Route Information -->
+            <div>
+              <h3 class="font-semibold mb-4">Route Information</h3>
+
+              <div class="grid md:grid-cols-2 gap-4">
+                <div>
+                  <label class="label" for="from_address"><span class="label-text">Pickup Address</span></label>
+
+                  <input id="from_address" name="from_address" class="address-auto" value="{{ form.from_address.value|default:'' }}" class="input input-bordered w-full" required />
+                </div>
+
+                <div>
+                  <label class="label" for="origin"><span class="label-text">Origin</span></label>
+
+                  <input type="text" name="origin" id="origin" value="{{ form.origin.value|default:'' }}" class="input input-bordered w-full" required />
+                </div>
+
+                <div>
+                  <label class="label" for="to_address"><span class="label-text">Drop Address</span></label>
+
+                  <input id="to_address" name="to_address" class="address-auto" class="input input-bordered w-full" value="{{ form.to_address.value|default:'' }}" required />
+                </div>
+
+                <div>
+                  <label class="label" for="destination"><span class="label-text">Destination</span></label>
+
+                  <input type="text" name="destination" id="destination" class="input input-bordered w-full" value="{{ form.destination.value|default:'' }}" required />
+                </div>
+              </div>
             </div>
+
+            <div class="divider"></div>
+
+            <!-- Schedule -->
+            <div>
+              <h3 class="font-semibold mb-4">Schedule</h3>
+
+              <div class="grid md:grid-cols-2 gap-4">
+                <div>
+                  <label class="label" for="departure_time"><span class="label-text">Departure Time</span></label>
+
+                  <input type="text" id="departure_time" name="departure_time" class="input input-bordered w-full" value="{{ object.departure_time|date:'Y-m-d H:i' }}" required />
+                </div>
+
+                <div>
+                  <label class="label" for="expected_arrival_time"><span class="label-text">Expected Arrival</span></label>
+
+                  <input type="text" id="expected_arrival_time" name="expected_arrival_time" class="input input-bordered w-full" value="{{ object.expected_arrival_time|date:'Y-m-d H:i' }}" required />
+                </div>
+              </div>
+            </div>
+
+            <div class="divider"></div>
+
+            <!-- Trip Details -->
+            <div>
+              <h3 class="font-semibold mb-4">Trip Details</h3>
+
+              <div class="grid md:grid-cols-2 gap-4">
+                <div>
+                  <label class="label" for="price"><span class="label-text">Price</span></label>
+
+                  <input type="number" id="price" name="price" value="{{ form.price.value|default:'0' }}" placeholder="Amount per person" class="input input-bordered w-full" required />
+                </div>
+
+                <div>
+                  <label class="label" for="slots_available"><span class="label-text">Available Seats</span></label>
+
+                  <input type="number" id="slots_available" name="slots_available" value="{{ form.slots_available.value|default:'3' }}" class="input input-bordered w-full" required />
+                </div>
+              </div>
+
+              <div class="mt-4">
+                <label class="label" for="duration"><span class="label-text">Duration</span></label>
+
+                <div class="flex gap-2">
+                  <input type="number" min="1" class="input input-bordered w-24" name="duration_value" id="duration" value="{{ form.duration_value.value|default:'' }}" />
+
+                  <select class="select select-bordered" name="duration_unit" value="{{ form.duration_unit.value|default:'' }}">
+                    <option value="days">Days</option>
+                    <option value="weeks">Weeks</option>
+                    <option value="months">Months</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="mt-4">
+                <label class="label" for="input-tags"><span class="label-text">Tags</span></label>
+
+                <input id="input-tags"
+                  autocomplete="off"
+                  placeholder="How cool is this?"
+                  name="tag"
+                  type="text"
+                  value="{% for tag in object.tag.all %}
+                    {{ tag.name }}{% if not forloop.last %}, {% endif %}
+                  {% endfor %}"
+                  placeholder="Add tags" />
+              </div>
+
+              <div class="mt-4">
+                <label class="label" for="description"><span class="label-text">Description</span></label>
+
+                <textarea name="description" id="description" class="textarea textarea-bordered w-full h-32" placeholder="Tell passengers about this trip...">{{ form.description.value|default:'' }}</textarea>
+              </div>
+            </div>
+
+            <div class="divider"></div>
+
+            <div class="flex justify-end gap-3">
+              {% if trip %}
+                <a href="{% url 'trip_detail' trip.pk %}" class="btn btn-ghost">Cancel</a>
+              {% else %}
+                <a href="{% url 'trip_list' %}" class="btn btn-ghost">Cancel</a>
+              {% endif %}
+
+              <button type="submit" class="btn bg-(--blue) text-white border-0 hover:bg-(--blue)">
+                {% if trip %}
+                  Update Trip
+                {% else %}
+                  Create Trip
+                {% endif %}
+              </button>
+            </div>
+          </form>
         </div>
-
+      </div>
     </div>
-</div>
+  </div>
 
-<script>
-document.querySelectorAll('.address-auto').forEach(el => {
-    new TomSelect(el,{
-    maxItems: 1,
-    create: true,
-	valueField: "addr",
-    labelField: "addr",
-    searchField: "addr",
-    hideSelected: true,
-    clearAfterSelect: true,
-
-
-    load: function(query, callback) {
-        fetch(`{% url 'autopopulate' %}?query=${encodeURIComponent(query)}`)
-            .then(response => response.json())
-            .then(data => {
-                console.log(data.results);
-                callback(data.results);
-            });
-    },
-
-    onItemAdd: function(value) {
-        const selectedOption = this.options[value];
-        if (selectedOption) {
-            const city = selectedOption.city || value;
-            console.log("Selected city:", city);
-            if (this.input.id === "from_address") {
-                document.getElementById("origin").value = city;
-            } else if (this.input.id === "to_address") {
-                document.getElementById("destination").value = city;
+  <script>
+    document.querySelectorAll('.address-auto').forEach((el) => {
+      new TomSelect(el, {
+        maxItems: 1,
+        create: true,
+        valueField: 'addr',
+        labelField: 'addr',
+        searchField: 'addr',
+        hideSelected: true,
+        clearAfterSelect: true,
+    
+        load: function (query, callback) {
+          fetch(`{% url 'autopopulate' %}?query=${encodeURIComponent(query)}`)
+            .then((response) => response.json())
+            .then((data) => {
+              console.log(data.results)
+              callback(data.results)
+            })
+        },
+    
+        onItemAdd: function (value) {
+          const selectedOption = this.options[value]
+          if (selectedOption) {
+            const city = selectedOption.city || value
+            console.log('Selected city:', city)
+            if (this.input.id === 'from_address') {
+              document.getElementById('origin').value = city
+            } else if (this.input.id === 'to_address') {
+              document.getElementById('destination').value = city
             }
-
+          }
         }
-    }
-
-
-
-});
-
-});
-
-   new TomSelect("#input-tags", {
-        persist: false,
-        createOnBlur: true,
-        create: true
-    });
-
-
-
-  
-</script>
+      })
+    })
+    
+    new TomSelect('#input-tags', {
+      persist: false,
+      createOnBlur: true,
+      create: true
+    })
+  </script>
 {% endblock %}

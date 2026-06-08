@@ -1,95 +1,58 @@
-{% extends "rides/base.html" %}
+{% extends 'rides/base.html' %}
 
 {% block content %}
-
-<div class="max-w-4xl mx-auto px-4 py-8">
-
+  <div class="max-w-4xl mx-auto px-4 py-8">
     <div class="mb-6">
-        <h1 class="text-3xl font-bold">
-            Inbox
-        </h1>
+      <h1 class="text-3xl font-bold">Inbox</h1>
 
-        <p class="text-base-content/60">
-            Your active trip conversations
-        </p>
+      <p class="text-base-content/60">Your active trip conversations</p>
     </div>
 
     <div class="bg-(--card) border border-(--blue-border) rounded-lg shadow-sm">
+      {% for membership in joined_trips %}
+        <a href="{% url 'trip_chat' membership.trip.pk %}" class="flex items-center gap-4 p-4 hover:bg-base-200 transition border-b border-base-200 last:border-b-0">
+          <!-- Trip Info -->
+          <div class="flex-1 min-w-0 border-(--blue-border) rounded-lg p-3">
+            <div class="flex justify-between items-center gap-2">
+              <h2 class="font-semibold">
+                {{ membership.trip.origin }}
+                →
+                {{ membership.trip.destination }}
+              </h2>
 
-        {% for membership in joined_trips %}
-
-        <a
-            href="{% url 'trip_chat' membership.trip.pk %}"
-            class="flex items-center gap-4 p-4 hover:bg-base-200 transition border-b border-base-200 last:border-b-0">
-
-          
-
-            <!-- Trip Info -->
-            <div class="flex-1 min-w-0 border-(--blue-border) rounded-lg p-3">
-
-                <div class="flex justify-between items-center gap-2">
-
-                    <h2 class="font-semibold">
-                        {{ membership.trip.origin }}
-                        →
-                        {{ membership.trip.destination }}
-                    </h2>
-
-                    <span class="text-xs opacity-60 whitespace-nowrap">
-                        {{ membership.trip.departure_time|date:"M d" }}
-                    </span>
-
-                </div>
-
-                <div class="flex items-center gap-2 mt-1">
-
-                    <span class="text-sm opacity-70">
-                        Organizer:
-                        {{ membership.trip.organizer.username }}
-                    </span>
-
-                    <div class="badge badge-ghost badge-sm">
-                        {{ membership.trip.get_accepted_members.count }}
-                    </div>
-
-                </div>
-
+              <span class="text-xs opacity-60 whitespace-nowrap">{{ membership.trip.departure_time|date:'M d' }}</span>
             </div>
 
-            <!-- Arrow -->
-            <div class="text-base-content/40 text-lg">
-<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
-  <path stroke-linecap="round" stroke-linejoin="round" d="M17.25 8.25 21 12m0 0-3.75 3.75M21 12H3" />
-</svg>
-            </div>
+            <div class="flex items-center gap-2 mt-1">
+              <span class="text-sm opacity-70">
+                Organizer:
+                {{ membership.trip.organizer.username }}
+              </span>
 
+              <div class="badge badge-ghost badge-sm">{{ membership.trip.get_accepted_members.count }}</div>
+            </div>
+          </div>
+
+          <!-- Arrow -->
+          <div class="text-base-content/40 text-lg">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M17.25 8.25 21 12m0 0-3.75 3.75M21 12H3" />
+            </svg>
+          </div>
         </a>
-
-        {% empty %}
-
+      {% empty %}
         <div class="p-12 text-center">
+          <div class="text-5xl mb-3">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 12.76c0 1.6 1.123 2.994 2.707 3.227 1.068.157 2.148.279 3.238.364.466.037.893.281 1.153.671L12 21l2.652-3.978c.26-.39.687-.634 1.153-.67 1.09-.086 2.17-.208 3.238-.365 1.584-.233 2.707-1.626 2.707-3.228V6.741c0-1.602-1.123-2.995-2.707-3.228A48.394 48.394 0 0 0 12 3c-2.392 0-4.744.175-7.043.513C3.373 3.746 2.25 5.14 2.25 6.741v6.018Z" />
+            </svg>
+          </div>
 
-            <div class="text-5xl mb-3">
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
-  <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 12.76c0 1.6 1.123 2.994 2.707 3.227 1.068.157 2.148.279 3.238.364.466.037.893.281 1.153.671L12 21l2.652-3.978c.26-.39.687-.634 1.153-.67 1.09-.086 2.17-.208 3.238-.365 1.584-.233 2.707-1.626 2.707-3.228V6.741c0-1.602-1.123-2.995-2.707-3.228A48.394 48.394 0 0 0 12 3c-2.392 0-4.744.175-7.043.513C3.373 3.746 2.25 5.14 2.25 6.741v6.018Z" />
-</svg>
+          <h3 class="font-semibold text-lg">No conversations yet</h3>
 
-            </div>
-
-            <h3 class="font-semibold text-lg">
-                No conversations yet
-            </h3>
-
-            <p class="text-base-content/60 mt-1">
-                Join a trip to start chatting.
-            </p>
-
+          <p class="text-base-content/60 mt-1">Join a trip to start chatting.</p>
         </div>
-
-        {% endfor %}
-
+      {% endfor %}
     </div>
-
-</div>
-
+  </div>
 {% endblock %}

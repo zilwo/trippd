@@ -133,7 +133,7 @@ class TripListView(ListView):
     model = Trip
     template_name = "rides/trip_list.html"
     context_object_name = "trips"
-    paginate_by = 3
+    paginate_by = 3    
 
     def get_queryset(self):
         queryset = super().get_queryset()

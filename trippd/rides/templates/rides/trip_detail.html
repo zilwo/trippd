@@ -1,449 +1,389 @@
-
 {% extends 'rides/base.html' %}
 {% load static %}
 
 {% block style %}
-<style>
-.city-name  { font-size: 20px; font-weight: 800; color: var(--white); line-height: 1; }
-.city-sub   { font-size: 12px; color: var(--muted); margin-top: 3px; font-weight: 500; }
-.addr-line  { font-size: 12px; color: var(--muted); margin-top: 5px; display: flex; align-items: flex-start; gap: 5px; }
-.dot-top    { width: 12px; height: 12px; border-radius: 50%; background: var(--blue); flex-shrink: 0; }
-.dot-stem   { width: 2px; height: 98px; background: linear-gradient(var(--blue), var(--muted2)); }
-.dot-bottom { width: 12px; height: 12px; border-radius: 50%; border: 2px solid var(--blue); background: transparent; flex-shrink: 0; }
-
-.detail-card {
-  background: var(--card);
-  border: 1.5px solid var(--blue-border);
-  border-radius: 20px;
-  padding: 24px;
-}
-.section-label {
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: .1em;
-  text-transform: uppercase;
-  color: var(--muted);
-  margin-bottom: 14px;
-}
-.meta-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  gap: 12px;
-  padding: 12px 0;
-  border-bottom: 1px solid var(--blue-border);
-  font-size: 14px;
-  flex-wrap: wrap;
-}
-
-.meta-row:last-child {
-  border-bottom: none;
-}
-
-.meta-key {
-  color: var(--muted);
-  font-weight: 500;
-}
-
-.meta-val {
-  font-weight: 700;
-  color: var(--text);
-  text-align: right;
-  word-break: break-word;
-  max-width: 60%;
-}
-
-</style>
+  <style>
+    .city-name {
+      font-size: 20px;
+      font-weight: 800;
+      color: var(--white);
+      line-height: 1;
+    }
+    .city-sub {
+      font-size: 12px;
+      color: var(--muted);
+      margin-top: 3px;
+      font-weight: 500;
+    }
+    .addr-line {
+      font-size: 12px;
+      color: var(--muted);
+      margin-top: 5px;
+      display: flex;
+      align-items: flex-start;
+      gap: 5px;
+    }
+    .dot-top {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background: var(--blue);
+      flex-shrink: 0;
+    }
+    .dot-stem {
+      width: 2px;
+      height: 98px;
+      background: linear-gradient(var(--blue), var(--muted2));
+    }
+    .dot-bottom {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      border: 2px solid var(--blue);
+      background: transparent;
+      flex-shrink: 0;
+    }
+    
+    .detail-card {
+      background: var(--card);
+      border: 1.5px solid var(--blue-border);
+      border-radius: 20px;
+      padding: 24px;
+    }
+    .section-label {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 14px;
+    }
+    .meta-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 12px;
+      padding: 12px 0;
+      border-bottom: 1px solid var(--blue-border);
+      font-size: 14px;
+      flex-wrap: wrap;
+    }
+    
+    .meta-row:last-child {
+      border-bottom: none;
+    }
+    
+    .meta-key {
+      color: var(--muted);
+      font-weight: 500;
+    }
+    
+    .meta-val {
+      font-weight: 700;
+      color: var(--text);
+      text-align: right;
+      word-break: break-word;
+      max-width: 60%;
+    }
+  </style>
 {% endblock %}
 
-
 {% block content %}
+  <div class="max-w-4xl mx-auto px-4 py-10 flex flex-col gap-6">
+    <!-- BACK -->
+    <div class="options-settings flex items-center justify-between">
+      <a href="{% url 'trip_list' %}" class="btn btn-ghost btn-sm w-fit gap-1 -ml-2 hover:bg-inherit outline-none border-0" style="color:var(--muted);">← Back to trips</a>
+      {% if user == trip.organizer %}
+        <details class="dropdown dropdown-end">
+          <summary class="btn btn-ghost btn-sm btn-circle">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M8.625 12a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm0 0H8.25m4.125 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm0 0H12m4.125 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm0 0h-.375M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+            </svg>
+          </summary>
 
+          <ul class="menu dropdown-content bg-base-100 rounded-box z-10 w-40 p-2 shadow">
+            <li>
+              <a href="{% url 'edit_trip' trip.pk %}">Edit Trip</a>
+            </li>
 
+            <li>
+              <button onclick="delete_trip_modal.showModal()">Delete Trip</button>
+            </li>
+          </ul>
+        </details>
+      {% endif %}
+    </div>
 
-<div class="max-w-4xl mx-auto px-4 py-10 flex flex-col gap-6">
-
-  <!-- BACK -->
-<div class="options-settings flex items-center justify-between">
-   <a href="{% url 'trip_list' %}" class="btn btn-ghost btn-sm w-fit gap-1 -ml-2 hover:bg-inherit outline-none border-0"
-     style="color:var(--muted);">
-    ← Back to trips
-  </a>
-  {% if user == trip.organizer %}
-
-  <details class="dropdown dropdown-end">
-    <summary class="btn btn-ghost btn-sm btn-circle">
-        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
-  <path stroke-linecap="round" stroke-linejoin="round" d="M8.625 12a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm0 0H8.25m4.125 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm0 0H12m4.125 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm0 0h-.375M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
-</svg>
-
-    </summary>
-
-    <ul class="menu dropdown-content bg-base-100 rounded-box z-10 w-40 p-2 shadow">
-        <li>
-            <a href="{% url 'edit_trip' trip.pk %}">
-                Edit Trip
-            </a>
-        </li>
-
-        <li>
-            <button onclick="delete_trip_modal.showModal()">
-                Delete Trip
-            </button>
-        </li>
-    </ul>
-</details>
-  {% endif %}
-
-  
-
-
-
-</div>
- 
-
-  
-
-  <!-- ── ROUTE HERO ── -->
-  <div class="detail-card">
-    <div class="flex items-start gap-6 flex-wrap justify-between">
-
-      <!-- Route visual -->
-<div class="flex items-start gap-4 flex-1 min-w-0">
+    <!-- ── ROUTE HERO ── -->
+    <div class="detail-card">
+      <div class="flex items-start gap-6 flex-wrap justify-between">
+        <!-- Route visual -->
+        <div class="flex items-start gap-4 flex-1 min-w-0">
           <div class="flex flex-col items-center mt-1">
-          <div class="dot-top"></div>
-          <div class="dot-stem"></div>
-          <div class="dot-bottom"></div>
-        </div>
-        <div class="flex flex-col gap-5">
+            <div class="dot-top"></div>
+            <div class="dot-stem"></div>
+            <div class="dot-bottom"></div>
+          </div>
+          <div class="flex flex-col gap-5">
+            <!-- Origin -->
+            <div>
+              <div class="city-sub">Departure · {{ trip.departure_time|date:'g:i A' }}</div>
+              <div class="city-name">{{ trip.origin }}</div>
+              {% if trip.from_address != 'Undecided' %}
+                <div class="addr-line">
+                  <span>
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-4">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M15 10.5a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1 1 15 0Z" />
+                    </svg>
+                  </span>
+                  <span>{{ trip.from_address }}</span>
+                </div>
+              {% endif %}
+            </div>
 
-          <!-- Origin -->
+            <!-- Destination -->
+            <div>
+              <div class="city-sub">Arrival · {{ trip.expected_arrival_time|date:'g:i A' }}</div>
+              <div class="city-name">{{ trip.destination }}</div>
+              {% if trip.to_address != 'Undecided' %}
+                <div class="addr-line">
+                  <span>
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-4">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M15 10.5a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1 1 15 0Z" />
+                    </svg>
+                  </span>
+                  <span>{{ trip.to_address }}</span>
+                </div>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+
+        <!-- Date + duration + price -->
+        <div class="flex flex-col gap-3 text-right">
           <div>
-            <div class="city-sub">Departure · {{ trip.departure_time|date:"g:i A" }}</div>
-            <div class="city-name">{{ trip.origin }}</div>
-            {% if trip.from_address != "Undecided" %}
-              <div class="addr-line">
-                <span ><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-4">
-  <path stroke-linecap="round" stroke-linejoin="round" d="M15 10.5a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
-  <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1 1 15 0Z" />
-</svg>
-</span>
-                <span>{{ trip.from_address }}</span>
-              </div>
-            {% endif %}
+            <div style="font-size:12px;color:var(--muted);font-weight:500;">Date</div>
+            <div style="font-size:15px;font-weight:800;color:var(--white);">{{ trip.departure_time|date:'D, d M Y' }}</div>
           </div>
-
-          <!-- Destination -->
-          <div>
-            <div class="city-sub">Arrival · {{ trip.expected_arrival_time|date:"g:i A" }}</div>
-            <div class="city-name">{{ trip.destination }}</div>
-            {% if trip.to_address != "Undecided" %}
-              <div class="addr-line">
-                <span><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-4">
-  <path stroke-linecap="round" stroke-linejoin="round" d="M15 10.5a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
-  <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1 1 15 0Z" />
-</svg>
-</span>
-                <span>{{ trip.to_address }}</span>
-              </div>
-            {% endif %}
-          </div>
-
-        </div>
-
-    
-      </div>
-          
-
-      <!-- Date + duration + price -->
-      <div class="flex flex-col gap-3 text-right">
-        <div>
-          <div style="font-size:12px;color:var(--muted);font-weight:500;">Date</div>
-          <div style="font-size:15px;font-weight:800;color:var(--white);">
-            {{ trip.departure_time|date:"D, d M Y" }}
-          </div>
-        </div>
-        {% if trip.duration_value %}
-        <div>
-          <div style="font-size:12px;color:var(--muted);font-weight:500;">Duration</div>
-          <span class="badge badge-soft bg-(--blue) border-0">{{ trip.duration_value }} {{ trip.duration_unit }}</span>
-        </div>
-
-        {% else %}
-         <div>
-          <div style="font-size:12px;color:var(--muted);font-weight:500;">Duration</div>
-          <span class="badge badge-soft bg-(--blue) border-0">N/A</span>
-        </div>
-        {% endif %}
-        <div>
-          <div style="font-size:12px;color:var(--muted);font-weight:500;">Per person</div>
-          <div class="nun" style="font-size:30px;font-weight:900;color:var(--white);">₹{{ trip.price }}</div>
-        </div>
-      </div>
-
-    </div>
-
-    <div class="trip-description p-4">
-          {% if trip.description %}
-            <div style="font-size:14px;color:var(--text);">
-              {{ trip.description }}
+          {% if trip.duration_value %}
+            <div>
+              <div style="font-size:12px;color:var(--muted);font-weight:500;">Duration</div>
+              <span class="badge badge-soft bg-(--blue) border-0">{{ trip.duration_value }} {{ trip.duration_unit }}</span>
             </div>
           {% else %}
-            <div style="font-size:14px;color:var(--muted);font-style:italic;">
-              No description provided.
+            <div>
+              <div style="font-size:12px;color:var(--muted);font-weight:500;">Duration</div>
+              <span class="badge badge-soft bg-(--blue) border-0">N/A</span>
             </div>
-          {% endif %}
-
-        </div>
-
-    <!-- Tags -->
-    {% if trip.tag.all %}
-    <div class="flex flex-wrap gap-2 mt-5 pt-5" style="border-top:1px solid var(--blue-border);">
-      {% for tag in trip.tag.all %}
-        <span class="badge badge-outline">{{ tag.name }}</span>
-      {% endfor %}
-    </div>
-    {% endif %}
-  </div>
-
-
-  <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-
-    <!-- ── LEFT col ── -->
-    <div class="md:col-span-2 flex flex-col gap-6">
-
-      <!-- Trip details -->
-      <div class="detail-card">
-        <div class="section-label">Trip details</div>
-        <div>
-        
-          <div class="meta-row">
-            <span class="meta-key">Starting Address</span>
-            <span class="meta-val">{{ trip.from_address }}</span>
-          </div>
-        
-          <div class="meta-row">
-            <span class="meta-key">Drop address</span>
-            <span class="meta-val">{{ trip.to_address }}</span>
-          </div>
-          <div class="meta-row">
-            <span class="meta-key">Departure</span>
-            <span class="meta-val">{{ trip.departure_time|date:"g:i A, d M Y" }}</span>
-          </div>
-          <div class="meta-row">
-            <span class="meta-key">Arrival</span>
-            <span class="meta-val">{{ trip.expected_arrival_time|date:"g:i A, d M Y" }}</span>
-          </div>
-          <div class="meta-row">
-            <span class="meta-key">Duration</span>
-            <span class="meta-val">{{ trip.duration_value }} {{ trip.duration_unit }}</span>
-          </div>
-          <div class="meta-row">
-            <span class="meta-key">Seats available</span>
-            <span class="meta-val">{{ trip.slots_available }}</span>
-          </div>
-          <div class="meta-row">
-            <span class="meta-key">Members joined</span>
-            <span class="meta-val">{{ trip.get_accepted_members.count }}</span>
-          </div>
-        </div>
-
-        <!-- Seat progress -->
-        <div class="mt-4">
-          <div style="font-size:12px;color:var(--muted);margin-bottom:6px;font-weight:600;">
-            {{ trip.get_accepted_members.count }} of {{ trip.slots_available }} seats filled
-          </div>
-          <progress class="progress bg-(--blue-dim) w-full"
-            value="{{ trip.get_accepted_members.count }}"
-            max="{{ trip.slots_available }}">
-          </progress>
-        </div>
-      </div>
-
-      <!-- Members (from TripMembership) -->
-      <div class="detail-card">
-        <div class="section-label">Trip mates</div>
-
-        {% with memberships=trip.memberships.all %}
-        {% if memberships %}
-          <div class="flex flex-col gap-3">
-            {% for m in memberships %}
-              {% if m.status == 'accepted' %}
-            <div class="flex items-center justify-between gap-3">
-              <div class="flex items-center gap-3">
-                {% if m.user.profile.profile_picture %}
-                  <div class="avatar">
-                    <div class="w-9 rounded-full">
-                      <img src="{{ m.user.profile.profile_picture.url }}" alt=""/>
-                    </div>
-                  </div>
-                {% else %}
-                  <div class="avatar">
-                    <div class="w-9 rounded-full">
-                      <img src="https://ui-avatars.com/api/?name={{ m.user.username }}" alt="Default Profile"/>
-                    </div>
-                  </div>
-                
-                {% endif %}
-                <div>
-                  <div style="font-size:14px;font-weight:700;color:var(--white);">
-                    {% if m.user.first_name and m.user.last_name %}
-                     {{ m.user.first_name }} {{ m.user.last_name }}
-                    {% else %}
-                     {{ m.user.username }}
-                    {% endif %}
-                  </div>
-                  <div style="font-size:11px;color:var(--muted);">
-                    Joined {{ m.joined_at|date:"d M Y" }}
-                  </div>
-                </div>
-              </div>
-              <!-- DaisyUI badge for membership status -->
-              <span class="badge status-{{ m.status }} btn bg-(--blue)" style="border:none;font-size:11px;font-weight:700;text-transform:capitalize;">
-                {{ m.get_status_display }}
-              </span>
-            </div>
-              {% endif %}
-            {% endfor %}
-          </div>
-        {% else %}
-          <p style="font-size:14px;color:var(--muted);">No one has joined yet — be the first!</p>
-        {% endif %}
-        {% endwith %}
-      </div>
-
-    </div>
-
-    <!-- ── RIGHT col ── -->
-    <div class="flex flex-col gap-6">
-
-      <!-- Organiser -->
-      <div class="detail-card">
-        <div class="section-label">Organiser</div>
-        <div class="flex items-center gap-3 mb-4">
-          {% if trip.organizer.profile.profile_picture %}
-            <div class="avatar">
-              <div class="w-12 rounded-full">
-                <img src="{{ trip.organizer.profile.profile_picture.url }}" alt=""/>
-              </div>
-            </div>
-          {% else %}
-            <div class="avatar">
-              <div class="w-12 rounded-full">
-                <img src="https://ui-avatars.com/api/?name={{ trip.organizer.username }}" alt="Default Profile"/>
-                </div>
-            </div>
-           
           {% endif %}
           <div>
-            {% if trip.organizer.first_name and trip.organizer.last_name %}
-<div style="font-size:15px;font-weight:800;color:var(--white);">
-              {{ trip.organizer.first_name }} {{ trip.organizer.last_name }}
-            </div>
-                        {% else %}
-<div style="font-size:15px;font-weight:800;color:var(--white);">
-              {{ trip.organizer.username }}
-            </div>
-            {% endif %}
-            
-            <div style="font-size:12px;color:var(--muted);">
-              {% if trip.organizer.profile.rating %}
-                {{ trip.organizer.profile.rating }}★
-              {% else %}
-                No ratings yet
-              {% endif %}
-               · 
-                {{ trip.organizer.profile.trips_completed }} trips
-              
-            </div>
+            <div style="font-size:12px;color:var(--muted);font-weight:500;">Per person</div>
+            <div class="nun" style="font-size:30px;font-weight:900;color:var(--white);">₹{{ trip.price }}</div>
           </div>
         </div>
-        <button class="btn btn-outline  w-full hover:bg-(--card2) text-(--black)" style="border-radius:10px;">
-          Message organiser
-        </button>
       </div>
 
-      <!-- Join action -->
-      <div class="detail-card text-center">
-        <div class="nun" style="font-size:32px;font-weight:900;color:var(--white);">
-          ₹{{ trip.price }}
+      <div class="trip-description p-4">
+        {% if trip.description %}
+          <div style="font-size:14px;color:var(--text);">{{ trip.description }}</div>
+        {% else %}
+          <div style="font-size:14px;color:var(--muted);font-style:italic;">No description provided.</div>
+        {% endif %}
+      </div>
+
+      <!-- Tags -->
+      {% if trip.tag.all %}
+        <div class="flex flex-wrap gap-2 mt-5 pt-5" style="border-top:1px solid var(--blue-border);">
+          {% for tag in trip.tag.all %}
+            <span class="badge badge-outline">{{ tag.name }}</span>
+          {% endfor %}
         </div>
-        <div style="font-size:12px;color:var(--muted);margin-bottom:16px;">per person</div>
+      {% endif %}
+    </div>
 
-        {% if trip.slots_available > 0 %}
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <!-- ── LEFT col ── -->
+      <div class="md:col-span-2 flex flex-col gap-6">
+        <!-- Trip details -->
+        <div class="detail-card">
+          <div class="section-label">Trip details</div>
+          <div>
+            <div class="meta-row">
+              <span class="meta-key">Starting Address</span>
+              <span class="meta-val">{{ trip.from_address }}</span>
+            </div>
 
-          
-          {% if not is_member %}
+            <div class="meta-row">
+              <span class="meta-key">Drop address</span>
+              <span class="meta-val">{{ trip.to_address }}</span>
+            </div>
+            <div class="meta-row">
+              <span class="meta-key">Departure</span>
+              <span class="meta-val">{{ trip.departure_time|date:'g:i A, d M Y' }}</span>
+            </div>
+            <div class="meta-row">
+              <span class="meta-key">Arrival</span>
+              <span class="meta-val">{{ trip.expected_arrival_time|date:'g:i A, d M Y' }}</span>
+            </div>
+            <div class="meta-row">
+              <span class="meta-key">Duration</span>
+              <span class="meta-val">{{ trip.duration_value }} {{ trip.duration_unit }}</span>
+            </div>
+            <div class="meta-row">
+              <span class="meta-key">Seats available</span>
+              <span class="meta-val">{{ trip.slots_available }}</span>
+            </div>
+            <div class="meta-row">
+              <span class="meta-key">Members joined</span>
+              <span class="meta-val">{{ trip.get_accepted_members.count }}</span>
+            </div>
+          </div>
 
-          <div class="trip_requests flex flex-col gap-3">
+          <!-- Seat progress -->
+          <div class="mt-4">
+            <div style="font-size:12px;color:var(--muted);margin-bottom:6px;font-weight:600;">{{ trip.get_accepted_members.count }} of {{ trip.slots_available }} seats filled</div>
+            <progress class="progress bg-(--blue-dim) w-full" value="{{ trip.get_accepted_members.count }}" max="{{ trip.slots_available }}"></progress>
+          </div>
+        </div>
 
+        <!-- Members (from TripMembership) -->
+        <div class="detail-card">
+          <div class="section-label">Trip mates</div>
 
-            <form method="post" action="{% url 'join_trip_request' trip.id %}">
-                {% csrf_token %}
-
-                <button type="submit" class="btn bg-(--blue) w-full hover:bg-(--blue-border) text-white" style="border-radius:12px;">
-                  Join Trip
-                </button>
-
-              
-            </form>
-              {% if is_pending %}
-              <form method="post" action="{% url 'cancel_trip_joining_request' trip.id %}">
-                {% csrf_token %}
-                 <button type="submit" class="btn bg-(--blue) w-full hover:bg-(--blue-border) text-white" style="border-radius:12px;">
-                  Cancel Request
-                </button>
-
-              </form>
-                  
-                {% endif %}
-
+          {% with memberships=trip.memberships.all %}
+            {% if memberships %}
+              <div class="flex flex-col gap-3">
+                {% for m in memberships %}
+                  {% if m.status == 'accepted' %}
+                    <div class="flex items-center justify-between gap-3">
+                      <div class="flex items-center gap-3">
+                        {% if m.user.profile.profile_picture %}
+                          <div class="avatar">
+                            <div class="w-9 rounded-full">
+                              <img src="{{ m.user.profile.profile_picture.url }}" alt="" />
+                            </div>
                           </div>
-
+                        {% else %}
+                          <div class="avatar">
+                            <div class="w-9 rounded-full">
+                              <img src="https://ui-avatars.com/api/?name={{ m.user.username }}" alt="Default Profile" />
+                            </div>
+                          </div>
+                        {% endif %}
+                        <div>
+                          <div style="font-size:14px;font-weight:700;color:var(--white);">
+                            {% if m.user.first_name and m.user.last_name %}
+                              {{ m.user.first_name }} {{ m.user.last_name }}
+                            {% else %}
+                              {{ m.user.username }}
+                            {% endif %}
+                          </div>
+                          <div style="font-size:11px;color:var(--muted);">Joined {{ m.joined_at|date:'d M Y' }}</div>
+                        </div>
+                      </div>
+                      <!-- DaisyUI badge for membership status -->
+                      <span class="badge status-{{ m.status }} btn bg-(--blue)" style="border:none;font-size:11px;font-weight:700;text-transform:capitalize;">{{ m.get_status_display }}</span>
+                    </div>
+                  {% endif %}
+                {% endfor %}
+              </div>
             {% else %}
-
-             <a href="{% url 'trip_chat' trip.pk %}" class="btn btn-outline w-full hover:bg-(--card2) text-(--black)" style="border-radius:12px;">
-                View Group
-            </a>
+              <p style="font-size:14px;color:var(--muted);">No one has joined yet — be the first!</p>
             {% endif %}
-          
-         
-        {% else %}
-          <button class="btn btn-disabled w-full hover:bg-(--card2) text-(--black)" style="border-radius:12px;">
-            Trip is full
-          </button>
-        {% endif %}
-
-        <div class="flex justify-center gap-2 mt-4 flex-wrap">
+          {% endwith %}
         </div>
       </div>
 
-    </div>
-  </div>
+      <!-- ── RIGHT col ── -->
+      <div class="flex flex-col gap-6">
+        <!-- Organiser -->
+        <div class="detail-card">
+          <div class="section-label">Organiser</div>
+          <div class="flex items-center gap-3 mb-4">
+            {% if trip.organizer.profile.profile_picture %}
+              <div class="avatar">
+                <div class="w-12 rounded-full">
+                  <img src="{{ trip.organizer.profile.profile_picture.url }}" alt="" />
+                </div>
+              </div>
+            {% else %}
+              <div class="avatar">
+                <div class="w-12 rounded-full">
+                  <img src="https://ui-avatars.com/api/?name={{ trip.organizer.username }}" alt="Default Profile" />
+                </div>
+              </div>
+            {% endif %}
+            <div>
+              {% if trip.organizer.first_name and trip.organizer.last_name %}
+                <div style="font-size:15px;font-weight:800;color:var(--white);">{{ trip.organizer.first_name }} {{ trip.organizer.last_name }}</div>
+              {% else %}
+                <div style="font-size:15px;font-weight:800;color:var(--white);">{{ trip.organizer.username }}</div>
+              {% endif %}
 
-  <dialog id="delete_trip_modal" class="modal">
-    <div class="modal-box">
+              <div style="font-size:12px;color:var(--muted);">
+                {% if trip.organizer.profile.rating %}
+                  {{ trip.organizer.profile.rating }}★
+                {% else %}
+                  No ratings yet
+                {% endif %}·
+                {{ trip.organizer.profile.trips_completed }} trips
+              </div>
+            </div>
+          </div>
+          <button class="btn btn-outline w-full hover:bg-(--card2) text-(--black)" style="border-radius:10px;">Message organiser</button>
+        </div>
+
+        <!-- Join action -->
+        <div class="detail-card text-center">
+          <div class="nun" style="font-size:32px;font-weight:900;color:var(--white);">₹{{ trip.price }}</div>
+          <div style="font-size:12px;color:var(--muted);margin-bottom:16px;">per person</div>
+
+          {% if trip.slots_available > 0 %}
+            {% if not is_member %}
+              <div class="trip_requests flex flex-col gap-3">
+                <form method="post" action="{% url 'join_trip_request' trip.id %}">
+                  {% csrf_token %}
+
+                  <button type="submit" class="btn bg-(--blue) w-full hover:bg-(--blue-border) text-white" style="border-radius:12px;">Join Trip</button>
+                </form>
+                {% if is_pending %}
+                  <form method="post" action="{% url 'cancel_trip_joining_request' trip.id %}">
+                    {% csrf_token %}
+                    <button type="submit" class="btn bg-(--blue) w-full hover:bg-(--blue-border) text-white" style="border-radius:12px;">Cancel Request</button>
+                  </form>
+                {% endif %}
+              </div>
+            {% else %}
+              <a href="{% url 'trip_chat' trip.pk %}" class="btn btn-outline w-full hover:bg-(--card2) text-(--black)" style="border-radius:12px;">View Group</a>
+            {% endif %}
+          {% else %}
+            <button class="btn btn-disabled w-full hover:bg-(--card2) text-(--black)" style="border-radius:12px;">Trip is full</button>
+          {% endif %}
+
+          <div class="flex justify-center gap-2 mt-4 flex-wrap"></div>
+        </div>
+      </div>
+    </div>
+
+    <dialog id="delete_trip_modal" class="modal">
+      <div class="modal-box">
         <h3 class="font-bold text-lg">Delete Trip?</h3>
 
-        <p class="py-4">
-            This action cannot be undone.
-        </p>
+        <p class="py-4">This action cannot be undone.</p>
 
         <div class="modal-action">
-            <form method="dialog">
-                <button class="btn">Cancel</button>
-            </form>
+          <form method="dialog">
+            <button class="btn">Cancel</button>
+          </form>
 
-            <form method="post"
-                  action="{% url 'delete_trip' trip.pk %}">
-                {% csrf_token %}
-                <button class="btn btn-error">
-                    Delete
-                </button>
-            </form>
+          <form method="post" action="{% url 'delete_trip' trip.pk %}">
+            {% csrf_token %}
+            <button class="btn btn-error">Delete</button>
+          </form>
         </div>
-    </div>
-</dialog>
-
-</div>
+      </div>
+    </dialog>
+  </div>
 {% endblock %}
