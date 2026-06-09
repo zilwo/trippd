@@ -2,14 +2,21 @@ from django.utils import timezone
 from django.http import JsonResponse
 from django.shortcuts import redirect, render
 from django.urls import reverse, reverse_lazy
-from django.views.generic import CreateView, DetailView, ListView, TemplateView, UpdateView
+from django.views.generic import (
+    CreateView,
+    DetailView,
+    ListView,
+    TemplateView,
+    UpdateView,
+)
 from django import forms
-from .models import Trip, TripMembership, TripMembership
+from .models import Trip, TripMembership, TripMembership, TripGroup, TripGroupMessage
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.http import require_POST
 from django.contrib.auth.mixins import LoginRequiredMixin
 from .services.autocomplete_location import autocomplete_location
+from django.http import HttpResponse
 
 # Create your views here.
 
@@ -49,30 +56,30 @@ class TripCreateForm(forms.ModelForm):
 
         if origin == destination:
             raise forms.ValidationError("Origin and destination cannot be the same.")
-        
+
         if from_address == to_address:
             raise forms.ValidationError("From and To addresses cannot be the same.")
 
         if price is not None and price < 0:
             raise forms.ValidationError("Price cannot be negative.")
-        
+
         if slots_available is not None and slots_available <= 0:
             raise forms.ValidationError("Slots available must be greater than zero.")
 
-        if departure_time and expected_arrival_time and expected_arrival_time <= departure_time:
+        if (
+            departure_time
+            and expected_arrival_time
+            and expected_arrival_time <= departure_time
+        ):
             raise forms.ValidationError(
                 "Expected arrival time must be after departure time."
             )
 
         if departure_time and departure_time <= timezone.now():
-            raise forms.ValidationError(
-                "Departure time must be in the future."
-            )
-        
+            raise forms.ValidationError("Departure time must be in the future.")
+
         if expected_arrival_time and expected_arrival_time <= timezone.now():
-            raise forms.ValidationError(
-                "Expected arrival time must be in the future."
-            )
+            raise forms.ValidationError("Expected arrival time must be in the future.")
 
         return cleaned_data
 
@@ -89,6 +96,7 @@ class CreateTripView(LoginRequiredMixin, CreateView):
         TripMembership.objects.create(
             trip=self.object, user=self.request.user, status="accepted"
         )
+        TripGroup.objects.create(trip=self.object, name=f"{self.object} Group")
         messages.success(self.request, "Trip created successfully!")
         return response
 
@@ -98,7 +106,7 @@ class CreateTripView(LoginRequiredMixin, CreateView):
 
     def get_success_url(self):
         return reverse("trip_detail", kwargs={"pk": self.object.pk})
-    
+
 
 def auto_populate(request):
     query = request.GET.get("query", "")
@@ -106,7 +114,7 @@ def auto_populate(request):
     if query:
         results = autocomplete_location(query)
         return JsonResponse({"results": results})
-    
+
     else:
         return JsonResponse({"results": []})
 
@@ -122,9 +130,13 @@ class TripDetailView(DetailView):
         user = self.request.user
 
         if user.is_authenticated:
-            context["is_member"] = TripMembership.objects.filter(trip=trip, user=user, status="accepted").exists()
+            context["is_member"] = TripMembership.objects.filter(
+                trip=trip, user=user, status="accepted"
+            ).exists()
             context["is_organizer"] = trip.organizer == user
-            context["is_pending"] = TripMembership.objects.filter(trip=trip, user=user, status="pending").exists()
+            context["is_pending"] = TripMembership.objects.filter(
+                trip=trip, user=user, status="pending"
+            ).exists()
 
         return context
 
@@ -133,7 +145,7 @@ class TripListView(ListView):
     model = Trip
     template_name = "rides/trip_list.html"
     context_object_name = "trips"
-    paginate_by = 3    
+    paginate_by = 3
 
     def get_queryset(self):
         queryset = super().get_queryset()
@@ -152,12 +164,12 @@ class TripListView(ListView):
             queryset = queryset.filter(slots_available__gte=passengers)
 
         return queryset.order_by("-created_at")
-    
 
     def get_template_names(self):
         if self.request.headers.get("HX-Request"):
             return ["rides/partials/trip_cards.html"]
         return super().get_template_names()
+
 
 @require_POST
 @login_required
@@ -189,6 +201,7 @@ def join_trip_request(request, pk):
 
     return redirect("trip_detail", pk=pk)
 
+
 @require_POST
 @login_required
 def cancel_trip_joining_request(request, pk):
@@ -214,19 +227,23 @@ class DashboardView(LoginRequiredMixin, TemplateView):
         context["organized_trips"] = Trip.objects.filter(
             organizer=self.request.user
         ).order_by("-departure_time")
-    
+
         context["joined_trips"] = (
             TripMembership.objects.filter(user=self.request.user)
             .exclude(trip__organizer=self.request.user)
             .select_related("trip")
             .order_by("-joined_at")
         )
-        context["pending_requests"] = TripMembership.objects.filter(
-            trip__organizer=self.request.user, status="pending"
-        ).select_related("user", "trip").order_by("-joined_at")
+        context["pending_requests"] = (
+            TripMembership.objects.filter(
+                trip__organizer=self.request.user, status="pending"
+            )
+            .select_related("user", "trip")
+            .order_by("-joined_at")
+        )
 
         return context
-    
+
 
 class EditTripView(LoginRequiredMixin, UpdateView):
     model = Trip
@@ -238,7 +255,8 @@ class EditTripView(LoginRequiredMixin, UpdateView):
 
     def get_success_url(self):
         return reverse("trip_detail", kwargs={"pk": self.object.pk})
- 
+
+
 @require_POST
 @login_required
 def delete_trip(request, pk):
@@ -251,6 +269,7 @@ def delete_trip(request, pk):
     messages.success(request, "Trip deleted successfully.")
     return redirect("home")
 
+
 @require_POST
 @login_required
 def accept_request(request, pk):
@@ -261,8 +280,15 @@ def accept_request(request, pk):
 
     membership.status = "accepted"
     membership.save()
-    messages.success(request, f"You have accepted {membership.user.username}'s request to join {membership.trip}.")
+    group = TripGroup.objects.get(trip=membership.trip)
+    group.activity = f"{membership.user.username} joined the trip."
+    group.save()
+    messages.success(
+        request,
+        f"You have accepted {membership.user.username}'s request to join {membership.trip}.",
+    )
     return redirect("trip_dashboard")
+
 
 @require_POST
 @login_required
@@ -274,15 +300,38 @@ def reject_request(request, pk):
 
     membership.status = "rejected"
     membership.save()
-    messages.success(request, f"You have rejected {membership.user.username}'s request to join {membership.trip}.")
+    messages.success(
+        request,
+        f"You have rejected {membership.user.username}'s request to join {membership.trip}.",
+    )
     return redirect("trip_dashboard")
 
 
-
 class ChatView(LoginRequiredMixin, DetailView):
-    model = Trip
+    model = TripGroup
     template_name = "rides/trip_chat.html"
-    context_object_name = "trip"
+    context_object_name = "tripgroup"
+
+    def get(self, request, *args, **kwargs):
+        self.object = self.get_object()
+        if request.headers.get("HX-Request"):
+            return render(request,"rides/partials/messages.html",context={"tripgroup":self.object})
+        
+        return super().get(request,*args,*kwargs)
+
+
+    def post(self, request, *args, **kwargs):
+
+        self.object = self.get_object()
+        body = request.POST.get("message-body")
+        if not body:
+            return HttpResponse("")
+        message = TripGroupMessage.objects.create(
+                sender=request.user, group=self.object, body=body
+            )
+        return render(
+            request, "rides/partials/message.html", context={"message": message}
+        )
 
 
 class InboxView(LoginRequiredMixin, TemplateView):

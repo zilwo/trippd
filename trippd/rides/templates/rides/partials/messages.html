@@ -1,0 +1,5 @@
+{% for message in tripgroup.chat_messages.all %}
+  {% include 'rides/partials/message.html' %}
+{% empty %}
+  <div class="h-full flex items-center justify-center opacity-60">No messages yet. Start the conversation.</div>
+{% endfor %}

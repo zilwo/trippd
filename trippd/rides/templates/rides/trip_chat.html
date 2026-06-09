@@ -1,82 +1,99 @@
 {% extends 'rides/base.html' %}
 
 {% block content %}
-  <div class="max-w-5xl mx-auto p-4">
+  <div class="max-w-6xl mx-auto p-4">
     <!-- Header -->
-
-    <div class="card bg-(--card) shadow-sm mb-4">
+    <div class="card bg-(--card) shadow-sm mb-6">
       <div class="card-body">
-        <div class="flex justify-between items-center">
+        <div class="flex flex-col md:flex-row md:justify-between md:items-center gap-4">
           <div>
-            <h1 class="text-xl font-bold">{{ trip.origin }} → {{ trip.destination }}</h1>
+            <h1 class="text-2xl font-bold">
+              {{ tripgroup.trip.origin }}
+              <span class="opacity-50 mx-2">→</span>
+              {{ tripgroup.trip.destination }}
+            </h1>
 
-            <p class="text-sm opacity-70">{{ trip.get_accepted_members.count }} members</p>
+            <p class="text-sm opacity-70 mt-1">{{ tripgroup.trip.get_accepted_members.count }} Members</p>
           </div>
 
-          <button class="btn bg-(--blue)" onclick="members_modal.showModal()">View Details</button>
+          <button class="btn btn-outline" onclick="members_modal.showModal()">View Members</button>
         </div>
       </div>
     </div>
 
     <!-- Tabs -->
-
-    <div role="tablist" class="tabs tabs-box w-full mb-6">
+    <div role="tablist" class="tabs tabs-box w-full">
+      <!-- CHAT TAB -->
       <input type="radio" name="trip_tabs" role="tab" class="tab" aria-label="Chat" checked />
 
-      <div role="tabpanel" class="tab-content bg-(--card) border-(--blue-border) rounded-box p-4 min-h-[70vh] flex flex-col">
-        <!-- Messages -->
+      <div role="tabpanel" class="tab-content bg-(--card) border border-(--blue-border) rounded-box overflow-hidden">
+        <div class="flex flex-col h-[70vh]">
+          <!-- Messages -->
+          <div class="flex-1 overflow-y-auto p-4 space-y-4" id="message-container" hx-get="{% url 'trip_chat' tripgroup.pk %}" hx-trigger="every 5s" hx-swap="innerHTML">
+            <div class="flex justify-center my-4">
+              <div class="badge badge-soft">{{ tripgroup.activity }}</div>
+            </div>
+            {% include 'rides/partials/messages.html' %}
+          </div>
 
-        <div class="flex-1 space-y-4">
-          <div class="chat chat-start"></div>
+          <!-- Composer -->
+          <div class="border-t border-(--blue-border) p-4">
+            <form method="post" class="flex gap-2" hx-post="{% url 'trip_chat' tripgroup.pk %}" hx-target="#message-container" hx-swap="beforeend scroll:bottom" hx-on::after-request="this.reset()">
+              {% csrf_token %}
 
-          <div class="chat chat-end"></div>
+              <input type="text" name="message-body" placeholder="Type a message..." class="input input-bordered flex-1" />
+
+              <button type="submit" class="btn bg-(--blue)">Send</button>
+            </form>
+          </div>
         </div>
-
-        <!-- Composer -->
-
-        <form class="join w-full mt-4">
-          <input type="text" class="input input-bordered join-item flex-1 outline-none border-0" placeholder="Type a message..." />
-
-          <button class="btn bg-(--blue)">Send</button>
-        </form>
       </div>
 
+      <!-- ANNOUNCEMENTS TAB -->
       <input type="radio" name="trip_tabs" role="tab" class="tab" aria-label="Announcements" />
 
-      <div role="tabpanel" class="tab-content bg-(--card) border-(--blue-border) rounded-box p-4"></div>
+      <div role="tabpanel" class="tab-content bg-(--card) border border-(--blue-border) rounded-box p-6 min-h-[70vh]">
+        <div class="text-center opacity-60">No announcements yet.</div>
+      </div>
 
+      <!-- POLLS TAB -->
       <input type="radio" name="trip_tabs" role="tab" class="tab" aria-label="Polls" />
 
-      <div role="tabpanel" class="tab-content bg-(--card) border-(--blue-border) rounded-box p-4"></div>
+      <div role="tabpanel" class="tab-content bg-(--card) border border-(--blue-border) rounded-box p-6 min-h-[70vh]">
+        <div class="text-center opacity-60">No polls yet.</div>
+      </div>
 
+      <!-- FILES TAB -->
       <input type="radio" name="trip_tabs" role="tab" class="tab" aria-label="Files" />
 
-      <div role="tabpanel" class="tab-content bg-(--card) border-(--blue-border) rounded-box p-4"></div>
+      <div role="tabpanel" class="tab-content bg-(--card) border border-(--blue-border) rounded-box p-6 min-h-[70vh]">
+        <div class="text-center opacity-60">No files uploaded yet.</div>
+      </div>
     </div>
   </div>
 
   <!-- Members Modal -->
-
   <dialog id="members_modal" class="modal">
     <div class="modal-box">
       <h3 class="font-bold text-lg mb-4">Trip Members</h3>
 
-      <div class="opacity-70">
-        {% for member in trip.get_accepted_members %}
-          <div class="flex items-center gap-3 mb-2">
+      <div class="space-y-3">
+        {% for member in tripgroup.trip.get_accepted_members %}
+          <div class="flex items-center gap-3">
             <div class="avatar">
-              <div class="w-8 rounded-full">
+              <div class="w-10 rounded-full">
                 {% if member.user.profile.profile_picture %}
-                  <img src="{{ member.user.profile.profile_picture.url }}" alt="Profile Picture" />
+                  <img src="{{ member.user.profile.profile_picture.url }}" alt="Profile" />
                 {% else %}
-                  <img src="https://ui-avatars.com/api/?name={{ member.user.username }}" alt="Default Profile" />
+                  <img src="https://ui-avatars.com/api/?name={{ member.user.username }}" alt="Profile" />
                 {% endif %}
               </div>
             </div>
-            {{ member.user.username }}
+
+            <span>{{ member.user.username }}</span>
           </div>
         {% empty %}
-          No members have joined this trip yet.
+          <p class="opacity-60">No members found.</p>
         {% endfor %}
       </div>
 
@@ -87,4 +104,11 @@
       </div>
     </div>
   </dialog>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const container = document.getElementById('message-container')
+      container.scrollTop = container.scrollHeight
+    })
+  </script>
 {% endblock %}
