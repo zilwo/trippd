@@ -1,5 +1,3 @@
-import re
-
 from django.shortcuts import redirect, render
 from django.contrib.auth.views import LoginView, LogoutView
 from django.urls import reverse_lazy
@@ -14,14 +12,17 @@ from django.contrib.auth.decorators import login_required
 class SignupForm(UserCreationForm):
     class Meta:
         model = User
-        fields = ("email","username", "password1", "password2")
+        fields = ("email", "username", "password1", "password2")
+
 
 class CustomLoginView(LoginView):
     template_name = "users/login.html"
     next_page = "home"
 
+
 class CustomLogoutView(LogoutView):
     next_page = "home"
+
 
 class SignUpView(CreateView):
     template_name = "users/signup.html"
@@ -31,7 +32,6 @@ class SignUpView(CreateView):
     def form_valid(self, form):
         user = form.save()
         print(f"New user created: {user.email}")
-        
 
         token = AccountActivationTokenGenerator().make_token(user)
         verification_link = self.request.build_absolute_uri(
@@ -65,9 +65,11 @@ def verify_account(request, pk, token):
         print("Invalid verification attempt for user:", user)
         return render(request, "users/activation_invalid.html")
 
+
 @login_required
 def profile(request):
     return render(request, "users/profile.html")
+
 
 @login_required
 def edit_profile(request):
@@ -79,11 +81,10 @@ def edit_profile(request):
         profile_picture = request.FILES.get("profile_picture")
 
         profile = request.user.profile
+
         request.user.first_name = first_name
         request.user.last_name = last_name
-        profile.last_name = last_name
 
-        print("name:", first_name, last_name,request.user.first_name, request.user.last_name)
         profile.bio = bio
         if profile_picture:
             profile.profile_picture = profile_picture
@@ -92,7 +93,7 @@ def edit_profile(request):
             profile.hobbies.set(tags)
         request.user.save()
         profile.save()
-        
+
         return redirect("profile")
 
     return render(request, "users/edit_profile.html")

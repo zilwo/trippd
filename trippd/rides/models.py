@@ -2,9 +2,6 @@ from django.db import models
 from users.models import User
 from taggit.managers import TaggableManager
 
-# Create your models here.
-
-
 class Trip(models.Model):
     organizer = models.ForeignKey(
         User, on_delete=models.CASCADE, related_name="organized_trips"
@@ -66,7 +63,6 @@ class TripMembership(models.Model):
 class TripGroup(models.Model):
     trip = models.OneToOneField(Trip, on_delete=models.CASCADE, primary_key=True)
     name = models.CharField(max_length=255)
-    activity = models.CharField(max_length=255, blank=True)
 
     def __str__(self):
         return self.name
@@ -79,10 +75,8 @@ class TripGroupMessage(models.Model):
     )
     body = models.TextField(max_length=500)
     send_at = models.DateTimeField(auto_now_add=True)
+    activity = models.CharField(max_length=255, blank=True)
+    is_system_message = models.BooleanField(default=False)
 
     def __str__(self):
         return f"Message by {self.sender.username} in {self.group.name}"
-    
-
-
-

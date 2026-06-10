@@ -4,6 +4,20 @@
 {% block style %}
   <link href="https://cdn.jsdelivr.net/npm/tom-select@2.6.1/dist/css/tom-select.css" rel="stylesheet" />
   <script src="https://cdn.jsdelivr.net/npm/tom-select@2.6.1/dist/js/tom-select.complete.min.js"></script>
+  <style>
+    .ts-wrapper {
+      width: 100%;
+    }
+    
+    .ts-control {
+      min-height: 40px; /* matches DaisyUI input height */
+      border-radius: 0.25rem !important;
+    }
+    
+    .ts-control input {
+      font-size: inherit;
+    }
+  </style>
 {% endblock %}
 
 {% block content %}
@@ -50,25 +64,25 @@
                 <div>
                   <label class="label" for="from_address"><span class="label-text">Pickup Address</span></label>
 
-                  <input id="from_address" name="from_address" class="address-auto" value="{{ form.from_address.value|default:'' }}" class="input input-bordered w-full" required />
+                  <input id="from_address" name="from_address" class="address-auto" value="{{ form.from_address.value|default:'' }}" required />
                 </div>
 
                 <div>
                   <label class="label" for="origin"><span class="label-text">Origin</span></label>
 
-                  <input type="text" name="origin" id="origin" value="{{ form.origin.value|default:'' }}" class="input input-bordered w-full" required />
+                  <input type="text" name="origin" id="origin" value="{{ form.origin.value|default:'' }}" class="input w-full" required />
                 </div>
 
                 <div>
                   <label class="label" for="to_address"><span class="label-text">Drop Address</span></label>
 
-                  <input id="to_address" name="to_address" class="address-auto" class="input input-bordered w-full" value="{{ form.to_address.value|default:'' }}" required />
+                  <input id="to_address" name="to_address" class="address-auto" value="{{ form.to_address.value|default:'' }}" required />
                 </div>
 
                 <div>
                   <label class="label" for="destination"><span class="label-text">Destination</span></label>
 
-                  <input type="text" name="destination" id="destination" class="input input-bordered w-full" value="{{ form.destination.value|default:'' }}" required />
+                  <input type="text" name="destination" id="destination" class="input w-full" value="{{ form.destination.value|default:'' }}" required />
                 </div>
               </div>
             </div>
@@ -133,7 +147,7 @@
 
                 <input id="input-tags"
                   autocomplete="off"
-                  placeholder="How cool is this?"
+                  placeholder="Add Tags for your trip"
                   name="tag"
                   type="text"
                   value="{% for tag in object.tag.all %}
@@ -177,6 +191,7 @@
       new TomSelect(el, {
         maxItems: 1,
         create: true,
+        delimiter: null,
         valueField: 'addr',
         labelField: 'addr',
         searchField: 'addr',
@@ -210,7 +225,8 @@
     new TomSelect('#input-tags', {
       persist: false,
       createOnBlur: true,
-      create: true
+      create: true,
+      plugins: ['remove_button']
     })
   </script>
 {% endblock %}

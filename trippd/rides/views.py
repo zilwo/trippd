@@ -75,7 +75,7 @@ class TripCreateForm(forms.ModelForm):
                 "Expected arrival time must be after departure time."
             )
 
-        if departure_time and departure_time <= timezone.now():
+        if departure_time and departure_time < timezone.now():
             raise forms.ValidationError("Departure time must be in the future.")
 
         if expected_arrival_time and expected_arrival_time <= timezone.now():
@@ -97,6 +97,13 @@ class CreateTripView(LoginRequiredMixin, CreateView):
             trip=self.object, user=self.request.user, status="accepted"
         )
         TripGroup.objects.create(trip=self.object, name=f"{self.object} Group")
+        TripGroupMessage.objects.create(
+            sender=self.request.user,
+            group=self.object.tripgroup,
+            activity=f"{self.request.user.username} created the trip.",
+            is_system_message=True,
+        )
+
         messages.success(self.request, "Trip created successfully!")
         return response
 
@@ -276,18 +283,23 @@ def accept_request(request, pk):
     membership = TripMembership.objects.get(pk=pk)
     if membership.trip.organizer != request.user:
         messages.error(request, "You are not authorized to accept this request.")
-        return redirect("trip_dashboard")
+        return HttpResponse(status=403)
 
     membership.status = "accepted"
     membership.save()
     group = TripGroup.objects.get(trip=membership.trip)
-    group.activity = f"{membership.user.username} joined the trip."
     group.save()
+    TripGroupMessage.objects.create(
+        sender=request.user,
+        group=group,
+        activity=f"{membership.user.username} has joined the trip.",
+        is_system_message=True,
+    )
     messages.success(
         request,
         f"You have accepted {membership.user.username}'s request to join {membership.trip}.",
     )
-    return redirect("trip_dashboard")
+    return HttpResponse(status=200)
 
 
 @require_POST
@@ -296,7 +308,7 @@ def reject_request(request, pk):
     membership = TripMembership.objects.get(pk=pk)
     if membership.trip.organizer != request.user:
         messages.error(request, "You are not authorized to reject this request.")
-        return redirect("trip_dashboard")
+        return HttpResponse(status=403)
 
     membership.status = "rejected"
     membership.save()
@@ -304,7 +316,7 @@ def reject_request(request, pk):
         request,
         f"You have rejected {membership.user.username}'s request to join {membership.trip}.",
     )
-    return redirect("trip_dashboard")
+    return HttpResponse(status=200)
 
 
 class ChatView(LoginRequiredMixin, DetailView):
@@ -315,10 +327,13 @@ class ChatView(LoginRequiredMixin, DetailView):
     def get(self, request, *args, **kwargs):
         self.object = self.get_object()
         if request.headers.get("HX-Request"):
-            return render(request,"rides/partials/messages.html",context={"tripgroup":self.object})
-        
-        return super().get(request,*args,*kwargs)
+            return render(
+                request,
+                "rides/partials/messages.html",
+                context={"tripgroup": self.object},
+            )
 
+        return super().get(request, *args, *kwargs)
 
     def post(self, request, *args, **kwargs):
 
@@ -327,8 +342,8 @@ class ChatView(LoginRequiredMixin, DetailView):
         if not body:
             return HttpResponse("")
         message = TripGroupMessage.objects.create(
-                sender=request.user, group=self.object, body=body
-            )
+            sender=request.user, group=self.object, body=body
+        )
         return render(
             request, "rides/partials/message.html", context={"message": message}
         )

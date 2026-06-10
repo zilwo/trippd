@@ -10,7 +10,7 @@
         <h2 class="text-xl font-bold mb-4">Trips Joined</h2>
 
         {% for membership in joined_trips %}
-          <div class="card bg-(--card) mb-3">
+          <div class="card bg-(--card) mb-3 hover:bg-(--card2)" onclick="window.location.href='{% url 'trip_detail' membership.trip.pk %}'" style="cursor: pointer;">
             <div class="card-body py-4">
               <div class="flex justify-between items-center">
                 <div>
@@ -38,7 +38,7 @@
         <h2 class="text-xl font-bold mb-4">Trips Organized</h2>
 
         {% for trip in organized_trips %}
-          <div class="card mb-3">
+          <div class="card mb-3 hover:bg-(--card2)" onclick="window.location.href='{% url 'trip_detail' trip.pk %}'" style="cursor: pointer;">
             <div class="card-body py-4">
               <div class="flex justify-between items-center">
                 <div>
@@ -66,7 +66,7 @@
         <h2 class="text-xl font-bold mb-4">Pending Join Requests</h2>
 
         {% for membership in pending_requests %}
-          <div class="card bg-(--card) mb-3">
+          <div class="card bg-(--card) mb-3" id="request-card-{{ membership.id }}">
             <div class="card-body py-4">
               <div class="flex justify-between items-center">
                 <div>
@@ -79,12 +79,12 @@
                 </div>
 
                 <div class="flex gap-2">
-                  <form method="post" action="{% url 'accept_request' membership.id %}">
+                  <form hx-post="{% url 'accept_request' membership.id %}" hx-target="#request-card-{{ membership.id }}" hx-swap="delete">
                     {% csrf_token %}
                     <button class="btn btn-success btn-sm">Accept</button>
                   </form>
 
-                  <form method="post" action="{% url 'reject_request' membership.id %}">
+                  <form hx-post="{% url 'reject_request' membership.id %}" hx-target="#request-card-{{ membership.id }}" hx-swap="delete">
                     {% csrf_token %}
                     <button class="btn btn-error btn-sm">Reject</button>
                   </form>

@@ -2,194 +2,106 @@
 {% load static %}
 {% load socialaccount %}
 
-
 {% block content %}
-
-{% if form.errors %}
-<div class="alert alert-error flex justify-between items-center">
-    <div>
+  {% if form.errors %}
+    <div class="alert alert-error flex justify-between items-center">
+      <div>
         {% for error in form.non_field_errors %}
-            <div>{{ error }}</div>
+          <div>{{ error }}</div>
         {% endfor %}
 
         {% for field in form %}
-            {% for error in field.errors %}
-                <div>{{ field.label }}: {{ error }}</div>
-            {% endfor %}
+          {% for error in field.errors %}
+            <div>{{ field.label }}: {{ error }}</div>
+          {% endfor %}
         {% endfor %}
+      </div>
+
+      <button type="button" onclick="this.parentElement.remove()" class="btn btn-ghost btn-xs">✕</button>
     </div>
+  {% endif %}
 
-    <button
-        type="button"
-        onclick="this.parentElement.remove()"
-        class="btn btn-ghost btn-xs">
-        ✕
-    </button>
-</div>
-{% endif %}
-
-<div class="min-h-screen bg-(--bg) p-6">
+  <div class="min-h-screen bg-(--bg) p-6">
     <div class="max-w-4xl mx-auto">
+      <div class="card bg-(--card) shadow-lg border border-(--blue-border)">
+        <div class="card-body">
+          <h2 class="card-title text-2xl mb-4">Edit Profile</h2>
 
-        <div class="card bg-(--card) shadow-lg border border-(--blue-border)">
-            <div class="card-body">
+          <form method="POST" enctype="multipart/form-data">
+            {% csrf_token %}
 
-                <h2 class="card-title text-2xl mb-4">
-                    Edit Profile
-                </h2>
+            <div class="flex flex-col md:flex-row gap-8">
+              <div class="flex flex-col items-center gap-4">
+                <div class="avatar">
+                  <div class="w-32 rounded-full ring ring-(--blue) ring-offset-2">
+                    {% if user.profile.profile_picture %}
+                      <img src="{{ user.profile.profile_picture.url }}" id="profile-preview" alt="Profile Picture" />
+                    {% else %}
+                      <img src="https://ui-avatars.com/api/?name={{ user.username }}" id="profile-preview" alt="Default Profile" />
+                    {% endif %}
+                  </div>
+                </div>
 
-                <form method="POST" enctype="multipart/form-data">
-                    {% csrf_token %}
+                <input type="file" name="profile_picture" class="file-input file-input-bordered w-full max-w-xs" onchange="document.getElementById('profile-preview').src = window.URL.createObjectURL(this.files[0])" />
+              </div>
 
-                    <div class="flex flex-col md:flex-row gap-8">
+              <div class="flex-1 space-y-4">
+                <div class="grid md:grid-cols-2 gap-4">
+                  <div>
+                    <label class="label"><span class="label-text">First Name</span></label>
 
-                        <div class="flex flex-col items-center gap-4">
+                    <input type="text" name="first_name" value="{{ user.first_name }}" class="input input-bordered w-full" />
+                  </div>
 
-                            <div class="avatar">
-                                <div class="w-32 rounded-full ring ring-(--blue) ring-offset-2">
-                                    {% if user.profile.profile_picture %}
-                                        <img src="{{ user.profile.profile_picture.url }}" id="profile-preview" alt="Profile Picture">
-                                    {% else %}
-                                        <img src="https://ui-avatars.com/api/?name={{user.username}}" id="profile-preview" alt="Default Profile">
-                                    {% endif %}
-                                </div>
-                            </div>
+                  <div>
+                    <label class="label"><span class="label-text">Last Name</span></label>
 
-                            <input
-                                type="file"
-                                name="profile_picture"
-                                class="file-input file-input-bordered w-full max-w-xs"
-                                onchange="document.getElementById('profile-preview').src = window.URL.createObjectURL(this.files[0])"
+                    <input type="text" name="last_name" value="{{ user.last_name }}" class="input input-bordered w-full" />
+                  </div>
+                </div>
 
-                                >
+                <div>
+                  <label class="label"><span class="label-text">Username</span></label>
 
-                        </div>
+                  <input type="text" name="username" value="{{ user.username }}" class="input input-bordered w-full" disabled />
+                </div>
 
-                        <div class="flex-1 space-y-4">
+                <div>
+                  <label class="label"><span class="label-text">Email</span></label>
 
-                            <div class="grid md:grid-cols-2 gap-4">
-
-                                <div>
-                                    <label class="label">
-                                        <span class="label-text">First Name</span>
-                                    </label>
-
-                                    <input
-                                        type="text"
-                                        name="first_name"
-                                        value="{{ user.first_name }}"
-                                        class="input input-bordered w-full">
-                                </div>
-
-                                <div>
-                                    <label class="label">
-                                        <span class="label-text">Last Name</span>
-                                    </label>
-
-                                    <input
-                                        type="text"
-                                        name="last_name"
-                                        value="{{ user.last_name }}"
-                                        class="input input-bordered w-full">
-                                </div>
-
-                            </div>
-
-                            <div>
-                                <label class="label">
-                                    <span class="label-text">Username</span>
-                                </label>
-
-                                <input
-                                    type="text"
-                                    name="username"
-                                    value="{{ user.username }}"
-                                    class="input input-bordered w-full">
-                            </div>
-
-                            <div>
-                                <label class="label">
-                                    <span class="label-text">Email</span>
-                                </label>
-
-                                <input
-                                    type="email"
-                                    value="{{ user.email }}"
-                                    class="input input-bordered w-full"
-                                    disabled>
-                            </div>
-
-                        </div>
-
-                    </div>
-
-                    <div class="divider"></div>
-
-                    <div class="mb-6">
-
-                        <label class="label">
-                            <span class="label-text">Bio</span>
-                        </label>
-
-                        <textarea
-                            name="bio"
-                            class="textarea textarea-bordered w-full h-32"
-                            placeholder="Tell other travelers about yourself...">{{ user.profile.bio }}</textarea>
-
-                    </div>
-
-                    <div class="mb-6">
-
-                        <label class="label">
-                            <span class="label-text">Hobbies</span>
-                        </label>
-
-                        <input
-                            type="text"
-                            name="hobbies"
-                            class="input input-bordered w-full"
-                            placeholder="Travel, Music, Gaming">
-
-                        <div class="flex flex-wrap gap-2 mt-3">
-
-                            {% for hobby in user.profile.hobbies.all %}
-                                <div class="badge badge-outline">
-                                    {{ hobby.name }}
-                                </div>
-                            {% endfor %}
-
-                        </div>
-
-                    </div>
-
-                    <div class="flex justify-end gap-3">
-
-                        <a href="{% url 'profile' %}"
-                           class="btn btn-ghost">
-                            Cancel
-                        </a>
-
-                        <button
-                            type="submit"
-                            class="btn bg-(--blue) text-white border-0 hover:bg-(--blue)">
-                            Save Changes
-                        </button>
-
-                        
-
-                    </div>
-
-                </form>
-
+                  <input type="email" value="{{ user.email }}" class="input input-bordered w-full" disabled />
+                </div>
+              </div>
             </div>
+
+            <div class="divider"></div>
+
+            <div class="mb-6">
+              <label class="label"><span class="label-text">Bio</span></label>
+
+              <textarea name="bio" class="textarea textarea-bordered w-full h-32" placeholder="Tell other travelers about yourself...">{{ user.profile.bio }}</textarea>
+            </div>
+
+            <div class="mb-6">
+              <label class="label"><span class="label-text">Hobbies</span></label>
+
+              <input type="text" name="hobbies" class="input input-bordered w-full" placeholder="Travel, Music, Gaming" />
+
+              <div class="flex flex-wrap gap-2 mt-3">
+                {% for hobby in user.profile.hobbies.all %}
+                  <div class="badge badge-outline">{{ hobby.name }}</div>
+                {% endfor %}
+              </div>
+            </div>
+
+            <div class="flex justify-end gap-3">
+              <a href="{% url 'profile' %}" class="btn btn-ghost">Cancel</a>
+
+              <button type="submit" class="btn bg-(--blue) text-white border-0 hover:bg-(--blue)">Save Changes</button>
+            </div>
+          </form>
         </div>
-
+      </div>
     </div>
-</div>
-
-
-
-
-
-    
+  </div>
 {% endblock %}
