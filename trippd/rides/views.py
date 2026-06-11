@@ -44,6 +44,7 @@ class TripCreateForm(forms.ModelForm):
         ]
 
     def clean(self):
+        """Performs custom validation to ensure that the trip details are consistent."""
         cleaned_data = super().clean()
         departure_time = cleaned_data.get("departure_time")
         expected_arrival_time = cleaned_data.get("expected_arrival_time")
@@ -90,6 +91,7 @@ class CreateTripView(LoginRequiredMixin, CreateView):
     template_name = "rides/create_trip.html"
 
     def form_valid(self, form):
+        """Creates a trip and initializes its membership and group chat."""
         print("Form is valid, setting organizer to:", self.request.user)
         form.instance.organizer = self.request.user
         response = super().form_valid(form)
@@ -173,6 +175,7 @@ class TripListView(ListView):
         return queryset.order_by("-created_at")
 
     def get_template_names(self):
+        """Serves partial templates for HTMX requests."""
         if self.request.headers.get("HX-Request"):
             return ["rides/partials/trip_cards.html"]
         return super().get_template_names()
@@ -181,6 +184,7 @@ class TripListView(ListView):
 @require_POST
 @login_required
 def join_trip_request(request, pk):
+    """Process User Request to Join a Trip."""
     trip = Trip.objects.get(pk=pk)
     existing_membership = TripMembership.objects.filter(
         trip=trip, user=request.user
@@ -284,6 +288,7 @@ def delete_trip(request, pk):
 @require_POST
 @login_required
 def accept_request(request, pk):
+    """Process Organizer's Acceptance of a User's Request to Join a Trip."""
     membership = TripMembership.objects.get(pk=pk)
     if membership.trip.organizer != request.user:
         messages.error(request, "You are not authorized to accept this request.")
@@ -305,6 +310,7 @@ def accept_request(request, pk):
 @require_POST
 @login_required
 def reject_request(request, pk):
+    """Process Organizer's Rejection of a User's Request to Join a Trip."""
     membership = TripMembership.objects.get(pk=pk)
     if membership.trip.organizer != request.user:
         messages.error(request, "You are not authorized to reject this request.")

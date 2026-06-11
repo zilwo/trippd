@@ -5,6 +5,7 @@ from django.core.validators import MinValueValidator, MaxValueValidator
 from taggit.managers import TaggableManager
 
 class User(AbstractUser):
+    """Custom user model with email verification."""
     username = models.CharField(max_length=150, unique=True)
     email = models.EmailField(unique=True)
     phone_number = PhoneNumberField(blank=True, region="IN")
@@ -15,6 +16,7 @@ class User(AbstractUser):
         return self.email
     
 class Profile(models.Model):
+    """Stores Additional Profile Information."""
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="profile")
     bio = models.TextField(blank=True)
     profile_picture = models.ImageField(upload_to="profile_pics/", blank=True, null=True)
@@ -35,6 +37,7 @@ class Profile(models.Model):
         return self.user.received_ratings.count()
     
 class Rating(models.Model):
+    """Model representing a rating given by one user to another for a specific trip."""
     rater = models.ForeignKey(User, on_delete=models.CASCADE, related_name="given_ratings")
     ratee = models.ForeignKey(User, on_delete=models.CASCADE, related_name="received_ratings")
     trip = models.ForeignKey("rides.Trip", on_delete=models.CASCADE, related_name="ratings")

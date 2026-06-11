@@ -3,6 +3,7 @@ from users.models import User
 from taggit.managers import TaggableManager
 
 class Trip(models.Model):
+    """Represents a trip which users can request to join."""
     organizer = models.ForeignKey(
         User, on_delete=models.CASCADE, related_name="organized_trips"
     )
@@ -36,6 +37,7 @@ class Trip(models.Model):
 
 
 class TripMembership(models.Model):
+    """Tracks a user's membership status for a trip."""
     trip = models.ForeignKey(Trip, on_delete=models.CASCADE, related_name="memberships")
     user = models.ForeignKey(
         User, on_delete=models.CASCADE, related_name="trip_memberships"
@@ -61,6 +63,7 @@ class TripMembership(models.Model):
 
 
 class TripGroup(models.Model):
+    """Chat group associated with a trip."""
     trip = models.OneToOneField(Trip, on_delete=models.CASCADE, primary_key=True)
     name = models.CharField(max_length=255)
 
@@ -69,6 +72,7 @@ class TripGroup(models.Model):
 
 
 class TripGroupMessage(models.Model):
+    """Message or activity updates posted in a trip group chat."""
     sender = models.ForeignKey(User, on_delete=models.CASCADE, related_name="messages")
     group = models.ForeignKey(
         TripGroup, on_delete=models.CASCADE, related_name="chat_messages"

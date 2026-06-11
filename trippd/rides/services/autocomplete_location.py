@@ -5,6 +5,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 def autocomplete_location(query):
+    """Fetches location suggestions based on a query string using the Geoapify API."""
     api_key = os.getenv("GEOAPIFY_API_KEY")
     
 

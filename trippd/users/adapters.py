@@ -5,6 +5,7 @@ from django.contrib import messages
 from django.shortcuts import redirect
 
 class SocialAccountAdapter(DefaultSocialAccountAdapter):
+    """Custom adapter to handle social account logins, ensuring that users with existing email addresses are prompted to log in instead of creating duplicate accounts."""
     def pre_social_login(self, request, sociallogin):
         print("PRE SOCIAL LOGIN CALLED")
         if sociallogin.is_existing:

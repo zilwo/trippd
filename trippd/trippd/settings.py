@@ -33,6 +33,7 @@ ALLOWED_HOSTS = ["727lcnlk-8000.inc1.devtunnels.ms", "localhost","127.0.0.1"]
 # Application definition
 
 INSTALLED_APPS = [
+    "daphne",
     "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",
@@ -80,6 +81,7 @@ TEMPLATES = [
 
 WSGI_APPLICATION = "trippd.wsgi.application"
 
+ASGI_APPLICATION = "trippd.asgi.application"
 
 # Database
 # https://docs.djangoproject.com/en/6.0/ref/settings/#databases

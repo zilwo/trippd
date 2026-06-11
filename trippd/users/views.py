@@ -30,6 +30,7 @@ class SignUpView(CreateView):
     form_class = SignupForm
 
     def form_valid(self, form):
+        """Creates a new user, generates an activation token, and sends a verification email."""
         user = form.save()
         print(f"New user created: {user.email}")
 
@@ -52,6 +53,7 @@ class SignUpView(CreateView):
 
 
 def verify_account(request, pk, token):
+    """Verifies the user's account using the provided token"""
     try:
         user = User.objects.get(pk=pk)
     except User.DoesNotExist:
@@ -73,6 +75,7 @@ def profile(request):
 
 @login_required
 def edit_profile(request):
+    """Updates user profile Hobbies are expected to be a comma-separated string"""
     if request.method == "POST":
         first_name = request.POST.get("first_name", "")
         last_name = request.POST.get("last_name", "")
