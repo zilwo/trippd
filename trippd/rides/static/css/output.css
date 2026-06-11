@@ -1944,9 +1944,6 @@
   .mb-1 {
     margin-bottom: calc(var(--spacing) * 1);
   }
-  .mb-2 {
-    margin-bottom: calc(var(--spacing) * 2);
-  }
   .mb-3 {
     margin-bottom: calc(var(--spacing) * 3);
   }
@@ -2641,18 +2638,6 @@
       --fontsize: 0.6875rem;
       --btn-p: 0.5rem;
       --size: calc(var(--size-field, 0.25rem) * 6);
-    }
-  }
-  .badge-info {
-    @layer daisyui.l1.l2 {
-      --badge-color: var(--color-info);
-      --badge-fg: var(--color-info-content);
-    }
-  }
-  .badge-success {
-    @layer daisyui.l1.l2 {
-      --badge-color: var(--color-success);
-      --badge-fg: var(--color-success-content);
     }
   }
   .btn-error {

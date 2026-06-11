@@ -185,9 +185,14 @@ def join_trip_request(request, pk):
     existing_membership = TripMembership.objects.filter(
         trip=trip, user=request.user
     ).first()
+    is_full = trip.slots_available <= trip.get_accepted_members().count()
 
     if trip.organizer == request.user:
         messages.error(request, "You are already the organizer of this trip.")
+        return redirect("trip_detail", pk=pk)
+
+    if is_full:
+        messages.error(request, "This trip is already full. You cannot join.")
         return redirect("trip_detail", pk=pk)
 
     if existing_membership:
@@ -273,7 +278,6 @@ def delete_trip(request, pk):
         return redirect("trip_detail", pk=pk)
 
     trip.delete()
-    messages.success(request, "Trip deleted successfully.")
     return redirect("home")
 
 
@@ -294,10 +298,6 @@ def accept_request(request, pk):
         group=group,
         activity=f"{membership.user.username} has joined the trip.",
         is_system_message=True,
-    )
-    messages.success(
-        request,
-        f"You have accepted {membership.user.username}'s request to join {membership.trip}.",
     )
     return HttpResponse(status=200)
 

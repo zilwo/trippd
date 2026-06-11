@@ -133,13 +133,13 @@
     {% if messages %}
       {% for message in messages %}
         {% if message.tags == 'error' %}
-          <div class="alert alert-success flex justify-between items-center" id="alerting-message">
+          <div class="alert alert-error flex justify-between items-center" id="alerting-message">
             <span>{{ message }}</span>
 
             <button type="button" onclick="this.parentElement.remove()" class="btn btn-ghost btn-xs">✕</button>
           </div>
         {% else %}
-          <div class="alert alert-error flex justify-between items-center" id="alerting-message">
+          <div class="alert alert-success flex justify-between items-center" id="alerting-message">
             <span>{{ message }}</span>
             <button type="button" onclick="this.parentElement.remove()" class="btn btn-ghost btn-xs">✕</button>
           </div>
