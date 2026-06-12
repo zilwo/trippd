@@ -29,16 +29,53 @@
       <div role="tabpanel" class="tab-content bg-(--card) border border-(--blue-border) rounded-box overflow-hidden">
         <div class="flex flex-col h-[70vh]">
           <!-- Messages -->
-          <div class="flex-1 overflow-y-auto p-4 space-y-4" id="message-container" hx-get="{% url 'trip_chat' tripgroup.pk %}" hx-trigger="every 10s" hx-swap="innerHTML">
-            {% include 'rides/partials/messages.html' %}
+          <div class="flex-1 overflow-y-auto p-4 space-y-4" id="message-container">
+            {% for message in tripgroup.chat_messages.all %}
+              {% if message.is_system_message %}
+                <div class="flex justify-center my-4">
+                  <div class="badge badge-soft">{{ message.activity }}</div>
+                </div>
+              {% else %}
+                {% if message.sender == request.user %}
+                  <div class="chat chat-end">
+                    <div class="chat-header">
+                      {{ message.sender.username }}
+                      <time class="text-xs opacity-50 ml-2">{{ message.send_at|date:'g:i A' }}</time>
+                    </div>
+                    <div class="chat-bubble">{{ message.body }}</div>
+                  </div>
+                {% else %}
+                  <div class="chat chat-start">
+                    <div class="chat-image avatar">
+                      <div class="w-10 rounded-full">
+                        {% if message.sender.profile.profile_picture %}
+                          <img src="{{ message.sender.profile.profile_picture.url }}" />
+                        {% else %}
+                          <img src="https://ui-avatars.com/api/?name={{ message.sender.username }}" />
+                        {% endif %}
+                      </div>
+                    </div>
+
+                    <div class="chat-header">
+                      {{ message.sender.username }}
+                      <time class="text-xs opacity-50 ml-2">{{ message.send_at|date:'g:i A' }}</time>
+                    </div>
+
+                    <div class="chat-bubble">{{ message.body }}</div>
+                  </div>
+                {% endif %}
+              {% endif %}
+            {% empty %}
+              <div class="h-full flex items-center justify-center opacity-60">No messages yet. Start the conversation.</div>
+            {% endfor %}
           </div>
 
           <!-- Composer -->
           <div class="border-t border-(--blue-border) p-4">
-            <form method="post" class="flex gap-2" hx-post="{% url 'trip_chat' tripgroup.pk %}" hx-target="#message-container" hx-swap="beforeend scroll:bottom" hx-on::after-request="this.reset()">
+            <form method="post" class="flex gap-2" id="message-form">
               {% csrf_token %}
 
-              <input type="text" name="message-body" placeholder="Type a message..." class="input input-bordered flex-1" />
+              <input type="text" name="message-body" placeholder="Type a message..." class="input input-bordered flex-1" id="message-body" />
 
               <button type="submit" class="btn bg-(--blue)">Send</button>
             </form>
@@ -107,5 +144,35 @@
       const container = document.getElementById('message-container')
       container.scrollTop = container.scrollHeight
     })
+    
+    const roomName = '{{ tripgroup.pk }}'
+    const chatSocket = new WebSocket('ws://' + window.location.host + '/ws/trip/' + roomName + '/')
+    
+    chatSocket.onmessage = function (e) {
+      const data = JSON.parse(e.data)
+      if (data.type === 'chat_message') {
+        const messageContainer = document.getElementById('message-container')
+        messageContainer.insertAdjacentHTML('beforeend', data.message_html)
+        messageContainer.scrollTop = messageContainer.scrollHeight
+      }
+    }
+    
+    chatSocket.onclose = function (e) {
+      console.error('Chat socket closed unexpectedly')
+    }
+    
+    document.getElementById('message-form').onsubmit = function (e) {
+      e.preventDefault()
+      const input = document.getElementById('message-body')
+      const message = input.value.trim()
+      if (message) {
+        chatSocket.send(
+          JSON.stringify({
+            message: message
+          })
+        )
+        input.value = ''
+      }
+    }
   </script>
 {% endblock %}
