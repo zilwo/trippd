@@ -330,30 +330,25 @@ class ChatView(LoginRequiredMixin, DetailView):
     template_name = "rides/trip_chat.html"
     context_object_name = "tripgroup"
 
+    def is_member(self, user):
+        return TripMembership.objects.filter(
+            trip=self.object.trip, user=user, status="accepted"
+        ).exists()
+    
     def get(self, request, *args, **kwargs):
         self.object = self.get_object()
-        if request.headers.get("HX-Request"):
-            return render(
-                request,
-                "rides/partials/messages.html",
-                context={"tripgroup": self.object},
-            )
+        if not self.is_member(request.user):
+            return redirect("trip_detail", pk=self.object.trip.pk)
+        return super().get(request, *args, **kwargs)
 
-        return super().get(request, *args, *kwargs)
 
     def post(self, request, *args, **kwargs):
-
         self.object = self.get_object()
-        body = request.POST.get("message-body")
-        if not body:
-            return HttpResponse("")
-        message = TripGroupMessage.objects.create(
-            sender=request.user, group=self.object, body=body
-        )
-        return render(
-            request, "rides/partials/message.html", context={"message": message}
-        )
+        if not self.is_member(request.user):
+            return redirect("trip_detail", pk=self.object.trip.pk)
+        return super().post(request, *args, **kwargs)
 
+ 
 
 class InboxView(LoginRequiredMixin, TemplateView):
     template_name = "rides/inbox.html"

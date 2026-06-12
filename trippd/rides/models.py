@@ -2,6 +2,7 @@ from django.db import models
 from users.models import User
 from taggit.managers import TaggableManager
 
+
 class Trip(models.Model):
     """Represents a trip which users can request to join."""
     organizer = models.ForeignKey(
