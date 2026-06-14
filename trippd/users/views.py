@@ -1,12 +1,13 @@
 from django.shortcuts import redirect, render
 from django.contrib.auth.views import LoginView, LogoutView
 from django.urls import reverse_lazy
-from django.views.generic import CreateView
+from django.views.generic import CreateView, DetailView
 from django.contrib.auth.forms import UserCreationForm
 from django.core.mail import send_mail
 from .utils.tokens import AccountActivationTokenGenerator
 from .models import User
 from django.contrib.auth.decorators import login_required
+from django.contrib.auth.mixins import LoginRequiredMixin
 
 
 class SignupForm(UserCreationForm):
@@ -69,11 +70,6 @@ def verify_account(request, pk, token):
 
 
 @login_required
-def profile(request):
-    return render(request, "users/profile.html")
-
-
-@login_required
 def edit_profile(request):
     """Updates user profile Hobbies are expected to be a comma-separated string"""
     if request.method == "POST":
@@ -100,3 +96,20 @@ def edit_profile(request):
         return redirect("profile")
 
     return render(request, "users/edit_profile.html")
+
+
+class UserProfileView(LoginRequiredMixin, DetailView):
+    model = User
+    template_name = "users/profile.html"
+    context_object_name = "profile_user"
+    slug_url_kwarg = "username"
+    slug_field = "username"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        profile_user = self.get_object()
+        context["is_own_profile"] = self.request.user == profile_user
+        print(
+            f"Viewing profile of: {profile_user.username}, is own profile: {context['is_own_profile']}"
+        )
+        return context

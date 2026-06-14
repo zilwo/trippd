@@ -160,7 +160,7 @@ class TripDetailView(DetailView):
             context["is_member"] = TripMembership.objects.filter(
                 trip=trip, user=user, status="accepted"
             ).exists()
-            context["is_organizer"] = trip.organizer == user
+            context["organizer"] = trip.organizer
             context["is_pending"] = TripMembership.objects.filter(
                 trip=trip, user=user, status="pending"
             ).exists()

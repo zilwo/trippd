@@ -37,19 +37,7 @@
         </div>
 
         <div class="flex items-center gap-3">
-          {% if t.organizer.profile.profile_picture %}
-            <div class="avatar">
-              <div class="w-8 rounded-full">
-                <img src="{{ t.organizer.profile.profile_picture.url }}" alt="" />
-              </div>
-            </div>
-          {% else %}
-            <div class="avatar">
-              <div class="w-8 rounded-full">
-                <img src="https://ui-avatars.com/api/?name={{ t.organizer.username }}" alt="Default Profile" />
-              </div>
-            </div>
-          {% endif %}
+          {% include 'rides/components/avatar.html' with user=t.organizer style='w-9 rounded-full ring ring-(--blue) ring-offset-2' %}
           <div>
             {% if t.organizer.first_name and t.organizer.last_name %}
               <span class="driver-name">{{ t.organizer.first_name }} {{ t.organizer.last_name }}</span>
@@ -73,17 +61,7 @@
         <span class="mates-label">{{ t.get_accepted_members.count }} joined · {{ t.slots_available }} seats</span>
         <div class="avatar-group -space-x-4">
           {% for member in t.get_accepted_members.all|slice:':3' %}
-            <div class="avatar">
-              <div class="w-8 rounded-full">
-                {% if member.user.profile.profile_picture %}
-                  <img src="{{ member.user.profile.profile_picture.url }}" alt="" />
-                {% else %}
-                  <div class="bg-neutral text-neutral-content w-8 rounded-full flex items-center justify-center text-xs font-bold">
-                    <img src="https://ui-avatars.com/api/?name={{ member.user.username }}" alt="Default Profile" />
-                  </div>
-                {% endif %}
-              </div>
-            </div>
+            {% include 'rides/components/avatar.html' with user=member.user style='w-9 rounded-full' %}
           {% endfor %}
           {% if t.get_accepted_members.count > 3 %}
             <div class="avatar">

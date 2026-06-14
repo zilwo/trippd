@@ -95,7 +95,7 @@
             </div>
 
             <div class="flex justify-end gap-3">
-              <a href="{% url 'profile' %}" class="btn btn-ghost">Cancel</a>
+              <a href="{% url 'profile' user.username %}" class="btn btn-ghost">Cancel</a>
 
               <button type="submit" class="btn bg-(--blue) text-white border-0 hover:bg-(--blue)">Save Changes</button>
             </div>

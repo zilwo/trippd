@@ -256,37 +256,31 @@
             {% if memberships %}
               <div class="flex flex-col gap-3">
                 {% for m in memberships %}
-                  {% if m.status == 'accepted' %}
-                    <div class="flex items-center justify-between gap-3">
-                      <div class="flex items-center gap-3">
-                        {% if m.user.profile.profile_picture %}
-                          <div class="avatar">
-                            <div class="w-9 rounded-full">
-                              <img src="{{ m.user.profile.profile_picture.url }}" alt="" />
+                  <a href="{% url 'profile' m.user.username %}" class="hover:bg-(--card2)">
+                    {% if m.status == 'accepted' %}
+                      <div class="flex items-center justify-between gap-3">
+                        <div class="flex items-center gap-3">
+                          {% include 'rides/components/avatar.html' with user=m.user %}
+                          <div>
+                            <div style="font-size:14px;font-weight:700;color:var(--white);">
+                              {% if m.user.first_name and m.user.last_name %}
+                                {{ m.user.first_name }} {{ m.user.last_name }}
+                              {% else %}
+                                {{ m.user.username }}
+                              {% endif %}
                             </div>
+                            <div style="font-size:11px;color:var(--muted);">Joined {{ m.joined_at|date:'d M Y' }}</div>
                           </div>
-                        {% else %}
-                          <div class="avatar">
-                            <div class="w-9 rounded-full">
-                              <img src="https://ui-avatars.com/api/?name={{ m.user.username }}" alt="Default Profile" />
-                            </div>
-                          </div>
-                        {% endif %}
-                        <div>
-                          <div style="font-size:14px;font-weight:700;color:var(--white);">
-                            {% if m.user.first_name and m.user.last_name %}
-                              {{ m.user.first_name }} {{ m.user.last_name }}
-                            {% else %}
-                              {{ m.user.username }}
-                            {% endif %}
-                          </div>
-                          <div style="font-size:11px;color:var(--muted);">Joined {{ m.joined_at|date:'d M Y' }}</div>
                         </div>
+                        <!-- DaisyUI badge for membership status -->
+                        {% if m.user == organizer %}
+                          <span class="badge status-{{ m.status }} btn bg-(--blue)" style="border:none;font-size:11px;font-weight:700;">Organizer</span>
+                        {% else %}
+                          <span class="badge status-{{ m.status }} btn bg-(--blue-dim)" style="border:none;font-size:11px;font-weight:700;text-transform:capitalize;">{{ m.get_status_display }}</span>
+                        {% endif %}
                       </div>
-                      <!-- DaisyUI badge for membership status -->
-                      <span class="badge status-{{ m.status }} btn bg-(--blue)" style="border:none;font-size:11px;font-weight:700;text-transform:capitalize;">{{ m.get_status_display }}</span>
-                    </div>
-                  {% endif %}
+                    {% endif %}
+                  </a>
                 {% endfor %}
               </div>
             {% else %}
@@ -332,10 +326,7 @@
               </div>
             </div>
           </div>
-          <form method="post" action="{% url 'start_chat' trip.organizer.pk %}">
-            {% csrf_token %}
-            <button type="submit" class="btn btn-outline w-full hover:bg-(--card2) text-(--black)" style="border-radius:10px;">Message organiser</button>
-          </form>
+          <a href="{% url 'profile' trip.organizer.username %}" class="btn btn-outline w-full hover:bg-(--card2) text-(--black)" style="border-radius:10px;">View Profile</a>
         </div>
 
         <!-- Join action -->
