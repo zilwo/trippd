@@ -5,6 +5,7 @@ from taggit.managers import TaggableManager
 
 class Trip(models.Model):
     """Represents a trip which users can request to join."""
+
     organizer = models.ForeignKey(
         User, on_delete=models.CASCADE, related_name="organized_trips"
     )
@@ -39,6 +40,7 @@ class Trip(models.Model):
 
 class TripMembership(models.Model):
     """Tracks a user's membership status for a trip."""
+
     trip = models.ForeignKey(Trip, on_delete=models.CASCADE, related_name="memberships")
     user = models.ForeignKey(
         User, on_delete=models.CASCADE, related_name="trip_memberships"
@@ -65,6 +67,7 @@ class TripMembership(models.Model):
 
 class TripGroup(models.Model):
     """Chat group associated with a trip."""
+
     trip = models.OneToOneField(Trip, on_delete=models.CASCADE, primary_key=True)
     name = models.CharField(max_length=255)
 
@@ -74,6 +77,7 @@ class TripGroup(models.Model):
 
 class TripGroupMessage(models.Model):
     """Message or activity updates posted in a trip group chat."""
+
     sender = models.ForeignKey(User, on_delete=models.CASCADE, related_name="messages")
     group = models.ForeignKey(
         TripGroup, on_delete=models.CASCADE, related_name="chat_messages"
@@ -85,3 +89,34 @@ class TripGroupMessage(models.Model):
 
     def __str__(self):
         return f"Message by {self.sender.username} in {self.group.name}"
+
+
+class Conversation(models.Model):
+    """Represents a private conversation between two users."""
+
+    participants = models.ManyToManyField(User, related_name="conversations")
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"Conversation between {', '.join(p.username for p in self.participants.all())}"
+
+    def get_other_participant(self, user):
+        return self.participants.exclude(id=user.id).first()
+
+
+class ConversationMessage(models.Model):
+    """Message sent within a private conversation."""
+
+    conversation = models.ForeignKey(
+        Conversation, on_delete=models.CASCADE, related_name="messages"
+    )
+    sender = models.ForeignKey(
+        User, on_delete=models.CASCADE, related_name="sent_messages"
+    )
+    body = models.TextField(max_length=1000)
+    sent_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return (
+            f"Message by {self.sender.username} in conversation {self.conversation.id}"
+        )

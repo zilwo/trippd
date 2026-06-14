@@ -16,5 +16,7 @@ urlpatterns = [
     path("ride/<int:pk>/edit/", views.EditTripView.as_view(), name="edit_trip"),
     path("ride/chat/<int:pk>/", views.ChatView.as_view(), name="trip_chat"),
     path("ride/inbox/", views.InboxView.as_view(), name="inbox"),
+    path("ride/start-chat/<int:pk>/", views.StartChatView.as_view(), name="start_chat"),
+    path("ride/direct-chat/<int:pk>/", views.DirectChatView.as_view(), name="direct_chat"),
 
 ]

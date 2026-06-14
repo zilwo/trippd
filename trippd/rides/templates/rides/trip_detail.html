@@ -332,7 +332,10 @@
               </div>
             </div>
           </div>
-          <button class="btn btn-outline w-full hover:bg-(--card2) text-(--black)" style="border-radius:10px;">Message organiser</button>
+          <form method="post" action="{% url 'start_chat' trip.organizer.pk %}">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-outline w-full hover:bg-(--card2) text-(--black)" style="border-radius:10px;">Message organiser</button>
+          </form>
         </div>
 
         <!-- Join action -->

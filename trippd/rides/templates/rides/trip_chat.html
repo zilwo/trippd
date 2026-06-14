@@ -72,9 +72,7 @@
 
           <!-- Composer -->
           <div class="border-t border-(--blue-border) p-4">
-            <form method="post" class="flex gap-2" id="message-form">
-              {% csrf_token %}
-
+            <form class="flex gap-2" id="message-form">
               <input type="text" name="message-body" placeholder="Type a message..." class="input input-bordered flex-1" id="message-body" />
 
               <button type="submit" class="btn bg-(--blue)">Send</button>

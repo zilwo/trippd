@@ -8,17 +8,27 @@ from django.views.generic import (
     ListView,
     TemplateView,
     UpdateView,
+    View,
 )
 from django import forms
-from .models import Trip, TripMembership, TripMembership, TripGroup, TripGroupMessage
+
+from users.models import User
+from .models import (
+    Conversation,
+    Trip,
+    TripMembership,
+    TripMembership,
+    TripGroup,
+    TripGroupMessage,
+)
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.http import require_POST
 from django.contrib.auth.mixins import LoginRequiredMixin
 from .services.autocomplete_location import autocomplete_location
 from django.http import HttpResponse
-
-# Create your views here.
+from channels.layers import get_channel_layer
+from asgiref.sync import async_to_sync
 
 
 def home(request):
@@ -99,11 +109,19 @@ class CreateTripView(LoginRequiredMixin, CreateView):
             trip=self.object, user=self.request.user, status="accepted"
         )
         TripGroup.objects.create(trip=self.object, name=f"{self.object} Group")
+
         TripGroupMessage.objects.create(
             sender=self.request.user,
             group=self.object.tripgroup,
             activity=f"{self.request.user.username} created the trip.",
             is_system_message=True,
+        )
+        async_to_sync(get_channel_layer().group_send)(
+            f"chat_{self.object.pk}",
+            {
+                "type": "trip_activity",
+                "activity": f"{self.request.user.username} created the trip.",
+            },
         )
 
         messages.success(self.request, "Trip created successfully!")
@@ -304,6 +322,13 @@ def accept_request(request, pk):
         activity=f"{membership.user.username} has joined the trip.",
         is_system_message=True,
     )
+    async_to_sync(get_channel_layer().group_send)(
+        f"chat_{membership.trip.pk}",
+        {
+            "type": "trip_activity",
+            "activity": f"{membership.user.username} has joined the trip.",
+        },
+    )
     return HttpResponse(status=200)
 
 
@@ -334,21 +359,13 @@ class ChatView(LoginRequiredMixin, DetailView):
         return TripMembership.objects.filter(
             trip=self.object.trip, user=user, status="accepted"
         ).exists()
-    
+
     def get(self, request, *args, **kwargs):
         self.object = self.get_object()
         if not self.is_member(request.user):
             return redirect("trip_detail", pk=self.object.trip.pk)
         return super().get(request, *args, **kwargs)
 
-
-    def post(self, request, *args, **kwargs):
-        self.object = self.get_object()
-        if not self.is_member(request.user):
-            return redirect("trip_detail", pk=self.object.trip.pk)
-        return super().post(request, *args, **kwargs)
-
- 
 
 class InboxView(LoginRequiredMixin, TemplateView):
     template_name = "rides/inbox.html"
@@ -360,4 +377,40 @@ class InboxView(LoginRequiredMixin, TemplateView):
             .select_related("trip", "trip__organizer")
             .order_by("-joined_at")
         )
+        return context
+
+
+class StartChatView(LoginRequiredMixin, View):
+    def post(self, request, pk):
+        user = User.objects.get(pk=pk)
+        conversation = (
+            Conversation.objects.filter(participants=user)
+            .filter(participants=request.user)
+            .first()
+        )
+        if not conversation:
+            conversation = Conversation.objects.create()
+            conversation.participants.add(user, request.user)
+            conversation.save()
+        return redirect("direct_chat", pk=conversation.pk)
+
+
+class DirectChatView(LoginRequiredMixin, DetailView):
+    model = Conversation
+    template_name = "rides/direct_chat.html"
+    context_object_name = "conversation"
+
+    def is_participant(self, user):
+        return self.object.participants.filter(id=user.id).exists()
+
+    def get(self, request, *args, **kwargs):
+        self.object = self.get_object()
+        if not self.is_participant(request.user):
+            return redirect("inbox")
+        return super().get(request, *args, **kwargs)
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        other_participant = self.object.get_other_participant(self.request.user)
+        context["other_user"] = other_participant
         return context
