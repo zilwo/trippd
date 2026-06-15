@@ -372,6 +372,14 @@ class InboxView(LoginRequiredMixin, TemplateView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+        conversations = Conversation.objects.filter(
+            participants=self.request.user
+        ).order_by("-created_at")
+
+        for conversation in conversations:
+            other_participant = conversation.get_other_participant(self.request.user)
+            conversation.other = other_participant
+        context["dm_conversations"] = conversations
         context["joined_trips"] = (
             TripMembership.objects.filter(user=self.request.user, status="accepted")
             .select_related("trip", "trip__organizer")

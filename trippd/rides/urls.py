@@ -8,7 +8,11 @@ urlpatterns = [
     path("rides/", views.TripListView.as_view(), name="trip_list"),
     path("ride/<int:pk>/", views.TripDetailView.as_view(), name="trip_detail"),
     path("join-ride/<int:pk>/", views.join_trip_request, name="join_trip_request"),
-    path("leave-ride/<int:pk>/", views.cancel_trip_joining_request, name="cancel_trip_joining_request"),
+    path(
+        "leave-ride/<int:pk>/",
+        views.cancel_trip_joining_request,
+        name="cancel_trip_joining_request",
+    ),
     path("ride/dashboard/", views.DashboardView.as_view(), name="trip_dashboard"),
     path("ride/accept/<int:pk>/", views.accept_request, name="accept_request"),
     path("ride/reject/<int:pk>/", views.reject_request, name="reject_request"),
@@ -17,6 +21,7 @@ urlpatterns = [
     path("ride/chat/<int:pk>/", views.ChatView.as_view(), name="trip_chat"),
     path("ride/inbox/", views.InboxView.as_view(), name="inbox"),
     path("ride/start-chat/<int:pk>/", views.StartChatView.as_view(), name="start_chat"),
-    path("ride/direct-chat/<int:pk>/", views.DirectChatView.as_view(), name="direct_chat"),
-
+    path(
+        "ride/direct-chat/<int:pk>/", views.DirectChatView.as_view(), name="direct_chat"
+    ),
 ]

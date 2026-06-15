@@ -1,3 +1,4 @@
+from django import forms
 from django.shortcuts import redirect, render
 from django.contrib.auth.views import LoginView, LogoutView
 from django.urls import reverse_lazy
@@ -5,9 +6,24 @@ from django.views.generic import CreateView, DetailView
 from django.contrib.auth.forms import UserCreationForm
 from django.core.mail import send_mail
 from .utils.tokens import AccountActivationTokenGenerator
-from .models import User
+from .models import Language, User
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
+from .models import Profile
+
+
+class ProfileForm(forms.ModelForm):
+    class Meta:
+        model = User.profile.related.related_model
+        fields = [
+            "bio",
+            "profile_picture",
+            "location",
+            "interests",
+            "languages_spoken",
+            "gender",
+            "age",
+        ]
 
 
 class SignupForm(UserCreationForm):
@@ -71,31 +87,28 @@ def verify_account(request, pk, token):
 
 @login_required
 def edit_profile(request):
-    """Updates user profile Hobbies are expected to be a comma-separated string"""
+    """Updates user profile interests are expected to be a comma-separated string"""
+    languages = Language.objects.all()
+    gender_choices = Profile._meta.get_field("gender").choices
     if request.method == "POST":
         first_name = request.POST.get("first_name", "")
         last_name = request.POST.get("last_name", "")
-        bio = request.POST.get("bio", "")
-        hobbies = request.POST.get("hobbies", "")
-        profile_picture = request.FILES.get("profile_picture")
+        form = ProfileForm(request.POST, request.FILES, instance=request.user.profile)
+        if form.is_valid():
+            print("form tags cleaned data:", form.cleaned_data.get("interests"))
+            form.save()
 
-        profile = request.user.profile
+            request.user.first_name = first_name
+            request.user.last_name = last_name
+            request.user.save()
 
-        request.user.first_name = first_name
-        request.user.last_name = last_name
+            return redirect("profile", username=request.user.username)
 
-        profile.bio = bio
-        if profile_picture:
-            profile.profile_picture = profile_picture
-        if hobbies:
-            tags = [hobby.strip() for hobby in hobbies.split(",") if hobby.strip()]
-            profile.hobbies.set(tags)
-        request.user.save()
-        profile.save()
-
-        return redirect("profile")
-
-    return render(request, "users/edit_profile.html")
+    return render(
+        request,
+        "users/edit_profile.html",
+        context={"languages": languages, "gender_choices": gender_choices},
+    )
 
 
 class UserProfileView(LoginRequiredMixin, DetailView):
@@ -108,6 +121,7 @@ class UserProfileView(LoginRequiredMixin, DetailView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         profile_user = self.get_object()
+        context["profile"] = profile_user.profile
         context["is_own_profile"] = self.request.user == profile_user
         print(
             f"Viewing profile of: {profile_user.username}, is own profile: {context['is_own_profile']}"

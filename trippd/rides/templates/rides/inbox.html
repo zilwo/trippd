@@ -1,58 +1,101 @@
 {% extends 'rides/base.html' %}
 
 {% block content %}
-  <div class="max-w-4xl mx-auto px-4 py-8">
-    <div class="mb-6">
-      <h1 class="text-3xl font-bold">Inbox</h1>
+  <!-- name of each tab group should be unique -->
+  <div class="max-w-5xl mx-auto px-4 py-8">
+    <div class="tabs tabs-lift">
+      <label class="tab">
+        <input type="radio" name="my_tabs_4" checked="checked" />
 
-      <p class="text-base-content/60">Your active trip conversations</p>
-    </div>
-
-    <div class="bg-(--card) border border-(--blue-border) rounded-lg shadow-sm">
-      {% for membership in joined_trips %}
-        <a href="{% url 'trip_chat' membership.trip.pk %}" class="flex items-center gap-4 p-4 hover:bg-base-200 transition border-b border-base-200 last:border-b-0">
-          <!-- Trip Info -->
-          <div class="flex-1 min-w-0 border-(--blue-border) rounded-lg p-3">
-            <div class="flex justify-between items-center gap-2">
-              <h2 class="font-semibold">
-                {{ membership.trip.origin }}
-                →
-                {{ membership.trip.destination }}
-              </h2>
-
-              <span class="text-xs opacity-60 whitespace-nowrap">{{ membership.trip.departure_time|date:'M d' }}</span>
-            </div>
-
-            <div class="flex items-center gap-2 mt-1">
-              <span class="text-sm opacity-70">
-                Organizer:
-                {{ membership.trip.organizer.username }}
-              </span>
-
-              <div class="badge badge-ghost badge-sm">{{ membership.trip.get_accepted_members.count }}</div>
-            </div>
-          </div>
-
-          <!-- Arrow -->
-          <div class="text-base-content/40 text-lg">
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M17.25 8.25 21 12m0 0-3.75 3.75M21 12H3" />
-            </svg>
-          </div>
-        </a>
-      {% empty %}
-        <div class="p-12 text-center">
-          <div class="text-5xl mb-3">
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 12.76c0 1.6 1.123 2.994 2.707 3.227 1.068.157 2.148.279 3.238.364.466.037.893.281 1.153.671L12 21l2.652-3.978c.26-.39.687-.634 1.153-.67 1.09-.086 2.17-.208 3.238-.365 1.584-.233 2.707-1.626 2.707-3.228V6.741c0-1.602-1.123-2.995-2.707-3.228A48.394 48.394 0 0 0 12 3c-2.392 0-4.744.175-7.043.513C3.373 3.746 2.25 5.14 2.25 6.741v6.018Z" />
-            </svg>
-          </div>
-
-          <h3 class="font-semibold text-lg">No conversations yet</h3>
-
-          <p class="text-base-content/60 mt-1">Join a trip to start chatting.</p>
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M12 20.25c4.97 0 9-3.694 9-8.25s-4.03-8.25-9-8.25S3 7.444 3 12c0 2.104.859 4.023 2.273 5.48.432.447.74 1.04.586 1.641a4.483 4.483 0 0 1-.923 1.785A5.969 5.969 0 0 0 6 21c1.282 0 2.47-.402 3.445-1.087.81.22 1.668.337 2.555.337Z" />
+        </svg><span class="ml-2">Chats</span>
+      </label>
+      <div class="tab-content border-base-300 p-6">
+        <div class="mb-6">
+          <h1 class="text-3xl font-bold">Inbox</h1>
         </div>
-      {% endfor %}
+
+        <div class="bg-(--card) border border-(--blue-border) rounded-lg shadow-sm">
+          {% for conversation in dm_conversations %}
+            <a href="{% url 'direct_chat' conversation.pk %}" class="flex items-center gap-4 p-4 hover:bg-base-200 transition border-b border-base-200 last:border-b-0">
+              <!-- Trip Info -->
+              <div class="flex-1 min-w-0 border-(--blue-border) rounded-lg p-3">
+                <div class="flex items-center gap-2 mt-1 hover:bg-(--card2)">
+                  {% include 'rides/components/avatar.html' with user=conversation.other style='w-10 rounded-full ' %}
+                  <span class="text-sm opacity-70">{{ conversation.other.username }}</span>
+                </div>
+              </div>
+
+              <!-- Arrow -->
+              <div class="text-base-content/40 text-lg">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M17.25 8.25 21 12m0 0-3.75 3.75M21 12H3" />
+                </svg>
+              </div>
+            </a>
+          {% empty %}
+            <div class="p-12 text-center">
+              <div class="font-semibold text-lg flex items-center justify-center gap-2">No conversations yet</div>
+            </div>
+          {% endfor %}
+        </div>
+      </div>
+
+      <label class="tab">
+        <input type="radio" name="my_tabs_4" />
+
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M18 18.72a9.094 9.094 0 0 0 3.741-.479 3 3 0 0 0-4.682-2.72m.94 3.198.001.031c0 .225-.012.447-.037.666A11.944 11.944 0 0 1 12 21c-2.17 0-4.207-.576-5.963-1.584A6.062 6.062 0 0 1 6 18.719m12 0a5.971 5.971 0 0 0-.941-3.197m0 0A5.995 5.995 0 0 0 12 12.75a5.995 5.995 0 0 0-5.058 2.772m0 0a3 3 0 0 0-4.681 2.72 8.986 8.986 0 0 0 3.74.477m.94-3.197a5.971 5.971 0 0 0-.94 3.197M15 6.75a3 3 0 1 1-6 0 3 3 0 0 1 6 0Zm6 3a2.25 2.25 0 1 1-4.5 0 2.25 2.25 0 0 1 4.5 0Zm-13.5 0a2.25 2.25 0 1 1-4.5 0 2.25 2.25 0 0 1 4.5 0Z" />
+        </svg>
+        <span class="ml-2">Trip Hubs</span>
+      </label>
+      <div class="tab-content bg-(--card) p-6">
+        <div class="mb-6">
+          <h1 class="text-3xl font-bold">My Trip Hubs</h1>
+
+          <p class="text-base-content/60">Your active trip conversations</p>
+        </div>
+
+        <div class="bg-(--card) border border-(--blue-border) rounded-lg shadow-sm">
+          {% for membership in joined_trips %}
+            <a href="{% url 'trip_chat' membership.trip.pk %}" class="flex items-center gap-4 p-4 hover:bg-base-200 transition border-b border-base-200 last:border-b-0">
+              <!-- Trip Info -->
+              <div class="flex-1 min-w-0 border-(--blue-border) rounded-lg p-3">
+                <div class="flex justify-between items-center gap-2">
+                  <h2 class="font-semibold">
+                    {{ membership.trip.origin }}
+                    →
+                    {{ membership.trip.destination }}
+                  </h2>
+
+                  <span class="text-xs opacity-60 whitespace-nowrap">{{ membership.trip.departure_time|date:'M d' }}</span>
+                </div>
+
+                <div class="flex items-center gap-2 mt-1">
+                  <span class="text-sm opacity-70">
+                    Organizer:
+                    {{ membership.trip.organizer.username }}
+                  </span>
+
+                  <div class="badge badge-ghost badge-sm">{{ membership.trip.get_accepted_members.count }}</div>
+                </div>
+              </div>
+
+              <!-- Arrow -->
+              <div class="text-base-content/40 text-lg">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M17.25 8.25 21 12m0 0-3.75 3.75M21 12H3" />
+                </svg>
+              </div>
+            </a>
+          {% empty %}
+            <div class="p-12 text-center">
+              <div class="font-semibold text-lg flex items-center justify-center gap-2">No conversations yet</div>
+            </div>
+          {% endfor %}
+        </div>
+      </div>
     </div>
   </div>
 {% endblock %}

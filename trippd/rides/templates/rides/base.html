@@ -9,6 +9,9 @@
     <link href="https://fonts.googleapis.com/css2?family=Nunito:ital,wght@0,400;0,600;0,700;0,800;0,900;1,800&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
     <script src="https://cdn.jsdelivr.net/npm/htmx.org@2.0.10/dist/htmx.min.js" integrity="sha384-H5SrcfygHmAuTDZphMHqBJLc3FhssKjG7w/CeCpFReSfwBWDTKpkzPP8c+cLsK+V" crossorigin="anonymous"></script>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css" />
+
+    <link href="https://cdn.jsdelivr.net/npm/tom-select@2.6.1/dist/css/tom-select.css" rel="stylesheet" />
+    <script src="https://cdn.jsdelivr.net/npm/tom-select@2.6.1/dist/js/tom-select.complete.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
     <script src="{% static 'js/base.js' %}"></script>
 
@@ -34,6 +37,19 @@
         font-family: 'Plus Jakarta Sans', sans-serif;
         min-height: 100vh;
       }
+      
+      .ts-wrapper {
+        width: 100%;
+      }
+      
+      .ts-control {
+        min-height: 40px; /* matches DaisyUI input height */
+        border-radius: 0.25rem !important;
+      }
+      
+      .ts-control input {
+        font-size: inherit;
+      }
     </style>
 
     {% block style %}
@@ -52,7 +68,7 @@
         <details class="dropdown dropdown-end">
           <summary class="btn btn-ghost btn-circle">
             {% if user.is_authenticated %}
-              {% include 'rides/components/avatar.html' with user=user style='w-12 rounded-full ring ring-(--blue) ring-offset-2' %}
+              {% include 'rides/components/avatar.html' with user=user style='w-10 rounded-full ring ring-(--blue) ring-offset-2' %}
             {% else %}
               <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z" />
@@ -139,4 +155,13 @@
 
     {% endblock %}
   </body>
+
+  <script>
+    new TomSelect('#input-tags', {
+      persist: false,
+      createOnBlur: true,
+      create: true,
+      plugins: ['remove_button']
+    })
+  </script>
 </html>

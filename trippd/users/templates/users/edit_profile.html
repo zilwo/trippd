@@ -82,15 +82,45 @@
               <textarea name="bio" class="textarea textarea-bordered w-full h-32" placeholder="Tell other travelers about yourself...">{{ user.profile.bio }}</textarea>
             </div>
 
-            <div class="mb-6">
-              <label class="label"><span class="label-text">Hobbies</span></label>
+            <div class="grid md:grid-cols-2 gap-4 mb-6">
+              <!-- Age -->
+              <div>
+                <label class="label"><span class="label-text">Age</span></label>
+                <input type="number" name="age" value="{{ user.profile.age }}" class="input input-bordered w-full" placeholder="Enter your age" />
+              </div>
 
-              <input type="text" name="hobbies" class="input input-bordered w-full" placeholder="Travel, Music, Gaming" />
+              <!-- Gender -->
+              <div>
+                <label class="label"><span class="label-text">Gender</span></label>
 
-              <div class="flex flex-wrap gap-2 mt-3">
-                {% for hobby in user.profile.hobbies.all %}
-                  <div class="badge badge-outline">{{ hobby.name }}</div>
-                {% endfor %}
+                <select name="gender" class="select select-bordered w-full">
+                  {% for value, label in gender_choices %}
+                    {% if user.profile.gender == value %}
+                      <option value="{{ value }}" selected>{{ label }}</option>
+                    {% else %}
+                      <option value="{{ value }}">{{ label }}</option>
+                    {% endif %}
+                  {% endfor %}
+                </select>
+              </div>
+
+              <!-- Location -->
+              <div>
+                <label class="label"><span class="label-text">Location</span></label>
+                <input type="text" name="location" value="{{ user.profile.location }}" class="input input-bordered w-full" placeholder="Enter your location" />
+              </div>
+              <div class="mb-6">
+                <label class="label"><span class="label-text">Languages</span></label>
+
+                <select id="languages" name="languages_spoken" multiple class="w-full">
+                  {% for language in languages %}
+                    {% if language in user.profile.languages_spoken.all %}
+                      <option value="{{ language.id }}" selected>{{ language.name }}</option>
+                    {% else %}
+                      <option value="{{ language.id }}">{{ language.name }}</option>
+                    {% endif %}
+                  {% endfor %}
+                </select>
               </div>
             </div>
 
@@ -104,4 +134,10 @@
       </div>
     </div>
   </div>
+  <script>
+    new TomSelect('#languages', {
+      plugins: ['remove_button'],
+      create: false
+    })
+  </script>
 {% endblock %}
