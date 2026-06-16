@@ -1,0 +1,26 @@
+{% if tripgroup.trip.status == 'planning' %}
+  <div class="badge badge-soft bg-(--warning)" id="status-update" hx-swap-oob="true">Planning</div>
+{% elif tripgroup.trip.status == 'upcoming' %}
+  <div class="badge badge-soft bg-(--primary)" id="status-update" hx-swap-oob="true">Upcoming</div>
+{% elif tripgroup.trip.status == 'ongoing' %}
+  <div class="badge badge-soft bg-(--blue)" id="status-update" hx-swap-oob="true">Ongoing</div>
+{% elif tripgroup.trip.status == 'completed' %}
+  <div class="badge badge-soft badge-success" id="status-update" hx-swap-oob="true">Completed</div>
+{% endif %}
+{% if request.user == tripgroup.trip.organizer %}
+  <div class="card bg-(--card) card-lg border border-(--blue-border) shadow-sm mt-6" id="status-card" hx-swap-oob="true">
+    <div class="card-body">
+      <h2 class="card-title">Trip Management</h2>
+      <p>The trip is currently in the {{ tripgroup.trip.status|title }} status.</p>
+      <div class="card-actions">
+        <div class="card-actions justify-center">
+          {% if tripgroup.trip.status == 'completed' %}
+            <button class="btn btn-success">Trip is Completed Post a Review</button>
+          {% else %}
+            <button class="btn btn-primary" hx-post="{% url 'advance_trip_status' tripgroup.trip.pk %}">Change Status to {{ tripgroup.trip.next_status|title }}</button>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+{% endif %}

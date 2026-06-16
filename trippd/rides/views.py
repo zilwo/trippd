@@ -46,7 +46,7 @@ class TripCreateForm(forms.ModelForm):
             "to_address",
             "departure_time",
             "expected_arrival_time",
-            "price",
+            "budget",
             "slots_available",
             "tag",
             "duration_value",
@@ -62,7 +62,7 @@ class TripCreateForm(forms.ModelForm):
         destination = cleaned_data.get("destination")
         to_address = cleaned_data.get("to_address")
         from_address = cleaned_data.get("from_address")
-        price = cleaned_data.get("price")
+        budget = cleaned_data.get("budget")
         slots_available = cleaned_data.get("slots_available")
 
         if origin == destination:
@@ -71,8 +71,8 @@ class TripCreateForm(forms.ModelForm):
         if from_address == to_address:
             raise forms.ValidationError("From and To addresses cannot be the same.")
 
-        if price is not None and price < 0:
-            raise forms.ValidationError("Price cannot be negative.")
+        if budget is not None and budget < 0:
+            raise forms.ValidationError("Budget cannot be negative.")
 
         if slots_available is not None and slots_available <= 0:
             raise forms.ValidationError("Slots available must be greater than zero.")
@@ -104,6 +104,7 @@ class CreateTripView(LoginRequiredMixin, CreateView):
         """Creates a trip and initializes its membership and group chat."""
         print("Form is valid, setting organizer to:", self.request.user)
         form.instance.organizer = self.request.user
+        form.instance.status = "upcoming"
         response = super().form_valid(form)
         TripMembership.objects.create(
             trip=self.object, user=self.request.user, status="accepted"
@@ -365,6 +366,59 @@ class ChatView(LoginRequiredMixin, DetailView):
         if not self.is_member(request.user):
             return redirect("trip_detail", pk=self.object.trip.pk)
         return super().get(request, *args, **kwargs)
+
+
+@login_required
+def advance_trip_status(request, pk):
+    trip = Trip.objects.get(pk=pk)
+    if trip.organizer != request.user:
+        return HttpResponse(status=403)
+
+    if trip.status == "completed":
+        return HttpResponse(status=400)
+
+    new_status = trip.next_status()
+
+    if (
+        new_status == "completed"
+        and timezone.now() < trip.expected_arrival_time + trip.get_duration_timedelta()
+    ):
+        return HttpResponse(
+            "Cannot complete trip before expected arrival time.", status=400
+        )
+
+    trip.status = new_status
+    trip.save()
+
+    message_updates = {
+        "upcoming": "The trip is now upcoming. Get ready for the adventure!",
+        "ongoing": "The trip is now ongoing. Enjoy the ride!",
+        "completed": "The trip has been completed. Hope you had a great time!",
+    }
+
+    TripGroupMessage.objects.create(
+        sender=request.user,
+        group=trip.tripgroup,
+        activity=message_updates.get(
+            new_status,
+        ),
+        is_system_message=True,
+    )
+    async_to_sync(get_channel_layer().group_send)(
+        f"chat_{trip.pk}",
+        {
+            "type": "trip_activity",
+            "activity": message_updates.get(
+                new_status,
+            ),
+        },
+    )
+
+    return render(
+        request,
+        "rides/partials/trip_status.html",
+        context={"tripgroup": trip.tripgroup},
+    )
 
 
 class InboxView(LoginRequiredMixin, TemplateView):

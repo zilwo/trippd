@@ -1,6 +1,7 @@
 from django.db import models
 from users.models import User
 from taggit.managers import TaggableManager
+from datetime import timedelta
 
 
 class Trip(models.Model):
@@ -16,7 +17,7 @@ class Trip(models.Model):
     to_address = models.CharField(max_length=255)
     departure_time = models.DateTimeField()
     expected_arrival_time = models.DateTimeField()
-    price = models.DecimalField(max_digits=10, decimal_places=2)
+    budget = models.DecimalField(max_digits=10, decimal_places=2)
     slots_available = models.PositiveIntegerField()
     duration_value = models.PositiveIntegerField(null=True, blank=True)
     duration_unit = models.CharField(
@@ -29,13 +30,45 @@ class Trip(models.Model):
     )
     tag = TaggableManager(blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
-    completed = models.BooleanField(default=False)
+    status = models.CharField(
+        max_length=20,
+        choices=[
+            ("planning", "Planning"),
+            ("upcoming", "Upcoming"),
+            ("ongoing", "Ongoing"),
+            ("completed", "Completed"),
+        ],
+        default="planning",
+    )
 
     def get_accepted_members(self):
         return self.memberships.filter(status="accepted")
 
     def __str__(self):
         return f"{self.origin} to {self.destination}"
+
+    def next_status(self):
+        status_flow = {
+            "planning": "upcoming",
+            "upcoming": "ongoing",
+            "ongoing": "completed",
+        }
+        return status_flow.get(self.status, self.status)
+
+    def get_duration_timedelta(self):
+        """Returns a timedelta object based on the duration_value and duration_unit."""
+
+        if self.duration_value is None or self.duration_unit is None:
+            return timedelta(0)
+
+        if self.duration_unit == "days":
+            return timedelta(days=self.duration_value)
+        elif self.duration_unit == "weeks":
+            return timedelta(weeks=self.duration_value)
+        elif self.duration_unit == "months":
+            return timedelta(days=self.duration_value * 30)
+        else:
+            return timedelta(0)
 
 
 class TripMembership(models.Model):

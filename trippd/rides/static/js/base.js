@@ -5,6 +5,8 @@ setTimeout(() => {
   }
 }, 5000);
 
+
+
 document.addEventListener("DOMContentLoaded", function () {
   // datetime picker
   flatpickr("#departure_time", {

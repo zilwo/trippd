@@ -1,6 +1,59 @@
 {% extends 'rides/base.html' %}
 
+{% block style %}
+  <style>
+    .detail-card {
+      background: var(--card);
+      border: 1.5px solid var(--blue-border);
+      border-radius: 20px;
+      padding: 24px;
+    }
+    .section-label {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 14px;
+    }
+    .meta-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 12px;
+      padding: 12px 0;
+      border-bottom: 1px solid var(--blue-border);
+      font-size: 14px;
+      flex-wrap: wrap;
+    }
+    
+    .meta-row:last-child {
+      border-bottom: none;
+    }
+    
+    .meta-key {
+      color: var(--muted);
+      font-weight: 500;
+    }
+    
+    .meta-val {
+      font-weight: 700;
+      color: var(--text);
+      text-align: right;
+      word-break: break-word;
+      max-width: 60%;
+    }
+  </style>
+{% endblock %}
+
 {% block content %}
+  <div id="trip-alerting-message" hidden>
+    <div class="alert alert-error flex justify-between items-center">
+      <span class="trip-alert-message">${event.detail.xhr.responseText}</span>
+      <button type="button" onclick="this.parentElement.remove()" class="btn btn-ghost btn-xs">✕</button>
+    </div>
+  </div>
+
   <div class="max-w-6xl mx-auto p-4">
     <!-- Header -->
     <div class="card bg-(--card) shadow-sm mb-6">
@@ -63,7 +116,7 @@
                 {% endif %}
               {% endif %}
             {% empty %}
-              <div class="h-full flex items-center justify-center opacity-60">No messages yet. Start the conversation.</div>
+              <div class="h-full flex items-center justify-center opacity-60">No messages yet. Start the conversations.</div>
             {% endfor %}
           </div>
 
@@ -79,24 +132,122 @@
       </div>
 
       <!-- ANNOUNCEMENTS TAB -->
-      <input type="radio" name="trip_tabs" role="tab" class="tab" aria-label="Announcements" />
+      <input type="radio" name="trip_tabs" role="tab" class="tab" aria-label="Details" />
 
-      <div role="tabpanel" class="tab-content bg-(--card) border border-(--blue-border) rounded-box p-6 min-h-[70vh]">
-        <div class="text-center opacity-60">No announcements yet.</div>
-      </div>
+      <div role="tabpanel" class="tab-content bg-(--card) rounded-box min-h-[70vh]">
+        <div class="card border border-(--blue-border)">
+          <div class="card-body">
+            <!-- Header -->
 
-      <!-- POLLS TAB -->
-      <input type="radio" name="trip_tabs" role="tab" class="tab" aria-label="Polls" />
+            <!-- Description -->
+            {% if tripgroup.trip.description %}
+              <p class="mt-2 opacity-80">{{ tripgroup.trip.description }}</p>
+            {% endif %}
 
-      <div role="tabpanel" class="tab-content bg-(--card) border border-(--blue-border) rounded-box p-6 min-h-[70vh]">
-        <div class="text-center opacity-60">No polls yet.</div>
-      </div>
+            <!-- Info -->
+            <div class="divider my-2"></div>
 
-      <!-- FILES TAB -->
-      <input type="radio" name="trip_tabs" role="tab" class="tab" aria-label="Files" />
+            <div class="grid grid-cols-2 md:grid-cols-2 gap-4">
+              <div class="flex gap-2 items-center justify-start">
+                <span class="text-xs opacity-50">Created by:</span>
+                {% include 'rides/components/avatar.html' with user=tripgroup.trip.organizer style='w-10 rounded-full' %}
 
-      <div role="tabpanel" class="tab-content bg-(--card) border border-(--blue-border) rounded-box p-6 min-h-[70vh]">
-        <div class="text-center opacity-60">No files uploaded yet.</div>
+                <p class="font-medium">{{ tripgroup.trip.organizer.username }}</p>
+              </div>
+
+              <div class="flex gap-2 items-center justify-start">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 11.25v7.5" />
+                </svg>
+                <span class="text-xs opacity-50">Created at:</span>
+
+                <p>{{ tripgroup.trip.created_at|date:'M d, Y' }}</p>
+              </div>
+
+              <div class="flex gap-2 items-center justify-start">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+                </svg>
+
+                <span class="opacity-50">Status</span>
+                {% if tripgroup.trip.status == 'planning' %}
+                  <div class="badge badge-soft bg-(--warning)" id="status-update">Planning</div>
+                {% elif tripgroup.trip.status == 'upcoming' %}
+                  <div class="badge badge-soft bg-(--primary)" id="status-update">Upcoming</div>
+                {% elif tripgroup.trip.status == 'ongoing' %}
+                  <div class="badge badge-soft bg-(--blue)" id="status-update">Ongoing</div>
+                {% elif tripgroup.trip.status == 'completed' %}
+                  <div class="badge badge-soft badge-success" id="status-update">Completed</div>
+                {% endif %}
+              </div>
+
+              <div class="flex gap-2 items-center justify-start">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M18 18.72a9.094 9.094 0 0 0 3.741-.479 3 3 0 0 0-4.682-2.72m.94 3.198.001.031c0 .225-.012.447-.037.666A11.944 11.944 0 0 1 12 21c-2.17 0-4.207-.576-5.963-1.584A6.062 6.062 0 0 1 6 18.719m12 0a5.971 5.971 0 0 0-.941-3.197m0 0A5.995 5.995 0 0 0 12 12.75a5.995 5.995 0 0 0-5.058 2.772m0 0a3 3 0 0 0-4.681 2.72 8.986 8.986 0 0 0 3.74.477m.94-3.197a5.971 5.971 0 0 0-.94 3.197M15 6.75a3 3 0 1 1-6 0 3 3 0 0 1 6 0Zm6 3a2.25 2.25 0 1 1-4.5 0 2.25 2.25 0 0 1 4.5 0Zm-13.5 0a2.25 2.25 0 1 1-4.5 0 2.25 2.25 0 0 1 4.5 0Z" />
+                </svg>
+
+                <span class="opacity-50">Trip Capacity</span>
+                <div>{{ tripgroup.trip.slots_available }}</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="detail-container mt-6">
+          <div class="detail-card border-(--blue-border)">
+            <div class="section-label">Trip details</div>
+            <div>
+              <div class="meta-row">
+                <span class="meta-key">Starting Address</span>
+                <span class="meta-val">{{ tripgroup.trip.from_address }}</span>
+              </div>
+
+              <div class="meta-row">
+                <span class="meta-key">Drop address</span>
+                <span class="meta-val">{{ tripgroup.trip.to_address }}</span>
+              </div>
+              <div class="meta-row">
+                <span class="meta-key">Departure</span>
+                <span class="meta-val">{{ tripgroup.trip.departure_time|date:'g:i A, d M Y' }}</span>
+              </div>
+              <div class="meta-row">
+                <span class="meta-key">Arrival</span>
+                <span class="meta-val">{{ tripgroup.trip.expected_arrival_time|date:'g:i A, d M Y' }}</span>
+              </div>
+              <div class="meta-row">
+                <span class="meta-key">Duration</span>
+                <span class="meta-val">{{ tripgroup.trip.duration_value }} {{ tripgroup.trip.duration_unit }}</span>
+              </div>
+              <div class="meta-row">
+                <span class="meta-key">Budget</span>
+                <span class="meta-val">₹{{ tripgroup.trip.budget }}</span>
+              </div>
+
+              <div class="mt-4">
+                <div style="font-size:12px;color:var(--muted);margin-bottom:6px;font-weight:600;">{{ tripgroup.trip.get_accepted_members.count }} of {{ tripgroup.trip.slots_available }} seats filled</div>
+                <progress class="progress bg-(--blue-dim) w-full" value="{{ tripgroup.trip.get_accepted_members.count }}" max="{{ tripgroup.trip.slots_available }}"></progress>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Actions -->
+        {% if request.user == tripgroup.trip.organizer %}
+          <div class="card bg-(--card) card-lg shadow-sm mt-6 border border-(--blue-border)" id="status-card">
+            <div class="card-body">
+              <h2 class="card-title">Trip Management</h2>
+
+              <p>The trip is currently in the {{ tripgroup.trip.status|title }} status.</p>
+              <div class="card-actions mt-4">
+                {% if tripgroup.trip.status == 'completed' %}
+                  <button class="btn badge-soft">Trip is Completed Post a Review</button>
+                {% else %}
+                  <button class="btn btn-primary" hx-post="{% url 'advance_trip_status' tripgroup.trip.pk %}">Change Status to {{ tripgroup.trip.next_status|title }}</button>
+                {% endif %}
+              </div>
+            </div>
+          </div>
+        {% endif %}
       </div>
     </div>
   </div>
@@ -111,6 +262,9 @@
           <div class="flex items-center gap-3 hover:bg-(--card2)" onclick="location.href='{% url 'profile' member.user.username %}'" style="cursor: pointer;">
             {% include 'rides/components/avatar.html' with user=member.user style='w-10 rounded-full' %}
             <span>{{ member.user.username }}</span>
+            {% if member.user == tripgroup.trip.organizer %}
+              <span class="badge bg-(--blue-dim)">Organizer</span>
+            {% endif %}
           </div>
         {% empty %}
           <p class="opacity-60">No members found.</p>
@@ -136,7 +290,7 @@
     
     chatSocket.onmessage = function (e) {
       const data = JSON.parse(e.data)
-      if (data.type === 'chat_message') {
+      if (data.type === 'chat_message' || data.type === 'trip_activity') {
         const messageContainer = document.getElementById('message-container')
         messageContainer.insertAdjacentHTML('beforeend', data.message_html)
         messageContainer.scrollTop = messageContainer.scrollHeight
@@ -160,5 +314,13 @@
         input.value = ''
       }
     }
+    document.body.addEventListener('htmx:responseError', function (event) {
+      let errorElement = document.getElementById('trip-alerting-message')
+      errorElement.hidden = false
+      errorElement.querySelector('.trip-alert-message').textContent = event.detail.xhr.responseText
+      setTimeout(() => {
+        errorElement.hidden = true
+      }, 5000)
+    })
   </script>
 {% endblock %}

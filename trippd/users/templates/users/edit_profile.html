@@ -82,6 +82,20 @@
               <textarea name="bio" class="textarea textarea-bordered w-full h-32" placeholder="Tell other travelers about yourself...">{{ user.profile.bio }}</textarea>
             </div>
 
+            <div class="mt-6">
+              <label class="label" for="input-tags"><span class="label-text">Tags</span></label>
+
+              <input id="input-tags"
+                autocomplete="off"
+                placeholder="Add Your Interests"
+                name="interests"
+                type="text"
+                value="{% for tag in object.interests.all %}
+                  {{ tag.name }}{% if not forloop.last %}, {% endif %}
+                {% endfor %}"
+                placeholder="Add Your Interests" />
+            </div>
+
             <div class="grid md:grid-cols-2 gap-4 mb-6">
               <!-- Age -->
               <div>
@@ -138,6 +152,12 @@
     new TomSelect('#languages', {
       plugins: ['remove_button'],
       create: false
+    })
+    new TomSelect('#input-tags', {
+      persist: false,
+      createOnBlur: true,
+      create: true,
+      plugins: ['remove_button']
     })
   </script>
 {% endblock %}

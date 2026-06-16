@@ -24,4 +24,9 @@ urlpatterns = [
     path(
         "ride/direct-chat/<int:pk>/", views.DirectChatView.as_view(), name="direct_chat"
     ),
+    path(
+        "ride/advance-status/<int:pk>/",
+        views.advance_trip_status,
+        name="advance_trip_status",
+    ),
 ]

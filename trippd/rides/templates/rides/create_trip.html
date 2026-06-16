@@ -97,13 +97,13 @@
 
               <div class="grid md:grid-cols-2 gap-4">
                 <div>
-                  <label class="label" for="price"><span class="label-text">Price</span></label>
+                  <label class="label" for="budget"><span class="label-text">Budget</span></label>
 
-                  <input type="number" id="price" name="price" value="{{ form.price.value|default:'0' }}" placeholder="Amount per person" class="input input-bordered w-full" required />
+                  <input type="number" id="budget" name="budget" value="{{ form.budget.value|default:'0' }}" placeholder="Total budget" class="input input-bordered w-full" required />
                 </div>
 
                 <div>
-                  <label class="label" for="slots_available"><span class="label-text">Available Seats</span></label>
+                  <label class="label" for="slots_available"><span class="label-text">Available Slots</span></label>
 
                   <input type="number" id="slots_available" name="slots_available" value="{{ form.slots_available.value|default:'3' }}" class="input input-bordered w-full" required />
                 </div>
@@ -201,6 +201,12 @@
           }
         }
       })
+    })
+    new TomSelect('#input-tags', {
+      persist: false,
+      createOnBlur: true,
+      create: true,
+      plugins: ['remove_button']
     })
   </script>
 {% endblock %}
