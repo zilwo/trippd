@@ -12,7 +12,7 @@ from django.views.generic import (
 )
 from django import forms
 
-from users.models import User
+from users.models import Language, User
 from .models import (
     Conversation,
     Trip,
@@ -29,6 +29,7 @@ from .services.autocomplete_location import autocomplete_location
 from django.http import HttpResponse
 from channels.layers import get_channel_layer
 from asgiref.sync import async_to_sync
+from django.db.models import Count
 
 
 def home(request):
@@ -51,6 +52,8 @@ class TripCreateForm(forms.ModelForm):
             "tag",
             "duration_value",
             "duration_unit",
+            "orgin_lat",
+            "origin_lon",
         ]
 
     def clean(self):
@@ -93,6 +96,46 @@ class TripCreateForm(forms.ModelForm):
             raise forms.ValidationError("Expected arrival time must be in the future.")
 
         return cleaned_data
+
+
+class TripFilterForm(forms.Form):
+    passengers = forms.ChoiceField(
+        required=False,
+        choices=[
+            ("", "Any"),
+            ("1", "At least 1 seat"),
+            ("2", "At least 2 seats"),
+            ("3", "At least 3 seats"),
+            ("4", "At least 4 seats"),
+        ],
+        widget=forms.Select(attrs={"class": "select"}),
+    )
+    budget = forms.IntegerField(
+        required=False,
+        initial=3,
+    )
+
+    age_group = forms.ChoiceField(
+        required=False,
+        choices=[
+            ("", "Any"),
+            ("18-25", "18-25"),
+            ("26-35", "26-35"),
+            ("36-45", "36-45"),
+            ("46-60", "46-60"),
+            ("60+", "60+"),
+        ],
+        widget=forms.Select(attrs={"class": "select"}),
+    )
+    gender = forms.ChoiceField(
+        required=False,
+        choices=[
+            ("", "Any"),
+            ("M", "Male"),
+            ("F", "Female"),
+        ],
+        widget=forms.RadioSelect(attrs={"class": "radio radio-primary"}),
+    )
 
 
 class CreateTripView(LoginRequiredMixin, CreateView):
@@ -174,13 +217,36 @@ class TripListView(ListView):
     template_name = "rides/trip_list.html"
     context_object_name = "trips"
     paginate_by = 3
+    BUDGET_LIMITS = {
+        1: 5000,
+        2: 15000,
+        3: 30000,
+        4: 50000,
+        5: 100000,
+    }
+    AGE_GROUPS = {
+        "18-25": (18, 25),
+        "26-35": (26, 35),
+        "36-45": (36, 45),
+        "46-60": (46, 60),
+        "60+": (60, 100),
+    }
 
     def get_queryset(self):
         queryset = super().get_queryset()
         origin = self.request.GET.get("origin")
         destination = self.request.GET.get("destination")
         departure = self.request.GET.get("departure")
-        passengers = self.request.GET.get("passengers")
+        tags = self.request.GET.getlist("tag")
+        languages = self.request.GET.getlist("language")
+        self.search_title = "Available Trips"
+
+        form = TripFilterForm(self.request.GET)
+        if form.is_valid():
+            passengers = form.cleaned_data.get("passengers")
+            budget = form.cleaned_data.get("budget")
+            age_group = form.cleaned_data.get("age_group")
+            gender = form.cleaned_data.get("gender")
 
         if origin:
             queryset = queryset.filter(origin__icontains=origin)
@@ -190,6 +256,37 @@ class TripListView(ListView):
             queryset = queryset.filter(departure_time__date=departure)
         if passengers:
             queryset = queryset.filter(slots_available__gte=passengers)
+        if tags:
+            queryset = queryset.filter(tag__name__in=tags)
+        if languages:
+            queryset = queryset.filter(
+                organizer__profile__languages_spoken__name__in=languages
+            )
+        if budget:
+            try:
+                budget_limit = self.BUDGET_LIMITS.get(int(budget), 100000)
+                queryset = queryset.filter(budget__lte=budget_limit).distinct()
+            except ValueError:
+                pass
+
+        if age_group:
+            age_range = self.AGE_GROUPS.get(age_group)
+            if age_range:
+                min_age, max_age = age_range
+                queryset = queryset.filter(
+                    organizer__profile__age__gte=min_age,
+                    organizer__profile__age__lte=max_age,
+                )
+
+        if gender:
+            queryset = queryset.filter(organizer__profile__gender=gender)
+
+        if origin and destination:
+            self.search_title = f"From {origin} to {destination}"
+        elif origin:
+            self.search_title = f"Starting from {origin}"
+        elif destination:
+            self.search_title = f"Going to {destination}"
 
         return queryset.order_by("-created_at")
 
@@ -198,6 +295,18 @@ class TripListView(ListView):
         if self.request.headers.get("HX-Request"):
             return ["rides/partials/trip_cards.html"]
         return super().get_template_names()
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["popular_tags"] = Trip.tag.most_common()[:5]
+        context["languages"] = Language.objects.annotate(
+            num_users=Count("profile")
+        ).order_by("-num_users")[:6]
+        context["filter_form"] = TripFilterForm(self.request.GET)
+        context["budget_limits"] = self.BUDGET_LIMITS
+        if self.request.headers.get("HX-Request"):
+            context["search_title"] = self.search_title
+        return context
 
 
 @require_POST

@@ -28,7 +28,12 @@ SECRET_KEY = os.getenv("SECRET_KEY")
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ["727lcnlk-8000.inc1.devtunnels.ms", "localhost", "127.0.0.1"]
+ALLOWED_HOSTS = [
+    "727lcnlk-8000.inc1.devtunnels.ms",
+    "localhost",
+    "127.0.0.1",
+    "demo-trippd.centralindia.cloudapp.azure.com",
+]
 
 
 # Application definition

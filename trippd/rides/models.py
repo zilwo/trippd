@@ -12,6 +12,8 @@ class Trip(models.Model):
     )
     origin = models.CharField(max_length=255)
     destination = models.CharField(max_length=255)
+    orgin_lat = models.FloatField(null=True, blank=True)
+    origin_lon = models.FloatField(null=True, blank=True)
     description = models.TextField(blank=True)
     from_address = models.CharField(max_length=255)
     to_address = models.CharField(max_length=255)

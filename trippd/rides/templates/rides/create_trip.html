@@ -52,6 +52,9 @@
                   <label class="label" for="origin"><span class="label-text">Origin</span></label>
 
                   <input type="text" name="origin" id="origin" value="{{ form.origin.value|default:'' }}" class="input w-full" required />
+
+                  <input type="hidden" name="origin_lat" id="origin_lat" />
+                  <input type="hidden" name="origin_lon" id="origin_lon" />
                 </div>
 
                 <div>
@@ -195,6 +198,10 @@
             console.log('Selected city:', city)
             if (this.input.id === 'from_address') {
               document.getElementById('origin').value = city
+              document.getElementById('origin_lat').value = selectedOption.lat
+              document.getElementById('origin_lon').value = selectedOption.lon
+    
+              console.log('Latitude:', document.getElementById('origin_lat').value, 'Longitude:', document.getElementById('origin_lon').value)
             } else if (this.input.id === 'to_address') {
               document.getElementById('destination').value = city
             }
