@@ -7,6 +7,11 @@ from datetime import timedelta
 class Trip(models.Model):
     """Represents a trip which users can request to join."""
 
+    trip_type = models.CharField(
+        max_length=20,
+        choices=[("ride-sharing", "Ride Sharing"), ("trip", "Trip")],
+        default="ride-sharing",
+    )
     organizer = models.ForeignKey(
         User, on_delete=models.CASCADE, related_name="organized_trips"
     )
@@ -25,6 +30,7 @@ class Trip(models.Model):
     duration_unit = models.CharField(
         max_length=50,
         choices=[
+            ("hours", "Hours"),
             ("days", "Days"),
             ("weeks", "Weeks"),
             ("months", "Months"),
@@ -42,6 +48,17 @@ class Trip(models.Model):
         ],
         default="planning",
     )
+    trip_image = models.ImageField(
+        upload_to="trip_images/",
+        blank=True,
+        null=True,
+        default="trip_images/default.jpg",
+    )
+    looking_for = models.CharField(
+        max_length=255,
+        blank=True,
+    )
+    previous_experiences = models.TextField(blank=True)
 
     def get_accepted_members(self):
         return self.memberships.filter(status="accepted")

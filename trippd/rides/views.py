@@ -54,6 +54,7 @@ class TripCreateForm(forms.ModelForm):
             "duration_unit",
             "orgin_lat",
             "origin_lon",
+            "trip_image",
         ]
 
     def clean(self):
@@ -138,6 +139,12 @@ class TripFilterForm(forms.Form):
     )
 
 
+class TravelCompanionForm(forms.Form):
+    travel_bio = forms.CharField(widget=forms.Textarea, required=False)
+    looking_for = forms.CharField(max_length=255, required=False)
+    previous_experiences = forms.CharField(widget=forms.Textarea, required=False)
+
+
 class CreateTripView(LoginRequiredMixin, CreateView):
     model = Trip
     form_class = TripCreateForm
@@ -216,7 +223,7 @@ class TripListView(ListView):
     model = Trip
     template_name = "rides/trip_list.html"
     context_object_name = "trips"
-    paginate_by = 3
+    paginate_by = 2
     BUDGET_LIMITS = {
         1: 5000,
         2: 15000,
@@ -266,6 +273,7 @@ class TripListView(ListView):
             try:
                 budget_limit = self.BUDGET_LIMITS.get(int(budget), 100000)
                 queryset = queryset.filter(budget__lte=budget_limit).distinct()
+
             except ValueError:
                 pass
 
@@ -288,7 +296,7 @@ class TripListView(ListView):
         elif destination:
             self.search_title = f"Going to {destination}"
 
-        return queryset.order_by("-created_at")
+        return queryset
 
     def get_template_names(self):
         """Serves partial templates for HTMX requests."""
@@ -341,6 +349,13 @@ def join_trip_request(request, pk):
         TripMembership.objects.create(trip=trip, user=request.user)
         messages.success(
             request, "Your request to join the trip has been sent to the organizer."
+        )
+        async_to_sync(get_channel_layer().group_send)(
+            f"notifications_{trip.organizer.id}",
+            {
+                "type": "send_notification",
+                "message": f"{request.user.username} has requested to join the trip.",
+            },
         )
 
     return redirect("trip_detail", pk=pk)
@@ -439,6 +454,13 @@ def accept_request(request, pk):
             "activity": f"{membership.user.username} has joined the trip.",
         },
     )
+    async_to_sync(get_channel_layer().group_send)(
+        f"notifications_{membership.user.id}",
+        {
+            "type": "send_notification",
+            "message": f"Your request to join {membership.trip} has been accepted!",
+        },
+    )
     return HttpResponse(status=200)
 
 
@@ -453,9 +475,12 @@ def reject_request(request, pk):
 
     membership.status = "rejected"
     membership.save()
-    messages.success(
-        request,
-        f"You have rejected {membership.user.username}'s request to join {membership.trip}.",
+    async_to_sync(get_channel_layer().group_send)(
+        f"notifications_{membership.user.id}",
+        {
+            "type": "send_notification",
+            "message": f"Your request to join {membership.trip} has been rejected.",
+        },
     )
     return HttpResponse(status=200)
 

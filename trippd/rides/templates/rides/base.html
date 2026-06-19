@@ -138,25 +138,68 @@
       </div>
     </div>
 
+
+  <div class="messages">
+
     {% if messages %}
       {% for message in messages %}
         {% if message.tags == 'error' %}
-          <div class="alert alert-error flex justify-between items-center" id="alerting-message">
+          <div class="alert alert-error flex justify-between items-center alerting-message">
             <span>{{ message }}</span>
 
             <button type="button" onclick="this.parentElement.remove()" class="btn btn-ghost btn-xs">✕</button>
           </div>
         {% else %}
-          <div class="alert alert-success flex justify-between items-center" id="alerting-message">
+          <div class="alert alert-success flex justify-between items-center alerting-message">
             <span>{{ message }}</span>
             <button type="button" onclick="this.parentElement.remove()" class="btn btn-ghost btn-xs">✕</button>
           </div>
         {% endif %}
       {% endfor %}
     {% endif %}
+      </div>
+
 
     {% block content %}
 
     {% endblock %}
+
+
+    <script>
+      const notificationSocket = new WebSocket('ws://' + window.location.host + '/ws/notifications/{{ user.id }}/')
+      notificationSocket.onmessage = function(e) {
+        const data = JSON.parse(e.data)
+        if (data.type === 'notification') {
+          const notification = document.createElement('div')
+          notification.className = 'alert alert-info flex justify-between items-center'
+          notification.innerHTML = `
+            <span>${data.message}</span>
+            <button type="button" onclick="this.parentElement.remove()" class="btn btn-ghost btn-xs">✕</button>
+          `
+          document.querySelector('.messages').appendChild(notification);
+     
+
+          setTimeout(() => {
+            notification.remove()
+          if (document.getElementById("pending-join-requests")) {
+            console.log('New join request notification received, reloading page...')
+            location.reload()  // Reload the page to update pending join requests if we're on the dashboard
+            
+          }
+          if (document.getElementById("group-detail-link")) {
+            console.log('New join request notification received, reloading page...')
+            location.reload()  // Reload the page to update group details if we're on the trip detail page
+
+          }
+
+          }, 5000)
+               
+         
+        }
+      }
+      notificationSocket.onclose = function(e) {
+        console.error('Notification socket closed unexpectedly')
+      }
+    </script>
   </body>
 </html>

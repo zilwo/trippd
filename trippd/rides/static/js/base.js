@@ -1,7 +1,7 @@
 setTimeout(() => {
-  const alert = document.getElementById("alerting-message");
+  const alert = document.querySelectorAll('.alerting-message');
   if (alert) {
-    alert.remove();
+    alert.forEach((a) => a.remove());
   }
 }, 5000);
 
@@ -19,3 +19,4 @@ document.addEventListener("DOMContentLoaded", function () {
     dateFormat: "Y-m-d H:i",
   });
 });
+

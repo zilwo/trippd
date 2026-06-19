@@ -3,7 +3,7 @@
 
 {% block content %}
   {% if form.errors %}
-    <div class="alert alert-error flex justify-between items-start" id="alerting-message">
+    <div class="alert alert-error flex justify-between items-start alerting-message">
       <div class="flex justify-between items-start w-full">
         <div>
           {% for error in form.non_field_errors %}
@@ -34,7 +34,7 @@
             {% endif %}
           </h2>
 
-          <form method="POST">
+          <form method="POST" enctype="multipart/form-data">
             {% csrf_token %}
 
             <!-- Route Information -->
@@ -72,6 +72,27 @@
             </div>
 
             <div class="divider"></div>
+            <div class="card bg-base-100 border border-base-300">
+              <div class="card-body">
+                <h2 class="card-title">Preview Image</h2>
+
+                <!-- Preview -->
+                <div class="flex justify-center">
+                  <img id="trip-preview" src="/media/trip_images/default.jpg" alt="Trip Preview" class="h-64 w-full max-w-md rounded-box object-cover border border-base-300" />
+                </div>
+
+                <!-- Upload -->
+                <div class="form-control mt-4">
+                  <label class="label"><span class="label-text">Choose a trip image</span></label>
+
+                  <input type="file" name="trip_image" id="trip-image-input" accept="image/*" class="file-input file-input-bordered w-full" />
+                </div>
+
+                <div class="alert alert-info mt-4">
+                  <span>Upload a photo that represents your trip destination or travel plan.</span>
+                </div>
+              </div>
+            </div>
 
             <!-- Schedule -->
             <div>
@@ -214,6 +235,14 @@
       createOnBlur: true,
       create: true,
       plugins: ['remove_button']
+    })
+    document.getElementById('trip-image-input').addEventListener('change', function (event) {
+      const file = event.target.files[0]
+    
+      if (!file) return
+    
+      const preview = document.getElementById('trip-preview')
+      preview.src = URL.createObjectURL(file)
     })
   </script>
 {% endblock %}

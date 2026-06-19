@@ -6,15 +6,22 @@
     <div class="trip-card-bar bg-(--blue)"></div>
 
     <div class="trip-card-body">
-      <div class="route-col">
-        <div class="route-dots">
+      <div class="route-col relative overflow-hidden rounded-lg">
+        {% if t.trip_image %}
+          <img src="{{ t.trip_image.url }}" alt="{{ t.destination }}" class="absolute inset-0 w-full h-full object-cover opacity-70" />
+
+          <div class="absolute inset-0 bg-white/25"></div>
+        {% endif %}
+
+        <div class="route-dots relative z-10">
           <div class="dot-top" style="background:var(--blue);"></div>
           <div class="dot-stem" style="background:linear-gradient(var(--blue),var(--muted2));"></div>
           <div class="dot-bottom" style="border-color:var(--blue);"></div>
         </div>
-        <div class="flex flex-col gap-4">
-          <div class="city-name">{{ t.origin }}</div>
-          <div class="city-name">{{ t.destination }}</div>
+
+        <div class="flex flex-col gap-4 relative z-10">
+          <div class="city-name text-white">{{ t.origin }}</div>
+          <div class="city-name text-white">{{ t.destination }}</div>
         </div>
       </div>
 
@@ -91,8 +98,8 @@
   <div class="flex justify-center mt-6">
     <div class="join">
       {% if page_obj.has_previous %}
-        <a hx-get="?page=1&origin={{ request.GET.origin }}&destination={{ request.GET.destination }}&departure={{ request.GET.departure }}&passengers={{ request.GET.passengers }}" hx-target=".trip-results" hx-swap="innerHTML" class="join-item btn">« First</a>
-        <a hx-get="?page={{ page_obj.previous_page_number }}&origin={{ request.GET.origin }}&destination={{ request.GET.destination }}&departure={{ request.GET.departure }}&passengers={{ request.GET.passengers }}" hx-target=".trip-results" hx-swap="innerHTML" class="join-item btn">Previous</a>
+        <a hx-get="{% querystring page=1 %}" hx-target=".trip-results" hx-swap="innerHTML" class="join-item btn">« First</a>
+        <a hx-get="{% querystring page=page_obj.previous_page_number %}" hx-target=".trip-results" hx-swap="innerHTML" class="join-item btn">Previous</a>
       {% else %}
         <button class="join-item btn btn-disabled">« First</button>
         <button class="join-item btn btn-disabled">Previous</button>
@@ -101,8 +108,8 @@
       <button class="join-item btn btn-active">{{ page_obj.number }} / {{ page_obj.paginator.num_pages }}</button>
 
       {% if page_obj.has_next %}
-        <a hx-get="?page={{ page_obj.next_page_number }}&origin={{ request.GET.origin }}&destination={{ request.GET.destination }}&departure={{ request.GET.departure }}&passengers={{ request.GET.passengers }}" hx-target=".trip-results" hx-swap="innerHTML" class="join-item btn">Next</a>
-        <a hx-get="?page={{ page_obj.paginator.num_pages }}&origin={{ request.GET.origin }}&destination={{ request.GET.destination }}&departure={{ request.GET.departure }}&passengers={{ request.GET.passengers }}" hx-target=".trip-results" hx-swap="innerHTML" class="join-item btn">Last »</a>
+        <a hx-get="{% querystring page=page_obj.next_page_number %}" hx-target=".trip-results" hx-swap="innerHTML" class="join-item btn">Next</a>
+        <a hx-get="{% querystring page=page_obj.paginator.num_pages %}" hx-target=".trip-results" hx-swap="innerHTML" class="join-item btn">Last »</a>
       {% else %}
         <button class="join-item btn btn-disabled">Next</button>
         <button class="join-item btn btn-disabled">Last »</button>

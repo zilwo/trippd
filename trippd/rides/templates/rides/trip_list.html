@@ -205,7 +205,7 @@
         <h1 class="text-5xl font-bold" id="search-title">Available Trips</h1>
 
         <!-- Search Form -->
-        <form method="GET" class="w-full max-w-3xl" id="trip-search-form" hx-get="{% url 'trip_list' %}" hx-target=".trip-results" hx-swap="innerHTML" hx-trigger="input changed delay:500ms,change" hx-include="#filter-form" hx-indicator="#trip-loading">
+        <form method="GET" class="w-full max-w-3xl" id="trip-search-form" hx-get="{% url 'trip_list' %}" hx-target=".trip-results" hx-swap="innerHTML" hx-trigger="input changed delay:500ms,change" hx-include="#filter-form">
           <div class="w-full max-w-3xl">
             <div class="search-bar">
               <div class="sf max-w-full" id="sf-from-wrap">
@@ -259,7 +259,7 @@
           </div>
 
           <div>
-            <label class="label"><span class="label-text font-semibold">Budget</span></label>
+            <label class="label"><span class="label-text font-semibold">Budget (Less Than)</span></label>
 
             <input type="range" name="budget" min="1" max="5" step="1" value="{{ request.GET.budget|default:'3' }}" class="range" />
 

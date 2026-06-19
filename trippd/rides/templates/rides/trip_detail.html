@@ -232,7 +232,7 @@
               <span class="meta-val">{{ trip.duration_value }} {{ trip.duration_unit }}</span>
             </div>
             <div class="meta-row">
-              <span class="meta-key">Budget</span>
+              <span class="meta-key">Price Per Person</span>
               <span class="meta-val">₹{{ trip.budget }}</span>
             </div>
           </div>
@@ -305,7 +305,7 @@
                 </div>
               </div>
             {% endif %}
-            <div>
+            <div id="group-detail-link">
               {% if trip.organizer.first_name and trip.organizer.last_name %}
                 <div style="font-size:15px;font-weight:800;color:var(--white);">{{ trip.organizer.first_name }} {{ trip.organizer.last_name }}</div>
               {% else %}

@@ -63,7 +63,7 @@
       <input type="radio" name="dashboard_tabs" role="tab" class="tab" aria-label="Join Requests" />
 
       <div role="tabpanel" class="tab-content bg-(--card) border-(--blue-border) rounded-box p-6">
-        <h2 class="text-xl font-bold mb-4">Pending Join Requests</h2>
+        <h2 class="text-xl font-bold mb-4" id="pending-join-requests">Pending Join Requests</h2>
 
         {% for membership in pending_requests %}
           <div class="card bg-(--card) mb-3" id="request-card-{{ membership.id }}">
