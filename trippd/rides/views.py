@@ -12,7 +12,7 @@ from django.views.generic import (
 )
 from django import forms
 
-from users.models import Language, User
+from users.models import Language, User, Notification
 from .models import (
     Conversation,
     Trip,
@@ -350,11 +350,25 @@ def join_trip_request(request, pk):
         messages.success(
             request, "Your request to join the trip has been sent to the organizer."
         )
+
+        request_message = (
+            f"{request.user.username} has requested to join your trip: {trip}."
+        )
+        Notification.objects.create(
+            user=trip.organizer,
+            text=request_message,
+            link=reverse("trip_dashboard") + "?tab=joinrequests",
+        )
+        print("we have th ", trip.organizer.notifications.filter(isread=False).count())
+
         async_to_sync(get_channel_layer().group_send)(
             f"notifications_{trip.organizer.id}",
             {
                 "type": "send_notification",
-                "message": f"{request.user.username} has requested to join the trip.",
+                "message": request_message,
+                "unread_count": trip.organizer.notifications.filter(
+                    isread=False
+                ).count(),
             },
         )
 
@@ -454,11 +468,19 @@ def accept_request(request, pk):
             "activity": f"{membership.user.username} has joined the trip.",
         },
     )
+
+    acceptance_message = f"Your request to join {membership.trip} has been accepted!"
+    Notification.objects.create(
+        user=membership.user,
+        text=acceptance_message,
+        link=reverse("trip_chat", kwargs={"pk": membership.trip.pk}),
+    )
     async_to_sync(get_channel_layer().group_send)(
         f"notifications_{membership.user.id}",
         {
             "type": "send_notification",
-            "message": f"Your request to join {membership.trip} has been accepted!",
+            "message": acceptance_message,
+            "unread_count": membership.user.get_unread_notification_count(),
         },
     )
     return HttpResponse(status=200)
@@ -480,6 +502,7 @@ def reject_request(request, pk):
         {
             "type": "send_notification",
             "message": f"Your request to join {membership.trip} has been rejected.",
+            "unread_count": membership.user.get_unread_notification_count(),
         },
     )
     return HttpResponse(status=200)

@@ -60,7 +60,7 @@
         {% endfor %}
       </div>
 
-      <input type="radio" name="dashboard_tabs" role="tab" class="tab" aria-label="Join Requests" />
+      <input type="radio" name="dashboard_tabs" role="tab" class="tab" aria-label="Join Requests" {% if request.GET.tab == "joinrequests" %}checked{% endif %} />
 
       <div role="tabpanel" class="tab-content bg-(--card) border-(--blue-border) rounded-box p-6">
         <h2 class="text-xl font-bold mb-4" id="pending-join-requests">Pending Join Requests</h2>

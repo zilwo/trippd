@@ -1,0 +1,5 @@
+{% for notification in notifications %}
+  {% include 'rides/partials/notification_item.html' %}
+{% empty %}
+  <p class="text-sm">No notifications.</p>
+{% endfor %}

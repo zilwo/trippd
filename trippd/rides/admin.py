@@ -1,5 +1,6 @@
 from django.contrib import admin
-from .models import Trip, TripMembership,TripGroup,TripGroupMessage
+from .models import Trip, TripMembership, TripGroup, TripGroupMessage
+
 # Register your models here.
 admin.site.register(Trip)
 admin.site.register(TripMembership)

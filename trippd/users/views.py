@@ -1,12 +1,15 @@
+from pyexpat.errors import messages
+
 from django import forms
+from django.http import Http404, HttpResponse
 from django.shortcuts import redirect, render
 from django.contrib.auth.views import LoginView, LogoutView
 from django.urls import reverse_lazy
-from django.views.generic import CreateView, DetailView
+from django.views.generic import CreateView, DetailView, ListView
 from django.contrib.auth.forms import UserCreationForm
 from django.core.mail import send_mail
 from .utils.tokens import AccountActivationTokenGenerator
-from .models import Language, User
+from .models import Language, Notification, User
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
 from .models import Profile
@@ -127,3 +130,52 @@ class UserProfileView(LoginRequiredMixin, DetailView):
             f"Viewing profile of: {profile_user.username}, is own profile: {context['is_own_profile']}"
         )
         return context
+
+
+class NotificationListView(LoginRequiredMixin, ListView):
+    model = Notification
+    template_name = "rides/partials/notification_list.html"
+    context_object_name = "notifications"
+
+    def get_queryset(self):
+        return self.request.user.notifications.order_by("-created_at").order_by(
+            "isread"
+        )[:20]
+
+
+@login_required
+def notification_redirect(request, notification_id):
+    """Redirects to the link associated with a notification and marks it as read. yes this is a GET request, but we are marking the notification as read"""
+    try:
+        notification = Notification.objects.get(id=notification_id, user=request.user)
+        notification.isread = True
+        notification.save()
+        print(
+            f"Redirecting user {request.user.username} to {notification.link} for notification {notification_id}"
+        )
+        return redirect(notification.link)
+    except Notification.DoesNotExist:
+        raise Http404(
+            "Notification does not exist or you do not have permission to view it."
+        )
+
+
+@login_required
+def mark_notification_as_read(request, notification_id):
+    """Marks a specific notification as read."""
+    try:
+        notification = Notification.objects.get(id=notification_id, user=request.user)
+        notification.isread = True
+        notification.save()
+        print(
+            f"Marked notification {notification_id} as read for user {request.user.username}"
+        )
+        return render(
+            request,
+            "rides/partials/notification_item.html",
+            {"notification": notification},
+        )
+    except Notification.DoesNotExist:
+        raise Http404(
+            "Notification does not exist or you do not have permission to modify it."
+        )

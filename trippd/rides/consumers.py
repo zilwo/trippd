@@ -251,6 +251,7 @@ class NotificationConsumer(AsyncWebsocketConsumer):
                 {
                     "type": "notification",
                     "message": event["message"],
+                    "unread_count": event.get("unread_count", 0),
                 }
             )
         )

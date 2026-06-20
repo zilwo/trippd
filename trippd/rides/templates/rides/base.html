@@ -67,6 +67,7 @@
       </div>
 
       <div class="navbar-end gap-2">
+          {% include 'rides/components/notifications.html' %}
         <a class="btn btn-ghost" href="{% url 'trip_list' %}">Find Trip</a>
 
         <details class="dropdown dropdown-end">
@@ -177,6 +178,10 @@
             <button type="button" onclick="this.parentElement.remove()" class="btn btn-ghost btn-xs">✕</button>
           `
           document.querySelector('.messages').appendChild(notification);
+          const notificationCountElem = document.getElementById("notification-count");
+          notificationCountElem.textContent = data.unread_count;
+          notificationCountElem.classList.remove("hidden");
+
      
 
           setTimeout(() => {
@@ -192,7 +197,7 @@
 
           }
 
-          }, 5000)
+          }, 3000)
                
          
         }

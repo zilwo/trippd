@@ -18,6 +18,9 @@ class User(AbstractUser):
     def __str__(self):
         return self.email
 
+    def get_unread_notification_count(self):
+        return self.notifications.filter(isread=False).count()
+
 
 class Language(models.Model):
     """Spoken languages for user profiles."""
@@ -82,3 +85,16 @@ class Rating(models.Model):
 
     def __str__(self):
         return f"{self.rater.email} rated {self.ratee.email} for {self.trip}"
+
+
+class Notification(models.Model):
+    user = models.ForeignKey(
+        User, on_delete=models.CASCADE, related_name="notifications"
+    )
+    text = models.CharField(max_length=255)
+    link = models.CharField(max_length=255, blank=True)
+    isread = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["created_at"]
