@@ -64,37 +64,56 @@
 
       <div role="tabpanel" class="tab-content bg-(--card) border-(--blue-border) rounded-box p-6">
         <h2 class="text-xl font-bold mb-4" id="pending-join-requests">Pending Join Requests</h2>
+        
+{% for membership in pending_requests %}
+<div id="request-card-{{ membership.id }}" class="card bg-(--card) mb-3">
+  <div class="card-body">
 
-        {% for membership in pending_requests %}
-          <div class="card bg-(--card) mb-3" id="request-card-{{ membership.id }}">
-            <div class="card-body py-4">
-              <div class="flex justify-between items-center">
-                <div>
-                  <h3 class="font-semibold">{{ membership.user.username }}</h3>
+    <div class="flex justify-between items-center">
 
-                  <p class="text-sm opacity-70">Wants to join
-                    {{ membership.trip.origin }}
-                    →
-                    {{ membership.trip.destination }}</p>
-                </div>
+      <a href="{% url 'profile' membership.user.username %}" class="flex items-center gap-3">
+        {% include 'rides/components/avatar.html' with user=membership.user style='w-10 rounded-full' %}
+        <span>{{ membership.user.username }}</span>
+      </a>
 
-                <div class="flex gap-2">
-                  <form hx-post="{% url 'accept_request' membership.id %}" hx-target="#request-card-{{ membership.id }}" hx-swap="delete">
-                    {% csrf_token %}
-                    <button class="btn btn-success btn-sm">Accept</button>
-                  </form>
+      <div class="flex gap-2">
+        <form hx-post="{% url 'accept_request' membership.id %}"
+              hx-target="#request-card-{{ membership.id }}"
+              hx-swap="delete">
+          {% csrf_token %}
+          <button class="btn btn-success btn-sm">Accept</button>
+        </form>
 
-                  <form hx-post="{% url 'reject_request' membership.id %}" hx-target="#request-card-{{ membership.id }}" hx-swap="delete">
-                    {% csrf_token %}
-                    <button class="btn btn-error btn-sm">Reject</button>
-                  </form>
-                </div>
-              </div>
-            </div>
-          </div>
-        {% empty %}
-          <p>No pending requests.</p>
-        {% endfor %}
+        <form hx-post="{% url 'reject_request' membership.id %}"
+              hx-target="#request-card-{{ membership.id }}"
+              hx-swap="delete">
+          {% csrf_token %}
+          <button class="btn btn-error btn-sm">Reject</button>
+        </form>
+      </div>
+
+    </div>
+
+    <p class="text-sm opacity-70 min-w-0">
+      {{ membership.trip.origin }} → {{ membership.trip.destination }}
+    </p>
+
+    <p class="text-sm opacity-70">
+      {{ membership.message }}
+    </p>
+
+  </div>
+</div>
+{% empty %}
+<p>No pending requests.</p>
+{% endfor %}
+
+
+
+              
+
+            
+    
       </div>
     </div>
   </div>

@@ -235,9 +235,11 @@
             <input type="hidden" name="lat" id="lat" value="" />
             <input type="hidden" name="lon" id="lon" value="" />
 
-            {% for tag in popular_tags %}
-              <label><input type="checkbox" name="tag" value="{{ tag }}" class="peer hidden" /><span class="btn btn-sm rounded-2xl peer-checked:bg-(--blue)">{{ tag|title }}</span></label>
-            {% endfor %}
+            <div class="flex gap-2">
+              {% for tag in popular_tags %}
+                <label><input type="checkbox" name="tag" value="{{ tag }}" class="peer hidden" /><span class="btn btn-sm rounded-2xl peer-checked:bg-(--blue)">{{ tag|title }}</span></label>
+              {% endfor %}
+            </div>
           </div>
         </form>
         <div class="trip-results m-0 p-0 flex flex-col items-center gap-6 w-full">

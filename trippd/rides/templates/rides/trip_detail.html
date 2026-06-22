@@ -333,15 +333,29 @@
           {% if trip.slots_available > 0 %}
             {% if not is_member %}
               <div class="trip_requests flex flex-col gap-3">
-                <form method="post" action="{% url 'join_trip_request' trip.id %}">
-                  {% csrf_token %}
+                {% if user.is_authenticated %}
+                  <button type="button" class="btn btn-outline w-full hover:bg-(--card2) text-(--black)" onclick="my_modal_4.showModal()" style="border-radius:12px;">Join Trip</button>
+                {% else %}
+                  <a href="{% url 'login' %}" class="btn btn-outline w-full hover:bg-(--card2) text-(--black)" style="border-radius:12px;">Join Trip</a>
+                {% endif %}
+                <dialog id="my_modal_4" class="modal">
+                  <div class="modal-box">
+                    <form method="dialog">
+                      <button type="submit" class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2">✕</button>
+                    </form>
+                    <form method="post" action="{% url 'join_trip_request' trip.id %}" class="flex flex-col gap-4">
+                      <h3 class="text-lg font-bold">Introduce Yourself, This will help others get to know you!</h3>
 
-                  <button type="submit" class="btn bg-(--blue) w-full hover:bg-(--blue-border) text-white" style="border-radius:12px;">Join Trip</button>
-                </form>
+                      {% csrf_token %}
+                      <textarea name="message" rows="5" class="textarea textarea-bordered w-full" placeholder="Hi, I'm interested in joining this trip because..."></textarea>
+                      <button type="submit" class="btn btn-outline w-full text-(--black)" style="border-radius:12px;">Submit Join Request</button>
+                    </form>
+                  </div>
+                </dialog>
                 {% if is_pending %}
                   <form method="post" action="{% url 'cancel_trip_joining_request' trip.id %}">
                     {% csrf_token %}
-                    <button type="submit" class="btn bg-(--blue) w-full hover:bg-(--blue-border) text-white" style="border-radius:12px;">Cancel Request</button>
+                    <button type="submit" class="btn btn-outline w-full ) text-(--black)" style="border-radius:12px;">Cancel Request</button>
                   </form>
                 {% endif %}
               </div>

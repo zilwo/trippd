@@ -98,6 +98,10 @@ class TripMembership(models.Model):
         User, on_delete=models.CASCADE, related_name="trip_memberships"
     )
     joined_at = models.DateTimeField(auto_now_add=True)
+    message = models.TextField(
+        blank=True, default="I am interested in joining this trip!"
+    )
+
     status = models.CharField(
         max_length=20,
         choices=[

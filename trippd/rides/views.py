@@ -272,7 +272,11 @@ class TripListView(ListView):
         if budget:
             try:
                 budget_limit = self.BUDGET_LIMITS.get(int(budget), 100000)
-                queryset = queryset.filter(budget__lte=budget_limit).distinct()
+                queryset = (
+                    queryset.filter(budget__lte=budget_limit)
+                    .distinct()
+                    .order_by("-budget")
+                )
 
             except ValueError:
                 pass
@@ -322,6 +326,8 @@ class TripListView(ListView):
 def join_trip_request(request, pk):
     """Process User Request to Join a Trip."""
     trip = Trip.objects.get(pk=pk)
+    join_message = request.POST.get("message", "").strip()
+
     existing_membership = TripMembership.objects.filter(
         trip=trip, user=request.user
     ).first()
@@ -346,7 +352,12 @@ def join_trip_request(request, pk):
                 "Your previous request to join this trip was rejected. Please contact the organizer for more information.",
             )
     else:
-        TripMembership.objects.create(trip=trip, user=request.user)
+        if join_message:
+            TripMembership.objects.create(
+                trip=trip, user=request.user, message=join_message
+            )
+        else:
+            TripMembership.objects.create(trip=trip, user=request.user)
         messages.success(
             request, "Your request to join the trip has been sent to the organizer."
         )
