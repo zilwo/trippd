@@ -32,8 +32,8 @@
           <span class="trip-date">{{ t.departure_time|date:'d M Y' }}</span>
           <span class="sep">·</span>
           <span class="badge bg-(--blue) border-0">
-            {% if t.duration_value and t.duration_unit %}
-              {{ t.duration_value }} {{ t.duration_unit }}
+            {% if t.trip_duration %}
+              {{ t.trip_duration }}
             {% else %}
               N/A
             {% endif %}

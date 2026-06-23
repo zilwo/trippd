@@ -46,13 +46,11 @@ class TripCreateForm(forms.ModelForm):
             "from_address",
             "to_address",
             "departure_time",
-            "expected_arrival_time",
+            "expected_finish_time",
             "budget",
             "slots_available",
             "tag",
-            "duration_value",
-            "duration_unit",
-            "orgin_lat",
+            "origin_lat",
             "origin_lon",
             "trip_image",
         ]
@@ -61,7 +59,7 @@ class TripCreateForm(forms.ModelForm):
         """Performs custom validation to ensure that the trip details are consistent."""
         cleaned_data = super().clean()
         departure_time = cleaned_data.get("departure_time")
-        expected_arrival_time = cleaned_data.get("expected_arrival_time")
+        expected_finish_time = cleaned_data.get("expected_finish_time")
         origin = cleaned_data.get("origin")
         destination = cleaned_data.get("destination")
         to_address = cleaned_data.get("to_address")
@@ -83,18 +81,18 @@ class TripCreateForm(forms.ModelForm):
 
         if (
             departure_time
-            and expected_arrival_time
-            and expected_arrival_time <= departure_time
+            and expected_finish_time
+            and expected_finish_time <= departure_time
         ):
             raise forms.ValidationError(
-                "Expected arrival time must be after departure time."
+                "Expected finish time must be after departure time."
             )
 
         if departure_time and departure_time < timezone.now():
             raise forms.ValidationError("Departure time must be in the future.")
 
-        if expected_arrival_time and expected_arrival_time <= timezone.now():
-            raise forms.ValidationError("Expected arrival time must be in the future.")
+        if expected_finish_time and expected_finish_time <= timezone.now():
+            raise forms.ValidationError("Expected finish time must be in the future.")
 
         return cleaned_data
 
@@ -215,6 +213,7 @@ class TripDetailView(DetailView):
             context["is_pending"] = TripMembership.objects.filter(
                 trip=trip, user=user, status="pending"
             ).exists()
+            context["duration"] = trip.trip_duration()
 
         return context
 
@@ -547,12 +546,9 @@ def advance_trip_status(request, pk):
 
     new_status = trip.next_status()
 
-    if (
-        new_status == "completed"
-        and timezone.now() < trip.expected_arrival_time + trip.get_duration_timedelta()
-    ):
+    if new_status == "completed" and timezone.now() < trip.expected_finish_time:
         return HttpResponse(
-            "Cannot complete trip before expected arrival time.", status=400
+            "Cannot complete trip before expected finish time.", status=400
         )
 
     trip.status = new_status

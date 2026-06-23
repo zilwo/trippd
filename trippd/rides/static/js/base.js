@@ -14,7 +14,7 @@ document.addEventListener("DOMContentLoaded", function () {
     dateFormat: "Y-m-d H:i",
   });
 
-  flatpickr("#expected_arrival_time", {
+  flatpickr("#expected_finish_time", {
     enableTime: true,
     dateFormat: "Y-m-d H:i",
   });

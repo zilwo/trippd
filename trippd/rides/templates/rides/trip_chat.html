@@ -211,12 +211,12 @@
                 <span class="meta-val">{{ tripgroup.trip.departure_time|date:'g:i A, d M Y' }}</span>
               </div>
               <div class="meta-row">
-                <span class="meta-key">Arrival</span>
-                <span class="meta-val">{{ tripgroup.trip.expected_arrival_time|date:'g:i A, d M Y' }}</span>
+                <span class="meta-key">Expected Finish Time</span>
+                <span class="meta-val">{{ tripgroup.trip.expected_finish_time|date:'g:i A, d M Y' }}</span>
               </div>
               <div class="meta-row">
                 <span class="meta-key">Duration</span>
-                <span class="meta-val">{{ tripgroup.trip.duration_value }} {{ tripgroup.trip.duration_unit }}</span>
+                <span class="meta-val">{{ tripgroup.trip.trip_duration }}</span>
               </div>
               <div class="meta-row">
                 <span class="meta-key">Budget</span>

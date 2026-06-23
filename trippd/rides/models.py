@@ -1,41 +1,32 @@
 from django.db import models
+from .utils.formatdelta import format_delta
 from users.models import User
 from taggit.managers import TaggableManager
 from datetime import timedelta
 
 
 class Trip(models.Model):
-    """Represents a trip which users can request to join."""
+    """Represents a ride/trip which users can request to join."""
 
     trip_type = models.CharField(
         max_length=20,
         choices=[("ride-sharing", "Ride Sharing"), ("trip", "Trip")],
-        default="ride-sharing",
+        default="trip",
     )
     organizer = models.ForeignKey(
         User, on_delete=models.CASCADE, related_name="organized_trips"
     )
     origin = models.CharField(max_length=255)
     destination = models.CharField(max_length=255)
-    orgin_lat = models.FloatField(null=True, blank=True)
+    origin_lat = models.FloatField(null=True, blank=True)
     origin_lon = models.FloatField(null=True, blank=True)
     description = models.TextField(blank=True)
     from_address = models.CharField(max_length=255)
     to_address = models.CharField(max_length=255)
     departure_time = models.DateTimeField()
-    expected_arrival_time = models.DateTimeField()
+    expected_finish_time = models.DateTimeField()
     budget = models.DecimalField(max_digits=10, decimal_places=2)
     slots_available = models.PositiveIntegerField()
-    duration_value = models.PositiveIntegerField(null=True, blank=True)
-    duration_unit = models.CharField(
-        max_length=50,
-        choices=[
-            ("hours", "Hours"),
-            ("days", "Days"),
-            ("weeks", "Weeks"),
-            ("months", "Months"),
-        ],
-    )
     tag = TaggableManager(blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     status = models.CharField(
@@ -74,20 +65,11 @@ class Trip(models.Model):
         }
         return status_flow.get(self.status, self.status)
 
-    def get_duration_timedelta(self):
-        """Returns a timedelta object based on the duration_value and duration_unit."""
-
-        if self.duration_value is None or self.duration_unit is None:
-            return timedelta(0)
-
-        if self.duration_unit == "days":
-            return timedelta(days=self.duration_value)
-        elif self.duration_unit == "weeks":
-            return timedelta(weeks=self.duration_value)
-        elif self.duration_unit == "months":
-            return timedelta(days=self.duration_value * 30)
-        else:
-            return timedelta(0)
+    def trip_duration(self):
+        if self.departure_time and self.expected_finish_time:
+            duration = self.expected_finish_time - self.departure_time
+            return format_delta(duration, trip_type=self.trip_type)
+        return None
 
 
 class TripMembership(models.Model):

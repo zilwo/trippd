@@ -144,7 +144,7 @@
 
             <!-- Destination -->
             <div>
-              <div class="city-sub">Arrival · {{ trip.expected_arrival_time|date:'g:i A' }}</div>
+              <div class="city-sub">Arrival · {{ trip.expected_finish_time|date:'g:i A' }}</div>
               <div class="city-name">{{ trip.destination }}</div>
               {% if trip.to_address != 'Undecided' %}
                 <div class="addr-line">
@@ -167,10 +167,10 @@
             <div style="font-size:12px;color:var(--muted);font-weight:500;">Date</div>
             <div style="font-size:15px;font-weight:800;color:var(--white);">{{ trip.departure_time|date:'D, d M Y' }}</div>
           </div>
-          {% if trip.duration_value %}
+          {% if trip.trip_duration %}
             <div>
               <div style="font-size:12px;color:var(--muted);font-weight:500;">Duration</div>
-              <span class="badge badge-soft bg-(--blue) border-0">{{ trip.duration_value }} {{ trip.duration_unit }}</span>
+              <div class="badge badge-soft bg-(--blue) border-0">{{ trip.trip_duration }}</div>
             </div>
           {% else %}
             <div>
@@ -224,12 +224,12 @@
               <span class="meta-val">{{ trip.departure_time|date:'g:i A, d M Y' }}</span>
             </div>
             <div class="meta-row">
-              <span class="meta-key">Arrival</span>
-              <span class="meta-val">{{ trip.expected_arrival_time|date:'g:i A, d M Y' }}</span>
+              <span class="meta-key">Expected Finish Time</span>
+              <span class="meta-val">{{ trip.expected_finish_time|date:'g:i A, d M Y' }}</span>
             </div>
             <div class="meta-row">
               <span class="meta-key">Duration</span>
-              <span class="meta-val">{{ trip.duration_value }} {{ trip.duration_unit }}</span>
+              <span class="meta-val">{{ trip.trip_duration }}</span>
             </div>
             <div class="meta-row">
               <span class="meta-key">Price Per Person</span>
