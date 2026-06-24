@@ -24,156 +24,196 @@
 
   <div class="min-h-screen bg-(--bg) p-6">
     <div class="max-w-4xl mx-auto">
-      <div class="card bg-(--card) shadow-lg border border-(--blue-border)">
-        <div class="card-body">
-          <h2 class="card-title text-2xl mb-4">
+      <form method="POST" enctype="multipart/form-data">
+        {% csrf_token %}
+
+        <div class="join mb-6">
+          {% if not trip %}
+            <input type="radio" name="creation_mode" class="join-item btn" value="trip" {% if creation_mode == "trip" %}checked{% endif %} aria-label="Trip" id="trip-mode" />
+            <input type="radio" name="creation_mode" class="join-item btn" value="companion" {% if creation_mode == "companion" %}checked{% endif %} aria-label="Companion" id="companion-mode" />
+          {% endif %}
+        </div>
+
+        <div id="trip-fields">
+          <div class="card bg-(--card) shadow-lg border border-(--blue-border)">
+            {% if not is_companion_edit %}
+              <div class="card-body">
+                <h2 class="card-title text-2xl mb-4">
+                  {% if trip %}
+                    Update Trip
+                  {% else %}
+                    Create Trip
+                  {% endif %}
+                </h2>
+                <span class="text-base-content/60">Create a fully planned trip with meeting spots, schedule, and other details for others to join.</span>
+
+                <!-- Route Information -->
+                <div>
+                  <h3 class="font-semibold mb-4">Route Information</h3>
+
+                  <div class="grid md:grid-cols-2 gap-4">
+                    <div>
+                      <label class="label" for="from_address"><span class="label-text">Meetup Address</span></label>
+
+                      <input id="from_address" name="from_address" class="address-auto" value="{{ form.from_address.value|default:'' }}" />
+                    </div>
+
+                    <div>
+                      <label class="label" for="origin"><span class="label-text">Origin</span></label>
+
+                      <input type="text" name="origin" id="origin" value="{{ form.origin.value|default:'' }}" class="input w-full" />
+
+                      <input type="hidden" name="origin_lat" id="origin_lat" />
+                      <input type="hidden" name="origin_lon" id="origin_lon" />
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Schedule -->
+                <div>
+                  <h3 class="font-semibold mb-4">Schedule</h3>
+
+                  <div class="grid md:grid-cols-2 gap-4">
+                    <div>
+                      <label class="label" for="departure_time"><span class="label-text">Departure Time</span></label>
+
+                      <input type="text" id="departure_time" name="departure_time" class="input input-bordered w-full" value="{{ object.departure_time|date:'Y-m-d H:i' }}" />
+                    </div>
+
+                    <div>
+                      <label class="label" for="expected_finish_time"><span class="label-text">Expected Finish Time</span></label>
+
+                      <input type="text" id="expected_finish_time" name="expected_finish_time" class="input input-bordered w-full" value="{{ object.expected_finish_time|date:'Y-m-d H:i' }}" />
+                    </div>
+                  </div>
+                </div>
+
+                <div class="divider"></div>
+              </div>
+            {% endif %}
+          </div>
+        </div>
+
+        {% if not trip or is_companion_edit %}
+          <div id="companion-fields">
+            <div class="card bg-(--card) shadow-lg border border-(--blue-border)">
+              <div class="card-body">
+                <h2 class="card-title text-2xl mb-4">
+                  {% if is_companion_edit %}
+                    Edit Companion Request
+                  {% else %}
+                    Create Companion Request
+                  {% endif %}
+                </h2>
+                <span class="text-base-content/60">Have a destination in mind? Find like-minded travelers and plan the trip together.</span>
+
+                <div>
+                  <label class="label" for="looking_for"><span class="label-text">Looking For</span></label>
+
+                  <textarea name="looking_for" id="looking_for" class="textarea textarea-bordered w-full h-32" placeholder="What kind of travel companion are you looking for?">{{ form.looking_for.value|default:'' }}</textarea>
+                </div>
+                <div>
+                  <label class="label" for="previous_experiences"><span class="label-text">Previous Experiences</span></label>
+
+                  <textarea name="previous_experiences" id="previous_experiences" class="textarea textarea-bordered w-full h-32" placeholder="Share your previous travel experiences...">{{ form.previous_experiences.value|default:'' }}</textarea>
+                </div>
+              </div>
+            </div>
+          </div>
+        {% endif %}
+
+        <!-- Trip Details -->
+        <div class="card bg-(--card) shadow-lg border border-(--blue-border) mt-6">
+          <div class="card-body">
+            <h3 class="font-semibold mb-4 card-title">Trip Details</h3>
+
+            <div class="grid md:grid-cols-2 gap-4">
+              <div>
+                <label class="label" for="to_address"><span class="label-text">Drop Address</span></label>
+
+                <input id="to_address" name="to_address" class="address-auto" value="{{ form.to_address.value|default:'' }}" required />
+              </div>
+
+              <div>
+                <label class="label" for="destination"><span class="label-text">Destination</span></label>
+
+                <input type="text" name="destination" id="destination" class="input w-full" value="{{ form.destination.value|default:'' }}" required />
+              </div>
+
+              <div>
+                <label class="label" for="budget"><span class="label-text">Budget</span></label>
+
+                <input type="number" id="budget" name="budget" value="{{ form.budget.value|default:'0' }}" placeholder="Price per person" class="input input-bordered w-full" required />
+              </div>
+
+              <div>
+                <label class="label" for="slots_available"><span class="label-text">Available Slots</span></label>
+
+                <input type="number" id="slots_available" name="slots_available" value="{{ form.slots_available.value|default:'3' }}" class="input input-bordered w-full" required />
+              </div>
+            </div>
+
+            <div class="mt-4">
+              <label class="label" for="input-tags"><span class="label-text">Tags</span></label>
+
+              <input id="input-tags"
+                autocomplete="off"
+                placeholder="Add Tags for your trip"
+                name="tag"
+                type="text"
+                value="{% for tag in object.tag.all %}
+                  {{ tag.name }}{% if not forloop.last %}, {% endif %}
+                {% endfor %}"
+                placeholder="Add tags" />
+            </div>
+
+            <div class="mt-4">
+              <label class="label" for="description"><span class="label-text">Description</span></label>
+
+              <textarea name="description" id="description" class="textarea textarea-bordered w-full h-32" placeholder="Tell passengers about this trip...">{{ form.description.value|default:'' }}</textarea>
+            </div>
+          </div>
+        </div>
+
+        <div class="divider"></div>
+        <div class="card bg-(--card)">
+          <div class="card-body">
+            <h2 class="card-title">Preview Image</h2>
+
+            <!-- Preview -->
+            <div class="flex justify-center">
+              <img id="trip-preview" src="/media/trip_images/default.jpg" alt="Trip Preview" class="h-64 w-full max-w-md rounded-box object-cover border border-base-300" />
+            </div>
+
+            <!-- Upload -->
+            <div class="form-control mt-4">
+              <label class="label"><span class="label-text">Choose a trip image</span></label>
+
+              <input type="file" name="trip_image" id="trip-image-input" accept="image/*" class="file-input file-input-bordered w-full" />
+            </div>
+
+            <div class="alert alert-info mt-4">
+              <span>Upload a photo that represents your trip destination or travel plan.</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="flex justify-end gap-3">
+          {% if trip %}
+            <a href="{% url 'trip_detail' trip.pk %}" class="btn btn-ghost">Cancel</a>
+          {% else %}
+            <a href="{% url 'trip_list' %}" class="btn btn-ghost">Cancel</a>
+          {% endif %}
+
+          <button type="submit" class="btn bg-(--blue) text-white border-0 hover:bg-(--blue)">
             {% if trip %}
               Update Trip
             {% else %}
               Create Trip
             {% endif %}
-          </h2>
-
-          <form method="POST" enctype="multipart/form-data">
-            {% csrf_token %}
-
-            <!-- Route Information -->
-            <div>
-              <h3 class="font-semibold mb-4">Route Information</h3>
-
-              <div class="grid md:grid-cols-2 gap-4">
-                <div>
-                  <label class="label" for="from_address"><span class="label-text">Pickup Address</span></label>
-
-                  <input id="from_address" name="from_address" class="address-auto" value="{{ form.from_address.value|default:'' }}" required />
-                </div>
-
-                <div>
-                  <label class="label" for="origin"><span class="label-text">Origin</span></label>
-
-                  <input type="text" name="origin" id="origin" value="{{ form.origin.value|default:'' }}" class="input w-full" required />
-
-                  <input type="hidden" name="origin_lat" id="origin_lat" />
-                  <input type="hidden" name="origin_lon" id="origin_lon" />
-                </div>
-
-                <div>
-                  <label class="label" for="to_address"><span class="label-text">Drop Address</span></label>
-
-                  <input id="to_address" name="to_address" class="address-auto" value="{{ form.to_address.value|default:'' }}" required />
-                </div>
-
-                <div>
-                  <label class="label" for="destination"><span class="label-text">Destination</span></label>
-
-                  <input type="text" name="destination" id="destination" class="input w-full" value="{{ form.destination.value|default:'' }}" required />
-                </div>
-              </div>
-            </div>
-
-            <div class="divider"></div>
-            <div class="card bg-base-100 border border-base-300">
-              <div class="card-body">
-                <h2 class="card-title">Preview Image</h2>
-
-                <!-- Preview -->
-                <div class="flex justify-center">
-                  <img id="trip-preview" src="/media/trip_images/default.jpg" alt="Trip Preview" class="h-64 w-full max-w-md rounded-box object-cover border border-base-300" />
-                </div>
-
-                <!-- Upload -->
-                <div class="form-control mt-4">
-                  <label class="label"><span class="label-text">Choose a trip image</span></label>
-
-                  <input type="file" name="trip_image" id="trip-image-input" accept="image/*" class="file-input file-input-bordered w-full" />
-                </div>
-
-                <div class="alert alert-info mt-4">
-                  <span>Upload a photo that represents your trip destination or travel plan.</span>
-                </div>
-              </div>
-            </div>
-
-            <!-- Schedule -->
-            <div>
-              <h3 class="font-semibold mb-4">Schedule</h3>
-
-              <div class="grid md:grid-cols-2 gap-4">
-                <div>
-                  <label class="label" for="departure_time"><span class="label-text">Departure Time</span></label>
-
-                  <input type="text" id="departure_time" name="departure_time" class="input input-bordered w-full" value="{{ object.departure_time|date:'Y-m-d H:i' }}" required />
-                </div>
-
-                <div>
-                  <label class="label" for="expected_finish_time"><span class="label-text">Expected Finish Time</span></label>
-
-                  <input type="text" id="expected_finish_time" name="expected_finish_time" class="input input-bordered w-full" value="{{ object.expected_finish_time|date:'Y-m-d H:i' }}" required />
-                </div>
-              </div>
-            </div>
-
-            <div class="divider"></div>
-
-            <!-- Trip Details -->
-            <div>
-              <h3 class="font-semibold mb-4">Trip Details</h3>
-
-              <div class="grid md:grid-cols-2 gap-4">
-                <div>
-                  <label class="label" for="budget"><span class="label-text">Budget</span></label>
-
-                  <input type="number" id="budget" name="budget" value="{{ form.budget.value|default:'0' }}" placeholder="Price per person" class="input input-bordered w-full" required />
-                </div>
-
-                <div>
-                  <label class="label" for="slots_available"><span class="label-text">Available Slots</span></label>
-
-                  <input type="number" id="slots_available" name="slots_available" value="{{ form.slots_available.value|default:'3' }}" class="input input-bordered w-full" required />
-                </div>
-              </div>
-
-              <div class="mt-4">
-                <label class="label" for="input-tags"><span class="label-text">Tags</span></label>
-
-                <input id="input-tags"
-                  autocomplete="off"
-                  placeholder="Add Tags for your trip"
-                  name="tag"
-                  type="text"
-                  value="{% for tag in object.tag.all %}
-                    {{ tag.name }}{% if not forloop.last %}, {% endif %}
-                  {% endfor %}"
-                  placeholder="Add tags" />
-              </div>
-
-              <div class="mt-4">
-                <label class="label" for="description"><span class="label-text">Description</span></label>
-
-                <textarea name="description" id="description" class="textarea textarea-bordered w-full h-32" placeholder="Tell passengers about this trip...">{{ form.description.value|default:'' }}</textarea>
-              </div>
-            </div>
-
-            <div class="divider"></div>
-
-            <div class="flex justify-end gap-3">
-              {% if trip %}
-                <a href="{% url 'trip_detail' trip.pk %}" class="btn btn-ghost">Cancel</a>
-              {% else %}
-                <a href="{% url 'trip_list' %}" class="btn btn-ghost">Cancel</a>
-              {% endif %}
-
-              <button type="submit" class="btn bg-(--blue) text-white border-0 hover:bg-(--blue)">
-                {% if trip %}
-                  Update Trip
-                {% else %}
-                  Create Trip
-                {% endif %}
-              </button>
-            </div>
-          </form>
+          </button>
         </div>
-      </div>
+      </form>
     </div>
   </div>
 
@@ -231,4 +271,30 @@
       preview.src = URL.createObjectURL(file)
     })
   </script>
+
+  {% if not trip %}
+    <script>
+      const tripMode = document.getElementById('trip-mode')
+      
+      const companionMode = document.getElementById('companion-mode')
+      
+      const tripFields = document.getElementById('trip-fields')
+      const companionFields = document.getElementById('companion-fields')
+      
+      function updateMode() {
+        if (tripMode.checked) {
+          tripFields.classList.remove('hidden')
+          companionFields.classList.add('hidden')
+        } else {
+          tripFields.classList.add('hidden')
+          companionFields.classList.remove('hidden')
+        }
+      }
+      
+      tripMode.addEventListener('change', updateMode)
+      companionMode.addEventListener('change', updateMode)
+      
+      updateMode()
+    </script>
+  {% endif %}
 {% endblock %}

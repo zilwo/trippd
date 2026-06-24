@@ -16,15 +16,15 @@ class Trip(models.Model):
     organizer = models.ForeignKey(
         User, on_delete=models.CASCADE, related_name="organized_trips"
     )
-    origin = models.CharField(max_length=255)
     destination = models.CharField(max_length=255)
+    origin = models.CharField(max_length=255, blank=True)
     origin_lat = models.FloatField(null=True, blank=True)
     origin_lon = models.FloatField(null=True, blank=True)
     description = models.TextField(blank=True)
-    from_address = models.CharField(max_length=255)
-    to_address = models.CharField(max_length=255)
-    departure_time = models.DateTimeField()
-    expected_finish_time = models.DateTimeField()
+    from_address = models.CharField(max_length=255, blank=True)
+    to_address = models.CharField(max_length=255, blank=True)
+    departure_time = models.DateTimeField(null=True, blank=True)
+    expected_finish_time = models.DateTimeField(null=True, blank=True)
     budget = models.DecimalField(max_digits=10, decimal_places=2)
     slots_available = models.PositiveIntegerField()
     tag = TaggableManager(blank=True)
@@ -55,7 +55,7 @@ class Trip(models.Model):
         return self.memberships.filter(status="accepted")
 
     def __str__(self):
-        return f"{self.origin} to {self.destination}"
+        return f"{self.origin if self.origin else 'TBD'} to {self.destination}"
 
     def next_status(self):
         status_flow = {

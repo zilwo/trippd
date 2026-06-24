@@ -1,3 +1,5 @@
+from turtle import mode
+
 from django.utils import timezone
 from django.http import JsonResponse
 from django.shortcuts import redirect, render
@@ -50,8 +52,6 @@ class TripCreateForm(forms.ModelForm):
             "budget",
             "slots_available",
             "tag",
-            "origin_lat",
-            "origin_lon",
             "trip_image",
         ]
 
@@ -66,6 +66,23 @@ class TripCreateForm(forms.ModelForm):
         from_address = cleaned_data.get("from_address")
         budget = cleaned_data.get("budget")
         slots_available = cleaned_data.get("slots_available")
+
+        if not origin:
+            raise forms.ValidationError("Origin is required.")
+        if not destination:
+            raise forms.ValidationError("Destination is required.")
+        if not from_address:
+            raise forms.ValidationError("From address is required.")
+        if not to_address:
+            raise forms.ValidationError("To address is required.")
+        if not departure_time:
+            raise forms.ValidationError("Departure time is required.")
+        if not expected_finish_time:
+            raise forms.ValidationError("Expected finish time is required.")
+        if not budget:
+            raise forms.ValidationError("Budget is required.")
+        if not slots_available:
+            raise forms.ValidationError("Slots available is required.")
 
         if origin == destination:
             raise forms.ValidationError("Origin and destination cannot be the same.")
@@ -93,6 +110,44 @@ class TripCreateForm(forms.ModelForm):
 
         if expected_finish_time and expected_finish_time <= timezone.now():
             raise forms.ValidationError("Expected finish time must be in the future.")
+
+        return cleaned_data
+
+
+class CompanionTravelForm(forms.ModelForm):
+    class Meta:
+        model = Trip
+        fields = [
+            "to_address",
+            "destination",
+            "description",
+            "slots_available",
+            "budget",
+            "tag",
+            "looking_for",
+            "previous_experiences",
+        ]
+
+    def clean(self):
+        cleaned_data = super().clean()
+        destination = cleaned_data.get("destination")
+        budget = cleaned_data.get("budget")
+        slots_available = cleaned_data.get("slots_available")
+        looking_for = cleaned_data.get("looking_for")
+
+        if not destination:
+            raise forms.ValidationError(
+                "Destination is required for companion requests."
+            )
+        if not looking_for:
+            raise forms.ValidationError(
+                "Please specify what you are looking for in a travel companion."
+            )
+        if budget is not None and budget < 0:
+            raise forms.ValidationError("Budget cannot be negative.")
+
+        if slots_available is not None and slots_available <= 0:
+            raise forms.ValidationError("Slots available must be greater than zero.")
 
         return cleaned_data
 
@@ -137,22 +192,24 @@ class TripFilterForm(forms.Form):
     )
 
 
-class TravelCompanionForm(forms.Form):
-    travel_bio = forms.CharField(widget=forms.Textarea, required=False)
-    looking_for = forms.CharField(max_length=255, required=False)
-    previous_experiences = forms.CharField(widget=forms.Textarea, required=False)
-
-
 class CreateTripView(LoginRequiredMixin, CreateView):
     model = Trip
     form_class = TripCreateForm
     template_name = "rides/create_trip.html"
 
     def form_valid(self, form):
-        """Creates a trip and initializes its membership and group chat."""
+        """Creates a trip which can be a planned trip or a non-planned trip and initializes the membership and group."""
         print("Form is valid, setting organizer to:", self.request.user)
         form.instance.organizer = self.request.user
-        form.instance.status = "upcoming"
+        if self.mode == "companion":
+            form.instance.status = "planning"
+            print(
+                "Creating a companion travel request with status 'planning'",
+                form.instance,
+            )
+        else:
+            form.instance.status = "upcoming"
+            print("Creating a planned trip with status 'upcoming'", form.instance)
         response = super().form_valid(form)
         TripMembership.objects.create(
             trip=self.object, user=self.request.user, status="accepted"
@@ -179,6 +236,18 @@ class CreateTripView(LoginRequiredMixin, CreateView):
     def form_invalid(self, form):
         print("Form is invalid. Errors:", form.errors)
         return super().form_invalid(form)
+
+    def get_form_class(self):
+        """Determines which form to use"""
+        self.mode = self.request.POST.get("creation_mode", "trip")
+        if self.mode == "companion":
+            return CompanionTravelForm
+        return TripCreateForm
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["creation_mode"] = self.mode
+        return context
 
     def get_success_url(self):
         return reverse("trip_detail", kwargs={"pk": self.object.pk})
@@ -439,6 +508,17 @@ class EditTripView(LoginRequiredMixin, UpdateView):
     def get_success_url(self):
         return reverse("trip_detail", kwargs={"pk": self.object.pk})
 
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        if self.object.status == "planning":
+            context["is_companion_edit"] = True
+        return context
+
+    def get_form_class(self):
+        if self.object.status == "planning":
+            return CompanionTravelForm
+        return TripCreateForm
+
 
 @require_POST
 @login_required
@@ -544,12 +624,13 @@ def advance_trip_status(request, pk):
     if trip.status == "completed":
         return HttpResponse(status=400)
 
-    new_status = trip.next_status()
-
-    if new_status == "completed" and timezone.now() < trip.expected_finish_time:
+    expected_finish_time = trip.expected_finish_time
+    if expected_finish_time and timezone.now() < expected_finish_time:
         return HttpResponse(
-            "Cannot complete trip before expected finish time.", status=400
+            "Cannot advance trip status before expected finish time.", status=400
         )
+
+    new_status = trip.next_status()
 
     trip.status = new_status
     trip.save()
