@@ -1,0 +1,56 @@
+{% extends 'rides/base.html' %}
+{% load static %}
+
+{% block style %}
+  <style>
+    .search-bar {
+      display: flex;
+      align-items: stretch;
+      background: var(--card);
+      border: 1.5px solid var(--blue-border);
+      border-radius: 16px;
+      overflow: visible;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    .search-bar:focus-within {
+      border-color: var(--blue-border2);
+      box-shadow: 0 0 0 4px rgba(79, 142, 255, 0.08);
+    }
+    .sf {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      padding: 14px 20px;
+      flex: 1;
+    }
+    .sf-label {
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 4px;
+    }
+    .sf-input,
+    .sf-select {
+      background: transparent;
+      border: none;
+      outline: none;
+      color: var(--black);
+      font-family: 'Nunito', sans-serif;
+      font-weight: 700;
+      font-size: 15px;
+      width: 100%;
+      cursor: pointer;
+      appearance: none;
+    }
+    
+    .search-btn {
+      max-width: 200px;
+    }
+  </style>
+{% endblock %}
+
+{% block content %}
+  {% include 'rides/components/sidebar.html' with mode='companion' %}
+{% endblock %}

@@ -32,169 +32,32 @@ from django.http import HttpResponse
 from channels.layers import get_channel_layer
 from asgiref.sync import async_to_sync
 from django.db.models import Count
+from .forms import (
+    TripCreateForm,
+    CompanionTravelForm,
+    TripFilterForm,
+    BUDGET_LIMITS,
+    AGE_GROUPS,
+)
 
 
 def home(request):
     return render(request, "rides/home.html")
 
 
-class TripCreateForm(forms.ModelForm):
-    class Meta:
-        model = Trip
-        fields = [
-            "origin",
-            "destination",
-            "description",
-            "from_address",
-            "to_address",
-            "departure_time",
-            "expected_finish_time",
-            "budget",
-            "slots_available",
-            "tag",
-            "trip_image",
-        ]
+def auto_populate(request):
+    query = request.GET.get("query", "")
 
-    def clean(self):
-        """Performs custom validation to ensure that the trip details are consistent."""
-        cleaned_data = super().clean()
-        departure_time = cleaned_data.get("departure_time")
-        expected_finish_time = cleaned_data.get("expected_finish_time")
-        origin = cleaned_data.get("origin")
-        destination = cleaned_data.get("destination")
-        to_address = cleaned_data.get("to_address")
-        from_address = cleaned_data.get("from_address")
-        budget = cleaned_data.get("budget")
-        slots_available = cleaned_data.get("slots_available")
+    if query:
+        results = autocomplete_location(query)
+        return JsonResponse({"results": results})
 
-        if not origin:
-            raise forms.ValidationError("Origin is required.")
-        if not destination:
-            raise forms.ValidationError("Destination is required.")
-        if not from_address:
-            raise forms.ValidationError("From address is required.")
-        if not to_address:
-            raise forms.ValidationError("To address is required.")
-        if not departure_time:
-            raise forms.ValidationError("Departure time is required.")
-        if not expected_finish_time:
-            raise forms.ValidationError("Expected finish time is required.")
-        if not budget:
-            raise forms.ValidationError("Budget is required.")
-        if not slots_available:
-            raise forms.ValidationError("Slots available is required.")
-
-        if origin == destination:
-            raise forms.ValidationError("Origin and destination cannot be the same.")
-
-        if from_address == to_address:
-            raise forms.ValidationError("From and To addresses cannot be the same.")
-
-        if budget is not None and budget < 0:
-            raise forms.ValidationError("Budget cannot be negative.")
-
-        if slots_available is not None and slots_available <= 0:
-            raise forms.ValidationError("Slots available must be greater than zero.")
-
-        if (
-            departure_time
-            and expected_finish_time
-            and expected_finish_time <= departure_time
-        ):
-            raise forms.ValidationError(
-                "Expected finish time must be after departure time."
-            )
-
-        if departure_time and departure_time < timezone.now():
-            raise forms.ValidationError("Departure time must be in the future.")
-
-        if expected_finish_time and expected_finish_time <= timezone.now():
-            raise forms.ValidationError("Expected finish time must be in the future.")
-
-        return cleaned_data
-
-
-class CompanionTravelForm(forms.ModelForm):
-    class Meta:
-        model = Trip
-        fields = [
-            "to_address",
-            "destination",
-            "description",
-            "slots_available",
-            "budget",
-            "tag",
-            "looking_for",
-            "previous_experiences",
-        ]
-
-    def clean(self):
-        cleaned_data = super().clean()
-        destination = cleaned_data.get("destination")
-        budget = cleaned_data.get("budget")
-        slots_available = cleaned_data.get("slots_available")
-        looking_for = cleaned_data.get("looking_for")
-
-        if not destination:
-            raise forms.ValidationError(
-                "Destination is required for companion requests."
-            )
-        if not looking_for:
-            raise forms.ValidationError(
-                "Please specify what you are looking for in a travel companion."
-            )
-        if budget is not None and budget < 0:
-            raise forms.ValidationError("Budget cannot be negative.")
-
-        if slots_available is not None and slots_available <= 0:
-            raise forms.ValidationError("Slots available must be greater than zero.")
-
-        return cleaned_data
-
-
-class TripFilterForm(forms.Form):
-    passengers = forms.ChoiceField(
-        required=False,
-        choices=[
-            ("", "Any"),
-            ("1", "At least 1 seat"),
-            ("2", "At least 2 seats"),
-            ("3", "At least 3 seats"),
-            ("4", "At least 4 seats"),
-        ],
-        widget=forms.Select(attrs={"class": "select"}),
-    )
-    budget = forms.IntegerField(
-        required=False,
-        initial=3,
-    )
-
-    age_group = forms.ChoiceField(
-        required=False,
-        choices=[
-            ("", "Any"),
-            ("18-25", "18-25"),
-            ("26-35", "26-35"),
-            ("36-45", "36-45"),
-            ("46-60", "46-60"),
-            ("60+", "60+"),
-        ],
-        widget=forms.Select(attrs={"class": "select"}),
-    )
-    gender = forms.ChoiceField(
-        required=False,
-        choices=[
-            ("", "Any"),
-            ("M", "Male"),
-            ("F", "Female"),
-        ],
-        widget=forms.RadioSelect(attrs={"class": "radio radio-primary"}),
-    )
+    else:
+        return JsonResponse({"results": []})
 
 
 class CreateTripView(LoginRequiredMixin, CreateView):
     model = Trip
-    form_class = TripCreateForm
     template_name = "rides/create_trip.html"
 
     def form_valid(self, form):
@@ -203,6 +66,7 @@ class CreateTripView(LoginRequiredMixin, CreateView):
         form.instance.organizer = self.request.user
         if self.mode == "companion":
             form.instance.status = "planning"
+            print("image is ", form.instance.trip_image)
             print(
                 "Creating a companion travel request with status 'planning'",
                 form.instance,
@@ -253,38 +117,36 @@ class CreateTripView(LoginRequiredMixin, CreateView):
         return reverse("trip_detail", kwargs={"pk": self.object.pk})
 
 
-def auto_populate(request):
-    query = request.GET.get("query", "")
-
-    if query:
-        results = autocomplete_location(query)
-        return JsonResponse({"results": results})
-
-    else:
-        return JsonResponse({"results": []})
-
-
-class TripDetailView(DetailView):
+class EditTripView(LoginRequiredMixin, UpdateView):
     model = Trip
-    template_name = "rides/trip_detail.html"
-    context_object_name = "trip"
+    template_name = "rides/create_trip.html"
+
+    def get_queryset(self):
+        return Trip.objects.filter(organizer=self.request.user)
+
+    def get_success_url(self):
+        return reverse("trip_detail", kwargs={"pk": self.object.pk})
+
+    def form_valid(self, form):
+        print("Form is valid, updating trip:", form.instance.trip_image)
+        response = super().form_valid(form)
+        print("Trip updated successfully.")
+        return response
+
+    def form_invalid(self, form):
+        print("Form is invalid. Errors:", form.errors)
+        return super().form_invalid(form)
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        trip = self.get_object()
-        user = self.request.user
-
-        if user.is_authenticated:
-            context["is_member"] = TripMembership.objects.filter(
-                trip=trip, user=user, status="accepted"
-            ).exists()
-            context["organizer"] = trip.organizer
-            context["is_pending"] = TripMembership.objects.filter(
-                trip=trip, user=user, status="pending"
-            ).exists()
-            context["duration"] = trip.trip_duration()
-
+        if self.object.status == "planning":
+            context["is_companion_edit"] = True
         return context
+
+    def get_form_class(self):
+        if self.object.status == "planning":
+            return CompanionTravelForm
+        return TripCreateForm
 
 
 class TripListView(ListView):
@@ -292,20 +154,6 @@ class TripListView(ListView):
     template_name = "rides/trip_list.html"
     context_object_name = "trips"
     paginate_by = 2
-    BUDGET_LIMITS = {
-        1: 5000,
-        2: 15000,
-        3: 30000,
-        4: 50000,
-        5: 100000,
-    }
-    AGE_GROUPS = {
-        "18-25": (18, 25),
-        "26-35": (26, 35),
-        "36-45": (36, 45),
-        "46-60": (46, 60),
-        "60+": (60, 100),
-    }
 
     def get_queryset(self):
         queryset = super().get_queryset()
@@ -326,7 +174,8 @@ class TripListView(ListView):
         if origin:
             queryset = queryset.filter(origin__icontains=origin)
         if destination:
-            queryset = queryset.filter(destination__icontains=destination)
+            if len(destination) >= 3:
+                queryset = queryset.filter(destination__icontains=destination)
         if departure:
             queryset = queryset.filter(departure_time__date=departure)
         if passengers:
@@ -339,7 +188,7 @@ class TripListView(ListView):
             )
         if budget:
             try:
-                budget_limit = self.BUDGET_LIMITS.get(int(budget), 100000)
+                budget_limit = self.BUDGET_LIMITS.get(budget, 100000)
                 queryset = (
                     queryset.filter(budget__lte=budget_limit)
                     .distinct()
@@ -368,7 +217,7 @@ class TripListView(ListView):
         elif destination:
             self.search_title = f"Going to {destination}"
 
-        return queryset
+        return queryset.filter(status="upcoming").order_by("-departure_time")
 
     def get_template_names(self):
         """Serves partial templates for HTMX requests."""
@@ -378,14 +227,157 @@ class TripListView(ListView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context["popular_tags"] = Trip.tag.most_common()[:5]
-        context["languages"] = Language.objects.annotate(
-            num_users=Count("profile")
-        ).order_by("-num_users")[:6]
-        context["filter_form"] = TripFilterForm(self.request.GET)
-        context["budget_limits"] = self.BUDGET_LIMITS
-        if self.request.headers.get("HX-Request"):
+        context["urlmode"] = "trip_list"
+
+        if not self.request.headers.get("HX-Request"):
+            ongoing_trips = Trip.objects.filter(status="upcoming")
+            context["popular_tags"] = Trip.tag.most_common(
+                extra_filters={"taggit_taggeditem_items__object_id__in": ongoing_trips}
+            )[:5]
+
+            context["languages"] = Language.objects.annotate(
+                num_users=Count("profile")
+            ).order_by("-num_users")[:6]
+            context["filter_form"] = TripFilterForm(self.request.GET)
+            context["budget_limits"] = BUDGET_LIMITS
+        else:
             context["search_title"] = self.search_title
+        return context
+
+
+class CompanionListView(ListView):
+    model = Trip
+    template_name = "rides/companion_list.html"
+    context_object_name = "companion_requests"
+    paginate_by = 4
+
+    def get_queryset(self):
+        queryset = super().get_queryset()
+
+        destination = self.request.GET.get("destination")
+        tags = self.request.GET.getlist("tag")
+        languages = self.request.GET.getlist("language")
+        form = TripFilterForm(self.request.GET)
+        self.search_title = "Companion Travel Requests"
+
+        if form.is_valid():
+            passengers = form.cleaned_data.get("passengers")
+            budget = form.cleaned_data.get("budget")
+            age_group = form.cleaned_data.get("age_group")
+            gender = form.cleaned_data.get("gender")
+
+        if destination:
+            if len(destination) >= 3:
+                queryset = queryset.filter(destination__icontains=destination)
+
+        if passengers:
+            queryset = queryset.filter(slots_available__gte=passengers)
+        if tags:
+            queryset = queryset.filter(tag__name__in=tags)
+        if languages:
+            queryset = queryset.filter(
+                organizer__profile__languages_spoken__name__in=languages
+            )
+        if budget:
+            try:
+                budget_limit = BUDGET_LIMITS.get(budget, 100000)
+                queryset = (
+                    queryset.filter(budget__lte=budget_limit)
+                    .distinct()
+                    .order_by("-budget")
+                )
+
+            except ValueError:
+                pass
+
+        if age_group:
+            age_range = AGE_GROUPS.get(age_group)
+            if age_range:
+                min_age, max_age = age_range
+                queryset = queryset.filter(
+                    organizer__profile__age__gte=min_age,
+                    organizer__profile__age__lte=max_age,
+                )
+
+        if gender:
+            queryset = queryset.filter(organizer__profile__gender=gender)
+
+        if destination:
+            self.search_title = f"Going to {destination}"
+
+        queryset = queryset.filter(status="planning")
+        return queryset.order_by("-created_at").distinct()
+
+    def get_template_names(self):
+        """Serves partial templates for HTMX requests."""
+
+        if self.request.headers.get("HX-Request"):
+            return ["rides/partials/companion_cards.html"]
+        return super().get_template_names()
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["urlmode"] = "companion_list"
+
+        if not self.request.headers.get("HX-Request"):
+            companion_trips = Trip.objects.filter(status="planning")
+            context["popular_tags"] = Trip.tag.most_common(
+                extra_filters={
+                    "taggit_taggeditem_items__object_id__in": companion_trips
+                }
+            )[:5]
+            context["budget_limits"] = BUDGET_LIMITS
+            context["languages"] = Language.objects.annotate(
+                num_users=Count("profile")
+            ).order_by("-num_users")[:6]
+            context["filter_form"] = TripFilterForm(self.request.GET)
+        else:
+            context["search_title"] = self.search_title
+        return context
+
+
+class TripDetailView(DetailView):
+    model = Trip
+    template_name = "rides/trip_detail.html"
+    context_object_name = "trip"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        trip = self.get_object()
+        user = self.request.user
+
+        if user.is_authenticated:
+            context["is_member"] = TripMembership.objects.filter(
+                trip=trip, user=user, status="accepted"
+            ).exists()
+            context["organizer"] = trip.organizer
+            context["is_pending"] = TripMembership.objects.filter(
+                trip=trip, user=user, status="pending"
+            ).exists()
+            context["duration"] = trip.trip_duration()
+
+        return context
+
+
+class CompanionDetailView(DetailView):
+    model = Trip
+    template_name = "rides/trip_detail.html"
+    context_object_name = "trip"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        companion_request = self.get_object()
+        user = self.request.user
+
+        if user.is_authenticated:
+            context["is_member"] = TripMembership.objects.filter(
+                trip=companion_request, user=user, status="accepted"
+            ).exists()
+            context["organizer"] = companion_request.organizer
+            context["is_pending"] = TripMembership.objects.filter(
+                trip=companion_request, user=user, status="pending"
+            ).exists()
+
         return context
 
 
@@ -497,29 +489,6 @@ class DashboardView(LoginRequiredMixin, TemplateView):
         return context
 
 
-class EditTripView(LoginRequiredMixin, UpdateView):
-    model = Trip
-    form_class = TripCreateForm
-    template_name = "rides/create_trip.html"
-
-    def get_queryset(self):
-        return Trip.objects.filter(organizer=self.request.user)
-
-    def get_success_url(self):
-        return reverse("trip_detail", kwargs={"pk": self.object.pk})
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        if self.object.status == "planning":
-            context["is_companion_edit"] = True
-        return context
-
-    def get_form_class(self):
-        if self.object.status == "planning":
-            return CompanionTravelForm
-        return TripCreateForm
-
-
 @require_POST
 @login_required
 def delete_trip(request, pk):
@@ -529,7 +498,12 @@ def delete_trip(request, pk):
         return redirect("trip_detail", pk=pk)
 
     trip.delete()
-    return redirect("home")
+    if trip.status == "planning":
+        messages.success(request, "Companion travel request deleted successfully.")
+        return redirect("companion_list")
+    else:
+        messages.success(request, "Trip deleted successfully.")
+        return redirect("trip_list")
 
 
 @require_POST

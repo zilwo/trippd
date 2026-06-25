@@ -2,11 +2,17 @@ from django.urls import path
 from . import views
 
 urlpatterns = [
-    path("", views.TripListView.as_view(), name="home"),
+    path("", views.TripListView.as_view(), name=""),
     path("create-ride/", views.CreateTripView.as_view(), name="create_trip"),
     path("autopopulate/", views.auto_populate, name="autopopulate"),
     path("rides/", views.TripListView.as_view(), name="trip_list"),
+    path("companions/", views.CompanionListView.as_view(), name="companion_list"),
     path("ride/<int:pk>/", views.TripDetailView.as_view(), name="trip_detail"),
+    path(
+        "companion/<int:pk>/",
+        views.CompanionDetailView.as_view(),
+        name="companion_detail",
+    ),
     path("join-ride/<int:pk>/", views.join_trip_request, name="join_trip_request"),
     path(
         "leave-ride/<int:pk>/",

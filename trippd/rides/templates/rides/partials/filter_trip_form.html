@@ -1,0 +1,51 @@
+<form action="" method="GET" id="filter-form" hx-get="{% url urlmode %}" hx-target=".trip-results" hx-swap="innerHTML" hx-trigger="change delay:500ms" class="flex flex-col gap-6" hx-include="#trip-search-form" hx-push-url="true">
+  <h2 class="font-bold text-lg mb-4">Filters</h2>
+
+  <div>
+    <label class="label" for="{{ filter_form.passengers.id_for_label }}">Available Seats</label>
+    {{ filter_form.passengers }}
+  </div>
+
+  <div>
+    <label class="label"><span class="label-text font-semibold">Budget (Less Than)</span></label>
+
+    <input type="range" name="budget" min="0" max="5" step="1" value="{{ request.GET.budget|default:'0' }}" class="range" />
+
+    <div class="flex justify-between px-2.5 mt-2 text-xs">
+      <span>|</span>
+      <span>|</span>
+      <span>|</span>
+      <span>|</span>
+      <span>|</span>
+      <span>|</span>
+    </div>
+
+    <div class="flex justify-between px-1 mt-1 text-[10px]">
+      {% for key, value in budget_limits.items %}
+        <span>{{ value }}</span>
+      {% endfor %}
+    </div>
+  </div>
+
+  <div>
+    <label class="label" for="{{ filter_form.age_group.id_for_label }}">Age Group</label>
+    {{ filter_form.age_group }}
+  </div>
+
+  <div class="flex text-xs gap-2">
+    <label class="label" for="{{ filter_form.gender.id_for_label }}">Gender</label>
+
+    {% for radio in filter_form.gender %}
+      <label class="flex items-center gap-2">
+        {{ radio.tag }}
+        <span>{{ radio.choice_label }}</span>
+      </label>
+    {% endfor %}
+  </div>
+
+  <div>
+    {% for language in languages %}
+      <label><input type="checkbox" name="language" value="{{ language }}" class="peer hidden" /><span class="btn btn-sm rounded-2xl peer-checked:bg-(--blue)">{{ language }}</span></label>
+    {% endfor %}
+  </div>
+</form>

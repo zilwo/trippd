@@ -1,0 +1,101 @@
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+  {% for companion_trip in companion_requests %}
+    <div class="card bg-(--card) shadow-md hover:shadow-lg border-(--blue-border) w-96 xl:w-2xl">
+      <div class="card-body flex flex-col h-full">
+        <!-- Image -->
+        <div class="shrink-0">
+          {% if companion_trip.trip_image %}
+            <img src="{{ companion_trip.trip_image.url }}" alt="{{ companion_trip.destination }}" class="w-full h-48 object-cover rounded-lg" />
+          {% else %}
+            <div class="w-full h-48 bg-(--muted2) rounded-lg flex items-center justify-center">
+              <span class="text-(--muted)">No image available</span>
+            </div>
+          {% endif %}
+        </div>
+
+        <!-- Content -->
+        <div class="flex-1">
+          <!-- User -->
+          <div class="flex items-center gap-3">
+            {% include 'rides/components/avatar.html' with user=companion_trip.organizer style='w-12 rounded-full ring ring-(--blue) ring-offset-2' %}
+
+            <div>
+              <div class="font-semibold">
+                {% if companion_trip.organizer.first_name and companion_trip.organizer.last_name %}
+                  {{ companion_trip.organizer.first_name }} {{ companion_trip.organizer.last_name }}
+                {% else %}
+                  {{ companion_trip.organizer.username }}
+                {% endif %}
+              </div>
+
+              <div class="text-sm opacity-70">
+                {% if companion_trip.organizer.profile.rating %}
+                  {{ companion_trip.organizer.profile.rating }}★
+                {% else %}
+                  No ratings yet
+                {% endif %}·
+                {{ companion_trip.organizer.profile.trips_completed }} trips
+              </div>
+            </div>
+          </div>
+
+          <!-- Destination -->
+          <div class="mt-4 flex items-center gap-2">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M15 10.5a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
+              <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1 1 15 0Z" />
+            </svg>
+
+            <h3 class="text-xl font-bold">{{ companion_trip.destination }}</h3>
+          </div>
+
+          <!-- Looking For -->
+          <div class="mt-4">
+            <p class="text-xs uppercase opacity-60">Looking For</p>
+
+            <p class="font-medium mt-1">{{ companion_trip.looking_for|truncatechars:150 }}</p>
+          </div>
+
+          <!-- Tags -->
+          {% if companion_trip.tag.all %}
+            <div class="flex flex-wrap gap-2 mt-4">
+              {% for tag in companion_trip.tag.all %}
+                <span class="badge badge-outline">{{ tag.name }}</span>
+              {% endfor %}
+            </div>
+          {% endif %}
+        </div>
+        <div class="flex justify-between items-center mt-4">
+          <span class="text-xs opacity-60">Posted {{ companion_trip.created_at|timesince }} ago</span>
+
+          <a href="{% url 'companion_detail' companion_trip.id %}" class="btn btn-sm bg-(--blue) text-white border-0">View Request</a>
+        </div>
+      </div>
+    </div>
+  {% empty %}
+    <div class="text-center py-12 opacity-70">No companion requests found.</div>
+  {% endfor %}
+</div>
+{% if is_paginated %}
+  <div class="flex justify-center mt-6">
+    <div class="join">
+      {% if page_obj.has_previous %}
+        <a hx-get="{% querystring page=1 %}" hx-target=".trip-results" hx-swap="innerHTML" class="join-item btn">« First</a>
+        <a hx-get="{% querystring page=page_obj.previous_page_number %}" hx-target=".trip-results" hx-swap="innerHTML" class="join-item btn">Previous</a>
+      {% else %}
+        <button class="join-item btn btn-disabled">« First</button>
+        <button class="join-item btn btn-disabled">Previous</button>
+      {% endif %}
+
+      <button class="join-item btn btn-active">{{ page_obj.number }} / {{ page_obj.paginator.num_pages }}</button>
+
+      {% if page_obj.has_next %}
+        <a hx-get="{% querystring page=page_obj.next_page_number %}" hx-target=".trip-results" hx-swap="innerHTML" class="join-item btn">Next</a>
+        <a hx-get="{% querystring page=page_obj.paginator.num_pages %}" hx-target=".trip-results" hx-swap="innerHTML" class="join-item btn">Last »</a>
+      {% else %}
+        <button class="join-item btn btn-disabled">Next</button>
+        <button class="join-item btn btn-disabled">Last »</button>
+      {% endif %}
+    </div>
+  </div>
+{% endif %}

@@ -63,13 +63,14 @@
 <body hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}'>
       <div class="navbar bg-(--card) shadow-sm px-4">
       <div class="navbar-start">
-        <a class="btn btn-ghost text-xl" href="{% url 'home' %}">trippd</a>
+        <a class="btn btn-ghost text-xl" href="{% url 'trip_list' %}">trippd</a>
       </div>
 
       <div class="navbar-end gap-2">
          {% if user.is_authenticated %}
           {% include 'rides/components/notifications.html' %}
         {% endif %}
+        <a class="btn btn-ghost" href="{% url 'companion_list' %}">Companions</a>
         <a class="btn btn-ghost" href="{% url 'trip_list' %}" class="font-semibold">Find Trip</a>
 
         
