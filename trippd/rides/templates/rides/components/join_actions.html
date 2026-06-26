@@ -1,0 +1,22 @@
+{% if trip.slots_available > 0 %}
+  {% if not is_member %}
+    <div class="trip_requests flex flex-col gap-3">
+      {% if user.is_authenticated %}
+        <button type="button" class="btn btn-outline {{ btn_cls }} hover:bg-(--card2) text-(--black)" onclick="my_modal_4.showModal()" style="border-radius:12px;">Join Trip</button>
+      {% else %}
+        <a href="{% url 'login' %}" class="btn btn-outline w-full hover:bg-(--card2) text-(--black)" style="border-radius:12px;">Join Trip</a>
+      {% endif %}
+
+      {% if is_pending %}
+        <form method="post" action="{% url 'cancel_trip_joining_request' trip.id %}">
+          {% csrf_token %}
+          <button type="submit" class="btn btn-outline {{ btn_cls }} ) text-(--black)" style="border-radius:12px;">Cancel Request</button>
+        </form>
+      {% endif %}
+    </div>
+  {% else %}
+    <a href="{% url 'trip_chat' trip.pk %}" class="btn btn-outline {{ btn_cls }} hover:bg-(--card2) text-(--black)" style="border-radius:12px;">View Group</a>
+  {% endif %}
+{% else %}
+  <button class="btn btn-disabled {{ btn_cls }} hover:bg-(--card2) text-(--black)" style="border-radius:12px; ">Trip is full</button>
+{% endif %}

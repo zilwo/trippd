@@ -37,7 +37,7 @@
 
         <div id="trip-fields">
           <div class="card bg-(--card) shadow-lg border border-(--blue-border)">
-            {% if not is_companion_edit %}
+            {% if not is_companion_edit or is_finalizing %}
               <div class="card-body">
                 <h2 class="card-title text-2xl mb-4">
                   {% if trip %}
@@ -95,7 +95,7 @@
           </div>
         </div>
 
-        {% if not trip or is_companion_edit %}
+        {% if not trip or is_companion_edit or is_finalizing %}
           <div id="companion-fields">
             <div class="card bg-(--card) shadow-lg border border-(--blue-border)">
               <div class="card-body">

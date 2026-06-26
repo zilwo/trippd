@@ -241,8 +241,14 @@
               <div class="card-actions mt-4">
                 {% if tripgroup.trip.status == 'completed' %}
                   <button class="btn badge-soft">Trip is Completed Post a Review</button>
+                {% endif %}
+                {% if tripgroup.trip.status == 'planning' %}
+                  <a class="btn btn-primary" href="{% url 'finalize_trip' tripgroup.trip.pk %}">Finalize Trip</a>
                 {% else %}
-                  <button class="btn btn-primary" hx-post="{% url 'advance_trip_status' tripgroup.trip.pk %}">Change Status to {{ tripgroup.trip.next_status|title }}</button>
+                  <form method="post" action="{% url 'advance_trip_status' tripgroup.trip.pk %}">
+                    {% csrf_token %}
+                    <button class="btn btn-success">Change Status to {{ tripgroup.trip.next_status|title }}</button>
+                  </form>
                 {% endif %}
               </div>
             </div>

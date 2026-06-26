@@ -1,0 +1,10 @@
+{% extends 'rides/base.html' %}
+{% load static %}
+
+{% block content %}
+  {% if trip.status == 'planning' %}
+    {% include 'rides/companion_detail.html' %}
+  {% elif trip.status == 'upcoming' %}
+    {% include 'rides/trip_detail.html' %}
+  {% endif %}
+{% endblock %}

@@ -13,6 +13,7 @@ from django.views.generic import (
     View,
 )
 from django import forms
+from django.conf import settings
 
 from users.models import Language, User, Notification
 from .models import (
@@ -217,6 +218,8 @@ class TripListView(ListView):
         elif destination:
             self.search_title = f"Going to {destination}"
 
+        print("heeyeyeyye")
+
         return queryset.filter(status="upcoming").order_by("-departure_time")
 
     def get_template_names(self):
@@ -338,15 +341,17 @@ class CompanionListView(ListView):
 
 class TripDetailView(DetailView):
     model = Trip
-    template_name = "rides/trip_detail.html"
+    template_name = "rides/detail.html"
     context_object_name = "trip"
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         trip = self.get_object()
         user = self.request.user
+        context["GOOGLE_MAPS_API_KEY"] = settings.GOOGLE_MAPS_API_KEY
 
         if user.is_authenticated:
+
             context["is_member"] = TripMembership.objects.filter(
                 trip=trip, user=user, status="accepted"
             ).exists()
@@ -355,28 +360,6 @@ class TripDetailView(DetailView):
                 trip=trip, user=user, status="pending"
             ).exists()
             context["duration"] = trip.trip_duration()
-
-        return context
-
-
-class CompanionDetailView(DetailView):
-    model = Trip
-    template_name = "rides/trip_detail.html"
-    context_object_name = "trip"
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        companion_request = self.get_object()
-        user = self.request.user
-
-        if user.is_authenticated:
-            context["is_member"] = TripMembership.objects.filter(
-                trip=companion_request, user=user, status="accepted"
-            ).exists()
-            context["organizer"] = companion_request.organizer
-            context["is_pending"] = TripMembership.objects.filter(
-                trip=companion_request, user=user, status="pending"
-            ).exists()
 
         return context
 
@@ -593,9 +576,13 @@ class ChatView(LoginRequiredMixin, DetailView):
 def advance_trip_status(request, pk):
     trip = Trip.objects.get(pk=pk)
     if trip.organizer != request.user:
+        messages.error(
+            request, "You are not authorized to advance the status of this trip."
+        )
         return HttpResponse(status=403)
 
     if trip.status == "completed":
+        messages.info(request, "This trip is already completed.")
         return HttpResponse(status=400)
 
     expected_finish_time = trip.expected_finish_time
@@ -605,7 +592,6 @@ def advance_trip_status(request, pk):
         )
 
     new_status = trip.next_status()
-
     trip.status = new_status
     trip.save()
 
@@ -638,6 +624,43 @@ def advance_trip_status(request, pk):
         "rides/partials/trip_status.html",
         context={"tripgroup": trip.tripgroup},
     )
+
+
+class FinalizeTripView(LoginRequiredMixin, UpdateView):
+    model = Trip
+    template_name = "rides/create_trip.html"
+    fields = [
+        "from_address",
+        "origin",
+        "departure_time",
+        "expected_finish_time",
+        "to_address",
+        "destination",
+        "description",
+        "slots_available",
+        "budget",
+        "tag",
+        "looking_for",
+        "previous_experiences",
+        "trip_image",
+    ]
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["is_finalizing"] = True
+        return context
+
+    def form_valid(self, form):
+        """Finalizes a companion travel request and changes its status to 'upcoming'."""
+        trip = form.instance
+        trip.status = "upcoming"
+        messages.success(self.request, "Trip finalized successfully!")
+
+        response = super().form_valid(form)
+        return response
+
+    def get_success_url(self):
+        return reverse("trip_chat", kwargs={"pk": self.object.pk})
 
 
 class InboxView(LoginRequiredMixin, TemplateView):

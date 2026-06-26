@@ -12,34 +12,6 @@
       margin-top: 3px;
       font-weight: 500;
     }
-    .addr-line {
-      font-size: 12px;
-      color: var(--muted);
-      margin-top: 5px;
-      display: flex;
-      align-items: flex-start;
-      gap: 5px;
-    }
-    .dot-top {
-      width: 12px;
-      height: 12px;
-      border-radius: 50%;
-      background: var(--blue);
-      flex-shrink: 0;
-    }
-    .dot-stem {
-      width: 2px;
-      height: 98px;
-      background: linear-gradient(var(--blue), var(--muted2));
-    }
-    .dot-bottom {
-      width: 12px;
-      height: 12px;
-      border-radius: 50%;
-      border: 2px solid var(--blue);
-      background: transparent;
-      flex-shrink: 0;
-    }
     
     .detail-card {
       background: var(--card);
@@ -55,33 +27,6 @@
       color: var(--muted);
       margin-bottom: 14px;
     }
-    .meta-row {
-      display: flex;
-      justify-content: space-between;
-      align-items: flex-start;
-      gap: 12px;
-      padding: 12px 0;
-      border-bottom: 1px solid var(--blue-border);
-      font-size: 14px;
-      flex-wrap: wrap;
-    }
-    
-    .meta-row:last-child {
-      border-bottom: none;
-    }
-    
-    .meta-key {
-      color: var(--muted);
-      font-weight: 500;
-    }
-    
-    .meta-val {
-      font-weight: 700;
-      color: var(--text);
-      text-align: right;
-      word-break: break-word;
-      max-width: 60%;
-    }
   </style>
 {% endblock %}
 
@@ -89,7 +34,7 @@
   <div class="max-w-4xl mx-auto px-4 py-10 flex flex-col gap-6">
     <!-- BACK -->
     <div class="options-settings flex items-center justify-between">
-      <a href="{% url 'trip_list' %}" class="btn btn-ghost btn-sm w-fit gap-1 -ml-2 hover:bg-inherit outline-none border-0" style="color:var(--muted);">← Back to trips</a>
+      <a href="{% url 'companion_list' %}" class="btn btn-ghost btn-sm w-fit gap-1 -ml-2 hover:bg-inherit outline-none border-0" style="color:var(--muted);">← Back to companions</a>
       {% if user == trip.organizer %}
         <details class="dropdown dropdown-end">
           <summary class="btn btn-ghost btn-sm btn-circle">
@@ -100,7 +45,7 @@
 
           <ul class="menu dropdown-content bg-base-100 rounded-box z-10 w-40 p-2 shadow">
             <li>
-              <a href="{% url 'edit_trip' trip.pk %}">Edit Trip</a>
+              <a href="{% url 'edit_companion' trip.pk %}">Edit Companion</a>
             </li>
 
             <li>
@@ -113,74 +58,33 @@
 
     <!-- ── ROUTE HERO ── -->
     <div class="detail-card">
-      <div class="flex items-start gap-6 flex-wrap justify-between">
-        <!-- Route visual -->
-        <div class="flex items-start gap-4 flex-1 min-w-0">
-          <div class="flex flex-col items-center mt-1">
-            <div class="dot-top"></div>
-            <div class="dot-stem"></div>
-            <div class="dot-bottom"></div>
-          </div>
-          <div class="flex flex-col gap-5">
-            <!-- Origin -->
-            <div>
-              <div class="city-sub">Departure · {{ trip.departure_time|date:'g:i A' }}</div>
-              <div class="city-name">{{ trip.origin }}</div>
-              {% if trip.from_address != 'Undecided' %}
-                <div class="addr-line">
-                  <span>{{ trip.from_address }}</span>
-                </div>
-              {% endif %}
-            </div>
+      <div class="flex items-center justify-between gap-4">
+        <div>
+          <h1 class="city-name">{{ trip.destination }}</h1>
 
-            <!-- Destination -->
-            <div>
-              <div class="city-sub">Arrival · {{ trip.expected_finish_time|date:'g:i A' }}</div>
-              <div class="city-name">{{ trip.destination }}</div>
-              {% if trip.to_address != 'Undecided' %}
-                <div class="addr-line">
-                  <span>{{ trip.to_address }}</span>
-                </div>
-              {% endif %}
-            </div>
-          </div>
-        </div>
-
-        <!-- Date + duration + price -->
-        <div class="flex flex-col gap-3 text-right">
-          <div>
-            <div style="font-size:12px;color:var(--muted);font-weight:500;">Date</div>
-            <div style="font-size:15px;font-weight:800;color:var(--white);">{{ trip.departure_time|date:'D, d M Y' }}</div>
-          </div>
-          {% if trip.trip_duration %}
-            <div>
-              <div style="font-size:12px;color:var(--muted);font-weight:500;">Duration</div>
-              <div class="badge badge-soft bg-(--blue) border-0">{{ trip.trip_duration }}</div>
-            </div>
-          {% else %}
-            <div>
-              <div style="font-size:12px;color:var(--muted);font-weight:500;">Duration</div>
-              <span class="badge badge-soft bg-(--blue) border-0">N/A</span>
-            </div>
+          {% if trip.description %}
+            <p class="mt-4 text-sm text-(--text)">{{ trip.description }}</p>
           {% endif %}
-          <div>
-            <div style="font-size:12px;color:var(--muted);font-weight:500;">Price per person</div>
-            <div class="nun" style="font-size:30px;font-weight:900;color:var(--white);">₹{{ trip.budget }}</div>
-          </div>
+        </div>
+        {% include 'rides/components/join_actions.html' with btn_cls='l' %}
+      </div>
+
+      <div class="divider my-5"></div>
+
+      <div class="space-y-4">
+        <div>
+          <p class="section-label">Looking For</p>
+          <p>{{ trip.looking_for }}</p>
+        </div>
+
+        <div>
+          <p class="section-label">Previous Experience</p>
+          <p>{{ trip.previous_experiences|default:'No previous experience shared.' }}</p>
         </div>
       </div>
 
-      <div class="trip-description p-4">
-        {% if trip.description %}
-          <div style="font-size:14px;color:var(--text);">{{ trip.description }}</div>
-        {% else %}
-          <div style="font-size:14px;color:var(--muted);font-style:italic;">No description provided.</div>
-        {% endif %}
-      </div>
-
-      <!-- Tags -->
       {% if trip.tag.all %}
-        <div class="flex flex-wrap gap-2 mt-5 pt-5" style="border-top:1px solid var(--blue-border);">
+        <div class="flex flex-wrap gap-2 mt-6">
           {% for tag in trip.tag.all %}
             <span class="badge badge-outline">{{ tag.name }}</span>
           {% endfor %}
@@ -194,15 +98,14 @@
         <!-- Trip details -->
         <div class="detail-card">
           <!-- Seat progress -->
-          <iframe width="100%" height="250" style="border:0" loading="lazy" allowfullscreen src="https://www.google.com/maps/embed/v1/directions?origin={{ trip.from_address|urlencode }}&destination={{ trip.to_address|urlencode }}&key={{ GOOGLE_MAPS_API_KEY }}"></iframe> <div class="mt-4">
-            <div style="font-size:12px;color:var(--muted);margin-bottom:6px;font-weight:600;">{{ trip.get_accepted_members.count }} of {{ trip.slots_available }} seats filled</div>
+          <iframe width="100%" height="250" style="border:0" loading="lazy" allowfullscreen src="https://www.google.com/maps/embed/v1/search?q={{ trip.to_address|urlencode }}&key={{ GOOGLE_MAPS_API_KEY }}"></iframe> <div class="mt-4">
+            <div style="font-size:12px;color:var(--muted);margin-bottom:6px;font-weight:600;">{{ trip.get_accepted_members.count }} of {{ trip.slots_available }} filled</div>
             <progress class="progress bg-(--blue-dim) w-full" value="{{ trip.get_accepted_members.count }}" max="{{ trip.slots_available }}"></progress>
           </div>
         </div>
 
-        <!-- Members (from TripMembership) -->
         <div class="detail-card">
-          <div class="section-label">Trip mates</div>
+          <div class="section-label">Trip Companions</div>
 
           {% with memberships=trip.memberships.all %}
             {% if memberships %}
@@ -224,7 +127,6 @@
                             <div style="font-size:11px;color:var(--muted);">Joined {{ m.joined_at|date:'d M Y' }}</div>
                           </div>
                         </div>
-                        <!-- DaisyUI badge for membership status -->
                         {% if m.user == organizer %}
                           <span class="badge status-{{ m.status }} btn bg-(--blue)" style="border:none;font-size:11px;font-weight:700;">Organizer</span>
                         {% else %}
@@ -286,46 +188,26 @@
           <div class="nun" style="font-size:32px;font-weight:900;color:var(--white);">₹{{ trip.budget }}</div>
           <div style="font-size:12px;color:var(--muted);margin-bottom:16px;">Price per person</div>
 
-          {% if trip.slots_available > 0 %}
-            {% if not is_member %}
-              <div class="trip_requests flex flex-col gap-3">
-                {% if user.is_authenticated %}
-                  <button type="button" class="btn btn-outline w-full hover:bg-(--card2) text-(--black)" onclick="my_modal_4.showModal()" style="border-radius:12px;">Join Trip</button>
-                {% else %}
-                  <a href="{% url 'login' %}" class="btn btn-outline w-full hover:bg-(--card2) text-(--black)" style="border-radius:12px;">Join Trip</a>
-                {% endif %}
-                <dialog id="my_modal_4" class="modal">
-                  <div class="modal-box">
-                    <form method="dialog">
-                      <button type="submit" class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2">✕</button>
-                    </form>
-                    <form method="post" action="{% url 'join_trip_request' trip.id %}" class="flex flex-col gap-4">
-                      <h3 class="text-lg font-bold">Introduce Yourself, This will help others get to know you!</h3>
-
-                      {% csrf_token %}
-                      <textarea name="message" rows="5" class="textarea textarea-bordered w-full" placeholder="Hi, I'm interested in joining this trip because..."></textarea>
-                      <button type="submit" class="btn btn-outline w-full text-(--black)" style="border-radius:12px;">Submit Join Request</button>
-                    </form>
-                  </div>
-                </dialog>
-                {% if is_pending %}
-                  <form method="post" action="{% url 'cancel_trip_joining_request' trip.id %}">
-                    {% csrf_token %}
-                    <button type="submit" class="btn btn-outline w-full ) text-(--black)" style="border-radius:12px;">Cancel Request</button>
-                  </form>
-                {% endif %}
-              </div>
-            {% else %}
-              <a href="{% url 'trip_chat' trip.pk %}" class="btn btn-outline w-full hover:bg-(--card2) text-(--black)" style="border-radius:12px;">View Group</a>
-            {% endif %}
-          {% else %}
-            <button class="btn btn-disabled w-full hover:bg-(--card2) text-(--black)" style="border-radius:12px;">Trip is full</button>
-          {% endif %}
-
+          {% include 'rides/components/join_actions.html' with btn_cls='w-full' %}
           <div class="flex justify-center gap-2 mt-4 flex-wrap"></div>
         </div>
       </div>
     </div>
+
+    <dialog id="my_modal_4" class="modal">
+      <div class="modal-box">
+        <form method="dialog">
+          <button type="submit" class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2">✕</button>
+        </form>
+        <form method="post" action="{% url 'join_trip_request' trip.id %}" class="flex flex-col gap-4">
+          <h3 class="text-lg font-bold">Introduce Yourself, This will help others get to know you!</h3>
+
+          {% csrf_token %}
+          <textarea name="message" rows="5" class="textarea textarea-bordered w-full" placeholder="Hi, I'm interested in joining this trip because..."></textarea>
+          <button type="submit" class="btn btn-outline w-full text-(--black)" style="border-radius:12px;">Submit Join Request</button>
+        </form>
+      </div>
+    </dialog>
 
     <dialog id="delete_trip_modal" class="modal">
       <div class="modal-box">

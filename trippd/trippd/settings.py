@@ -195,3 +195,6 @@ CSRF_TRUSTED_ORIGINS = [
     "https://727lcnlk-8000.inc1.devtunnels.ms",
     "http://localhost:8000",
 ]
+
+
+GOOGLE_MAPS_API_KEY = os.getenv("GOOGLE_MAPS_API_KEY")

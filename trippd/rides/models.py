@@ -71,6 +71,28 @@ class Trip(models.Model):
             return format_delta(duration, trip_type=self.trip_type)
         return None
 
+    def is_valid_trip(self):
+        """Check all required fields are filled for a valid trip."""
+        print(
+            "Checking trip validity:",
+            self.origin,
+            self.destination,
+            self.departure_time,
+            self.expected_finish_time,
+            self.budget,
+            self.slots_available,
+        )
+        return all(
+            [
+                self.origin,
+                self.destination,
+                self.departure_time,
+                self.expected_finish_time,
+                self.budget,
+                self.slots_available,
+            ]
+        )
+
 
 class TripMembership(models.Model):
     """Tracks a user's membership status for a trip."""

@@ -68,7 +68,7 @@
         <div class="flex justify-between items-center mt-4">
           <span class="text-xs opacity-60">Posted {{ companion_trip.created_at|timesince }} ago</span>
 
-          <a href="{% url 'companion_detail' companion_trip.id %}" class="btn btn-sm bg-(--blue) text-white border-0">View Request</a>
+          <a href="{% url 'trip_detail' companion_trip.id %}" class="btn btn-sm bg-(--blue) text-white border-0">View Request</a>
         </div>
       </div>
     </div>
