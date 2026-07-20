@@ -12,7 +12,9 @@ from .utils.tokens import AccountActivationTokenGenerator
 from .models import Language, Notification, User
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
-from .models import Profile
+from .models import Profile, Rating
+from django.db.models import Count
+from rides.models import Trip
 
 
 class ProfileForm(forms.ModelForm):
@@ -26,6 +28,7 @@ class ProfileForm(forms.ModelForm):
             "languages_spoken",
             "gender",
             "age",
+            "instagram",
         ]
 
 
@@ -123,12 +126,48 @@ class UserProfileView(LoginRequiredMixin, DetailView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+
         profile_user = self.get_object()
+
         context["profile"] = profile_user.profile
         context["is_own_profile"] = self.request.user == profile_user
-        print(
-            f"Viewing profile of: {profile_user.username}, is own profile: {context['is_own_profile']}"
+        completed_trips = Trip.objects.filter(
+            status="completed",
+            memberships__user=profile_user,
+        ).order_by("-departure_time")
+
+        rating_counts = (
+            Rating.objects.filter(ratee=profile_user)
+            .values("rating")
+            .annotate(count=Count("id"))
         )
+
+        distribution = {i: 0 for i in range(1, 6)}
+
+        for item in rating_counts:
+            distribution[item["rating"]] = item["count"]
+
+        total_reviews = sum(distribution.values())
+
+        rating_distribution = []
+
+        for star in range(5, 0, -1):
+            count = distribution[star]
+            percent = (count / total_reviews * 100) if total_reviews else 0
+
+            rating_distribution.append(
+                {
+                    "star": star,
+                    "count": count,
+                    "percent": round(percent),
+                }
+            )
+
+        context["rating_distribution"] = rating_distribution
+        context["total_reviews"] = total_reviews
+        context["completed_trips"] = completed_trips
+        context["completed_trip_count"] = completed_trips.count()
+
         return context
 
 

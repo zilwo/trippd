@@ -50,6 +50,7 @@ class Profile(models.Model):
         blank=True,
     )
     age = models.PositiveIntegerField(null=True, blank=True)
+    instagram = models.CharField(max_length=50, blank=True)
 
     def __str__(self):
         return f"{self.user.username}'s Profile"
@@ -57,6 +58,7 @@ class Profile(models.Model):
     def average_rating(self):
         ratings = self.user.received_ratings.all()
         if ratings.exists():
+            print(sum(r.rating for r in ratings) / ratings.count(), ratings.count())
             return sum(r.rating for r in ratings) / ratings.count()
         return 0
 

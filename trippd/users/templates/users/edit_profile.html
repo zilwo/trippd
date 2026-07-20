@@ -83,7 +83,7 @@
             </div>
 
             <div class="mt-6">
-              <label class="label" for="input-tags"><span class="label-text">Tags</span></label>
+              <label class="label" for="input-tags"><span class="label-text">Interests</span></label>
 
               <input id="input-tags"
                 autocomplete="off"
@@ -123,7 +123,7 @@
                 <label class="label"><span class="label-text">Location</span></label>
                 <input type="text" name="location" value="{{ user.profile.location }}" class="input input-bordered w-full" placeholder="Enter your location" />
               </div>
-              <div class="mb-6">
+              <div class="">
                 <label class="label"><span class="label-text">Languages</span></label>
 
                 <select id="languages" name="languages_spoken" multiple class="w-full">
@@ -135,6 +135,19 @@
                     {% endif %}
                   {% endfor %}
                 </select>
+              </div>
+            </div>
+            <div class="mb-6">
+              <label class="label"><span class="label-text">Instagram</span></label>
+
+              <div class="join w-full">
+                <span class="join-item btn btn-disabled">
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-4 h-4">
+                    <path d="M7.5 2C4.46 2 2 4.46 2 7.5v9C2 19.54 4.46 22 7.5 22h9c3.04 0 5.5-2.46 5.5-5.5v-9C22 4.46 19.54 2 16.5 2h-9Zm0 2h9A3.5 3.5 0 0 1 20 7.5v9a3.5 3.5 0 0 1-3.5 3.5h-9A3.5 3.5 0 0 1 4 16.5v-9A3.5 3.5 0 0 1 7.5 4Zm9.75 1a.75.75 0 1 0 0 1.5.75.75 0 0 0 0-1.5ZM12 7a5 5 0 1 0 0 10 5 5 0 0 0 0-10Zm0 2a3 3 0 1 1 0 6 3 3 0 0 1 0-6Z" />
+                  </svg>
+                </span>
+
+                <input type="text" name="instagram" value="{{ user.profile.instagram }}" class="input input-bordered join-item flex-1" placeholder="yourusername" />
               </div>
             </div>
 

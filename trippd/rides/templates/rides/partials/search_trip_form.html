@@ -15,7 +15,7 @@
 
       <div class="sf max-w-full">
         <div class="sf-label">Date</div>
-        <input class="sf-input" type="date" id="sf-date" name="departure" />
+        <input class="sf-input" type="date" id="departure_date" name="departure" placeholder="Date" />
       </div>
 
       <button class="sf hover:bg-(--card2)!" type="button" style="border-right: 0;  border-radius: 0 16px 16px 0;">Search</button>
@@ -24,7 +24,7 @@
     </div>
   </div>
   <div class="flex justify-center gap-2 mt-4">
-    <label><input type="checkbox" name="nearby" value="" class="peer hidden" onclick="getLocation(this)" /><span class="btn btn-sm rounded-2xl peer-checked:bg-(--blue)">Nearby</span></label>
+    <label><input type="checkbox" name="nearby" value="" class="peer hidden" onclick="getLocation(this)" /><span class="btn btn-sm rounded-2xl">Nearby</span></label>
     <input type="hidden" name="lat" id="lat" value="" />
     <input type="hidden" name="lon" id="lon" value="" />
 

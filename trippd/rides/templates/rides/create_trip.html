@@ -37,16 +37,20 @@
 
         <div id="trip-fields">
           <div class="card bg-(--card) shadow-lg border border-(--blue-border)">
-            {% if not is_companion_edit or is_finalizing %}
+            {% if not trip or not is_companion_edit or is_finalizing %}
               <div class="card-body">
                 <h2 class="card-title text-2xl mb-4">
                   {% if trip %}
-                    Update Trip
+                    {% if is_finalizing %}
+                        Finalize Trip
+                    {% else %}
+                        Edit Trip
+                    {% endif %}
                   {% else %}
                     Create Trip
                   {% endif %}
                 </h2>
-                <span class="text-base-content/60">Create a fully planned trip with meeting spots, schedule, and other details for others to join.</span>
+                <span class="text-base-content/60">Create a fully planned trip with meeting spots, schedule, and other details together.</span>
 
                 <!-- Route Information -->
                 <div>
@@ -54,15 +58,15 @@
 
                   <div class="grid md:grid-cols-2 gap-4">
                     <div>
-                      <label class="label" for="from_address"><span class="label-text">Meetup Address</span></label>
+                      <label class="label" for="from_address"><span class="label-text">Origin Address</span></label>
 
-                      <input id="from_address" name="from_address" class="address-auto" value="{{ form.from_address.value|default:'' }}" />
+                      <input id="from_address" name="from_address" class="address-auto" value="{{ form.from_address.value|default:'' }}" placeholder="Where are you starting from?" />
                     </div>
 
                     <div>
                       <label class="label" for="origin"><span class="label-text">Origin</span></label>
 
-                      <input type="text" name="origin" id="origin" value="{{ form.origin.value|default:'' }}" class="input w-full" />
+                      <input type="text" name="origin" id="origin" value="{{ form.origin.value|default:'' }}" class="input w-full"  placeholder="City of Origin"/>
 
                       <input type="hidden" name="origin_lat" id="origin_lat" />
                       <input type="hidden" name="origin_lon" id="origin_lon" />
@@ -96,14 +100,20 @@
         </div>
 
         {% if not trip or is_companion_edit or is_finalizing %}
-          <div id="companion-fields">
+          <div id="companion-fields" class="mt-6">
             <div class="card bg-(--card) shadow-lg border border-(--blue-border)">
               <div class="card-body">
                 <h2 class="card-title text-2xl mb-4">
                   {% if is_companion_edit %}
                     Edit Companion Request
                   {% else %}
-                    Create Companion Request
+                    {% if not is_finalizing %}
+                          Create Companion Request
+
+                    {% else %}
+                          Finalize Companion Request
+
+                    {% endif %}
                   {% endif %}
                 </h2>
                 <span class="text-base-content/60">Have a destination in mind? Find like-minded travelers and plan the trip together.</span>
@@ -130,25 +140,25 @@
 
             <div class="grid md:grid-cols-2 gap-4">
               <div>
-                <label class="label" for="to_address"><span class="label-text">Drop Address</span></label>
+                <label class="label" for="to_address"><span class="label-text">Destination Address</span></label>
 
-                <input id="to_address" name="to_address" class="address-auto" value="{{ form.to_address.value|default:'' }}" required />
+                <input id="to_address" name="to_address" class="address-auto" value="{{ form.to_address.value|default:'' }}" required  placeholder="Where are you Planning to go?"/>
               </div>
 
               <div>
-                <label class="label" for="destination"><span class="label-text">Destination</span></label>
+                <label class="label" for="destination"><span class="label-text">Destination City</span></label>
 
-                <input type="text" name="destination" id="destination" class="input w-full" value="{{ form.destination.value|default:'' }}" required />
+                <input type="text" name="destination" id="destination" class="input w-full" value="{{ form.destination.value|default:'' }}" required  placeholder="City of Destination"/>
               </div>
 
               <div>
                 <label class="label" for="budget"><span class="label-text">Budget</span></label>
                   
         <label class="input w-full">
-            <span class="border-r border-base-300 pr-3 mr-3"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
-  <path stroke-linecap="round" stroke-linejoin="round" d="M15 8.25H9m6 3H9m3 6-3-3h1.5a3 3 0 1 0 0-6M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
-</svg>
-</span>
+                    <span class="border-r border-base-300 pr-3 mr-3"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M15 8.25H9m6 3H9m3 6-3-3h1.5a3 3 0 1 0 0-6M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+        </svg>
+        </span>
             <input
                 type="number"
                 name="budget"
@@ -214,7 +224,7 @@
             </div>
 
             <!-- Upload -->
-            <div class="form-control mt-4">
+            <div class="mt-4">
               <label class="label"><span class="label-text">Choose a trip image</span></label>
 
               <input type="file" name="trip_image" id="trip-image-input" accept="image/*" class="file-input file-input-bordered w-full" />
@@ -256,6 +266,7 @@
         searchField: 'addr',
         hideSelected: true,
         clearAfterSelect: true,
+        loadingClass: 'ts-loading',
     
         load: function (query, callback) {
           fetch(`{% url 'autopopulate' %}?query=${encodeURIComponent(query)}`)

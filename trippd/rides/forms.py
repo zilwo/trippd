@@ -1,6 +1,6 @@
 from django import forms
 from django.utils import timezone
-from .models import Trip
+from .models import Activity, Trip
 
 BUDGET_LIMITS = {
     0: "Any",
@@ -25,6 +25,8 @@ class TripCreateForm(forms.ModelForm):
         fields = [
             "origin",
             "destination",
+            "origin_lat",
+            "origin_lon",
             "description",
             "from_address",
             "to_address",
@@ -172,3 +174,29 @@ class TripFilterForm(forms.Form):
         ],
         widget=forms.RadioSelect(attrs={"class": "radio radio-primary"}),
     )
+
+
+class FinalizeTripForm(TripCreateForm):
+    class Meta:
+        model = Trip
+        fields = TripCreateForm.Meta.fields + [
+            "looking_for",
+            "previous_experiences",
+        ]
+
+
+class ActivityForm(forms.ModelForm):
+    search_query = forms.CharField(
+        required=False,
+        widget=forms.TextInput(attrs={"placeholder": "Search for a place..."}),
+    )
+    place_id = forms.CharField(widget=forms.HiddenInput())
+
+    class Meta:
+        model = Activity
+        fields = [
+            "title",
+            "description",
+            "start_time",
+            "max_participants",
+        ]

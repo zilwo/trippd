@@ -1,19 +1,14 @@
-import os
 from django.conf import settings
 import requests
-from dotenv import load_dotenv
-
-load_dotenv()
 
 
 def autocomplete_location(query):
     """Fetches location suggestions based on a query string using the Geoapify API."""
-    api_key = os.getenv("GEOAPIFY_API_KEY")
 
     response = requests.get(
         "https://api.geoapify.com/v1/geocode/autocomplete",
         params={
-            "apiKey": api_key,
+            "apiKey": settings.GEOAPIFY_API_KEY,
             "text": query,
             "limit": 5,
             "format": "json",

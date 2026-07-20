@@ -198,7 +198,7 @@
 
   <script>
     function getLocation(element) {
-      if (element.checked) {
+      if (element.checked && navigator.geolocation) {
         if (navigator.geolocation) {
           navigator.geolocation.getCurrentPosition(function (position) {
             const lat = position.coords.latitude

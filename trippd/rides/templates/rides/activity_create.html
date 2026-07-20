@@ -1,0 +1,111 @@
+{% extends 'rides/base.html' %}
+
+{% block content %}
+  <div class="container mx-auto max-w-4xl px-4 py-8">
+    <form method="POST">
+      {% csrf_token %}
+
+      <div class="card bg-(--card) shadow-lg border border-(--blue-border)">
+        <div class="card-body">
+          <h2 class="card-title text-2xl">Create Activity</h2>
+          <span class="text-base-content/60">Plan an activity for your trip and let others join.</span>
+
+          <div class="grid md:grid-cols-2 gap-4 mt-6">
+            <!-- Activity Title -->
+            <div class="md:col-span-2">
+              <label class="label" for="activity_title"><span class="label-text">Activity Title</span></label>
+
+              <input type="text" id="activity_title" name="title" value="{{ form.title.value|default:'' }}" class="input w-full" placeholder="e.g. Sunset Beach Walk" />
+
+              {% if form.title.errors %}
+                <span class="text-error text-sm">{{ form.title.errors.0 }}</span>
+              {% endif %}
+            </div>
+
+            <!-- Place -->
+            <div class="md:col-span-2">
+              <label class="label" for="search_query"><span class="label-text">Place</span></label>
+
+              <input id="search_query" name="search_query" class="place-auto" value="{{ form.search_query.value|default:'' }}" placeholder="Search for a place..." />
+
+              <input type="hidden" id="place_id" name="place_id" value="{{ form.place_id.value|default:'' }}" />
+              <input type="hidden" id="session_token" name="session_token" />
+
+              {% if form.search_query.errors %}
+                <span class="text-error text-sm">{{ form.search_query.errors.0 }}</span>
+              {% endif %}
+            </div>
+
+            <!-- Start Time -->
+            <div>
+              <label class="label" for="start_time"><span class="label-text">Start Time</span></label>
+
+              <input type="date" id="activity_start_time" name="start_time" value="{{ form.start_time.value|default:'' }}" placeholder="When does this activity start?" class="input w-full" />
+            </div>
+
+            <!-- Maximum Participants -->
+            <div>
+              <label class="label" for="max_participants"><span class="label-text">Maximum Participants</span></label>
+
+              <label class="input w-full"><input type="number" min="1" id="max_participants" name="max_participants" value="{{ form.max_participants.value|default:'' }}" placeholder="How many people can join?" /></label>
+
+              {% if form.max_participants.errors %}
+                <span class="text-error text-sm">{{ form.max_participants.errors.0 }}</span>
+              {% endif %}
+            </div>
+
+            <!-- Description -->
+            <div class="md:col-span-2">
+              <label class="label" for="activity_description"><span class="label-text">Description</span></label>
+
+              <textarea id="activity_description" name="description" class="textarea w-full h-32" placeholder="Tell participants about this activity...">{{ form.description.value|default:'' }}</textarea>
+
+              {% if form.description.errors %}
+                <span class="text-error text-sm">{{ form.description.errors.0 }}</span>
+              {% endif %}
+            </div>
+          </div>
+
+          <div class="divider"></div>
+
+          <div class="flex justify-end gap-3">
+            <a href="{% url 'activity_list' %}" class="btn btn-ghost">Cancel</a>
+
+            <button type="submit" class="btn bg-(--blue) text-white border-0 hover:bg-(--blue)">Create Activity</button>
+          </div>
+        </div>
+      </div>
+    </form>
+  </div>
+
+  <script>
+    let sessionToken = crypto.randomUUID()
+    
+    document.getElementById('session_token').value = sessionToken
+    new TomSelect('.place-auto', {
+      maxItems: 1,
+      create: false,
+      valueField: 'place_id',
+      labelField: 'text',
+      searchField: 'text',
+      loadingClass: 'ts-loading',
+    
+      load(query, callback) {
+        if (query.length < 2) {
+          callback()
+          return
+        }
+        fetch(`/activities/autocomplete/?query=${encodeURIComponent(query)}&session_token=${encodeURIComponent(sessionToken)}`)
+          .then((res) => res.json())
+          .then((data) => callback(data.results))
+          .catch(() => callback())
+      },
+    
+      onItemAdd(value) {
+        const selected = this.options[value]
+    
+        document.getElementById('place_id').value = selected.place_id
+      }
+    })
+  </script>
+{% endblock %}

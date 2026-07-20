@@ -1,0 +1,69 @@
+{% load ride_tags %}
+
+{% if activities %}
+  <div class="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+    {% for activity in activities %}
+      <div class="card bg-(--card) shadow-lg border border-base-300">
+        <div class="card-body">
+          <div class="flex justify-between items-start">
+            <div>
+              {% if activity.trip %}
+                <div class="avatar-group -space-x-4">
+                  {% for membership in activity.trip.memberships.all|slice:':3' %}
+                    {% include 'rides/components/avatar.html' with user=membership.user style='w-10 rounded-full' %}
+                  {% endfor %}
+                </div>
+
+                <p class="mt-2 text-sm text-base-content/70">Hosted by {{ activity.organizer.username }}</p>
+
+                <p class="font-semibold">{{ activity.trip.memberships.count }} Going</p>
+              {% else %}
+                {% include 'rides/components/avatar.html' with user=activity.organizer style='w-10 rounded-full' %}
+
+                <p class="mt-2 text-sm text-base-content/70">Hosted by {{ activity.organizer.username }}</p>
+
+                <p class="font-semibold">1 Going</p>
+              {% endif %}
+            </div>
+          </div>
+
+          <h2 class="card-title mt-4">{{ activity.title }}</h2>
+          <div class="flex gap-1">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-5">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M15 10.5a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
+              <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1 1 15 0Z" />
+            </svg>
+
+            <p class="font-small">{{ activity.place.address|short_address|truncatewords:4 }}</p>
+          </div>
+
+          <div class="space-y-2 text-sm">
+            <div class="flex items-center gap-2">
+              <span>{{ activity.place_name }}</span>
+            </div>
+
+            <div class="flex items-center gap-2">
+              <span>{{ activity.start_time|date:'M d, Y  h:i A' }}</span>
+            </div>
+          </div>
+
+          <div class="divider my-1"></div>
+
+          <div class="card-actions justify-end mt-4">
+            <a href="{% url 'activity_detail' activity.pk %}" class="btn bg-(--blue) btn-sm text-white">View Details</a>
+          </div>
+        </div>
+      </div>
+    {% endfor %}
+  </div>
+{% else %}
+  <div class="hero bg-base-200 rounded-box">
+    <div class="hero-content text-center py-16">
+      <div>
+        <h2 class="text-3xl font-bold">No activities yet</h2>
+
+        <p class="py-4 text-base-content/70">Be the first to organize one.</p>
+      </div>
+    </div>
+  </div>
+{% endif %}

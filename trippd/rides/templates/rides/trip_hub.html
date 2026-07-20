@@ -1,4 +1,5 @@
 {% extends 'rides/base.html' %}
+{% load ride_tags %}
 
 {% block style %}
   <style>
@@ -60,11 +61,15 @@
       <div class="card-body">
         <div class="flex flex-col md:flex-row md:justify-between md:items-center gap-4">
           <div>
-            <h1 class="text-2xl font-bold">
-              {{ tripgroup.trip.origin }}
-              <span class="opacity-50 mx-2">→</span>
-              {{ tripgroup.trip.destination }}
-            </h1>
+            {% if tripgroup.trip.status == 'planning' %}
+              <h1 class="text-2xl font-bold">{{ tripgroup.trip.destination }}</h1>
+            {% else %}
+              <h1 class="text-2xl font-bold">
+                {{ tripgroup.trip.origin }}
+                <span class="opacity-50 mx-2">→</span>
+                {{ tripgroup.trip.destination }}
+              </h1>
+            {% endif %}
 
             <p class="text-sm opacity-70 mt-1">{{ tripgroup.trip.get_accepted_members.count }} Members</p>
           </div>
@@ -74,10 +79,18 @@
       </div>
     </div>
 
+    {% if tripgroup.whats_app_group_link %}
+      <div class="alert alert-success mb-4">
+        <span>A WhatsApp group is available for this trip.</span>
+
+        <a href="{{ tripgroup.whats_app_group_link }}" target="_blank" rel="noopener noreferrer" class="btn btn-sm">Join Group</a>
+      </div>
+    {% endif %}
+
     <!-- Tabs -->
     <div role="tablist" class="tabs tabs-box w-full">
       <!-- CHAT TAB -->
-      <input type="radio" name="trip_tabs" role="tab" class="tab" aria-label="Chat" checked />
+      <input type="radio" name="trip_tabs" role="tab" class="tab" aria-label="Chat" />
 
       <div role="tabpanel" class="tab-content bg-(--card) border border-(--blue-border) rounded-box overflow-hidden">
         <div class="flex flex-col h-[70vh]">
@@ -132,13 +145,11 @@
       </div>
 
       <!-- ANNOUNCEMENTS TAB -->
-      <input type="radio" name="trip_tabs" role="tab" class="tab" aria-label="Details" />
+      <input type="radio" name="trip_tabs" role="tab" class="tab" aria-label="Details" checked />
 
       <div role="tabpanel" class="tab-content bg-(--card) rounded-box min-h-[70vh]">
         <div class="card border border-(--blue-border)">
           <div class="card-body">
-            <!-- Header -->
-
             <!-- Description -->
             {% if tripgroup.trip.description %}
               <p class="mt-2 opacity-80">{{ tripgroup.trip.description }}</p>
@@ -194,69 +205,176 @@
         </div>
 
         <div class="detail-container mt-6">
-          <div class="detail-card border-(--blue-border)">
-            <div class="section-label">Trip details</div>
-            <div>
-              <div class="meta-row">
-                <span class="meta-key">Starting Address</span>
-                <span class="meta-val">{{ tripgroup.trip.from_address }}</span>
-              </div>
+          {% if tripgroup.trip.status == 'planning' %}
+            <div class="detail-card border-(--blue-border)">
+              <div class="section-label">Trip details</div>
+              <div>
+                <div class="meta-row">
+                  <span class="meta-key">Drop address</span>
+                  <span class="meta-val">{{ tripgroup.trip.to_address }}</span>
+                </div>
 
-              <div class="meta-row">
-                <span class="meta-key">Drop address</span>
-                <span class="meta-val">{{ tripgroup.trip.to_address }}</span>
-              </div>
-              <div class="meta-row">
-                <span class="meta-key">Departure</span>
-                <span class="meta-val">{{ tripgroup.trip.departure_time|date:'g:i A, d M Y' }}</span>
-              </div>
-              <div class="meta-row">
-                <span class="meta-key">Expected Finish Time</span>
-                <span class="meta-val">{{ tripgroup.trip.expected_finish_time|date:'g:i A, d M Y' }}</span>
-              </div>
-              <div class="meta-row">
-                <span class="meta-key">Duration</span>
-                <span class="meta-val">{{ tripgroup.trip.trip_duration }}</span>
-              </div>
-              <div class="meta-row">
-                <span class="meta-key">Budget</span>
-                <span class="meta-val">₹{{ tripgroup.trip.budget }}</span>
-              </div>
+                <div class="meta-row">
+                  <span class="meta-key">Budget</span>
+                  <span class="meta-val">₹{{ tripgroup.trip.budget }}</span>
+                </div>
 
-              <div class="mt-4">
-                <div style="font-size:12px;color:var(--muted);margin-bottom:6px;font-weight:600;">{{ tripgroup.trip.get_accepted_members.count }} of {{ tripgroup.trip.slots_available }} seats filled</div>
-                <progress class="progress bg-(--blue-dim) w-full" value="{{ tripgroup.trip.get_accepted_members.count }}" max="{{ tripgroup.trip.slots_available }}"></progress>
+                <div class="mt-4">
+                  <div style="font-size:12px;color:var(--muted);margin-bottom:6px;font-weight:600;">{{ tripgroup.trip.get_accepted_members.count }} of {{ tripgroup.trip.slots_available }} seats filled</div>
+                  <progress class="progress bg-(--blue-dim) w-full" value="{{ tripgroup.trip.get_accepted_members.count }}" max="{{ tripgroup.trip.slots_available }}"></progress>
+                </div>
               </div>
             </div>
-          </div>
+          {% else %}
+            <div class="detail-card border-(--blue-border)">
+              <div class="section-label">Trip details</div>
+              <div>
+                <div class="meta-row">
+                  <span class="meta-key">Starting Address</span>
+                  <span class="meta-val">{{ tripgroup.trip.from_address }}</span>
+                </div>
+
+                <div class="meta-row">
+                  <span class="meta-key">Drop address</span>
+                  <span class="meta-val">{{ tripgroup.trip.to_address }}</span>
+                </div>
+                <div class="meta-row">
+                  <span class="meta-key">Departure</span>
+                  <span class="meta-val">{{ tripgroup.trip.departure_time|date:'g:i A, d M Y' }}</span>
+                </div>
+                <div class="meta-row">
+                  <span class="meta-key">Expected Finish Time</span>
+                  <span class="meta-val">{{ tripgroup.trip.expected_finish_time|date:'g:i A, d M Y' }}</span>
+                </div>
+                <div class="meta-row">
+                  <span class="meta-key">Duration</span>
+                  <span class="meta-val">{{ tripgroup.trip.trip_duration }}</span>
+                </div>
+                <div class="meta-row">
+                  <span class="meta-key">Budget</span>
+                  <span class="meta-val">₹{{ tripgroup.trip.budget }}</span>
+                </div>
+
+                <div class="mt-4">
+                  <div style="font-size:12px;color:var(--muted);margin-bottom:6px;font-weight:600;">{{ tripgroup.trip.get_accepted_members.count }} of {{ tripgroup.trip.slots_available }} seats filled</div>
+                  <progress class="progress bg-(--blue-dim) w-full" value="{{ tripgroup.trip.get_accepted_members.count }}" max="{{ tripgroup.trip.slots_available }}"></progress>
+                </div>
+              </div>
+            </div>
+          {% endif %}
         </div>
 
         <!-- Actions -->
         {% if request.user == tripgroup.trip.organizer %}
-          <div class="card bg-(--card) card-lg shadow-sm mt-6 border border-(--blue-border)" id="status-card">
+          <div class="card bg-(--card) card-lg shadow-sm mt-6 border border-(--blue-border)">
             <div class="card-body">
               <h2 class="card-title">Trip Management</h2>
 
               <p>The trip is currently in the {{ tripgroup.trip.status|title }} status.</p>
+
               <div class="card-actions mt-4">
-                {% if tripgroup.trip.status == 'completed' %}
-                  <button class="btn badge-soft">Trip is Completed Post a Review</button>
-                {% endif %}
                 {% if tripgroup.trip.status == 'planning' %}
                   <a class="btn btn-primary" href="{% url 'finalize_trip' tripgroup.trip.pk %}">Finalize Trip</a>
-                {% else %}
-                  <form method="post" action="{% url 'advance_trip_status' tripgroup.trip.pk %}">
+                {% elif tripgroup.trip.status == 'upcoming' %}
+                  <button class="btn btn-info" onclick="confirm_ongoing.showModal()">Start Trip</button>
+                {% elif tripgroup.trip.status == 'ongoing' %}
+                  <form method="post" action="{% url 'complete_trip' tripgroup.trip.pk %}">
                     {% csrf_token %}
-                    <button class="btn btn-success">Change Status to {{ tripgroup.trip.next_status|title }}</button>
+
+                    <div class="flex gap-2">
+                      <a href="{% url 'activity_create' %}?trip_id={{ tripgroup.trip.pk }}" class="btn bg-(--blue) text-white">Create Activity</a>
+
+                      <a href="{% url 'activity_list' %}" class="btn bg-(--blue) text-white">Browse Activities</a>
+
+                      <button class="btn btn-success text-white">Complete Trip</button>
+                    </div>
                   </form>
                 {% endif %}
               </div>
             </div>
           </div>
         {% endif %}
+
+        {% if tripgroup.trip.status == 'completed' %}
+          <div class="card bg-(--card) card-lg shadow-sm mt-6 border border-(--blue-border)">
+            <div class="card-body">
+              <h2 class="card-title">Reviews</h2>
+
+              {% if has_submitted_ratings %}
+                <button class="btn btn-success" disabled>You have submitted your ratings</button>
+              {% else %}
+                <button class="btn btn-outline" onclick="review_modal.showModal()">Leave Reviews</button>
+              {% endif %}
+            </div>
+          </div>
+        {% endif %}
       </div>
     </div>
   </div>
+
+  <!-- You can open the modal using ID.showModal() method -->
+  <dialog id="confirm_ongoing" class="modal">
+    <div class="modal-box">
+      <form method="dialog">
+        <button class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2">✕</button>
+      </form>
+      <h3 class="text-lg font-bold">Confirm Ongoing Status</h3>
+      <form action="{% url 'confirm_ongoing' tripgroup.trip.pk %}" method="post">
+        {% csrf_token %}
+        <p class="py-4">You can optionally provide a join link for WhatsApp group which others can join</p>
+        <input type="url" class="input w-full" name="whatsapplink" />
+        <button class="btn btn-primary mt-4" type="submit">Confirm</button>
+      </form>
+    </div>
+  </dialog>
+
+  <dialog id="review_modal" class="modal">
+    <div class="modal-box max-w-3xl">
+      <form method="dialog">
+        <button class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2">✕</button>
+      </form>
+
+      <h3 class="font-bold text-xl">Leave Reviews</h3>
+
+      <p class="opacity-70 mb-6">Help other travelers by rating your experience with each member.</p>
+
+      <form method="post" action="{% url 'submit_reviews' tripgroup.trip.pk %}">
+        {% csrf_token %}
+
+        {% for member in tripgroup.trip.get_accepted_members %}
+          {% if member.user != request.user %}
+            <div class="card border border-base-300 mb-5">
+              <div class="card-body">
+                <div class="flex items-center gap-4">
+                  {% include 'rides/components/avatar.html' with user=member.user style='w-14 rounded-full' %}
+
+                  <div>
+                    <h2 class="font-semibold">{{ member.user.username }}</h2>
+
+                    <p class="text-sm opacity-60">Rate your experience</p>
+                  </div>
+                </div>
+
+                <!-- Hidden user id -->
+                <input type="hidden" name="ratee" value="{{ member.user.id }}" />
+
+                <!-- Rating -->
+                <div class="rating rating-lg mt-4">
+                  {% for i in 5|times %}
+                    <input type="radio" name="rating_{{ member.user.id }}" value="{{ i }}" class="mask mask-star-2 bg-yellow-400" />
+                  {% endfor %}
+                </div>
+              </div>
+            </div>
+          {% endif %}
+        {% endfor %}
+
+        <div class="modal-action">
+          <button type="submit" class="btn btn-primary">Submit Reviews</button>
+        </div>
+      </form>
+    </div>
+  </dialog>
 
   <!-- Members Modal -->
   <dialog id="members_modal" class="modal">

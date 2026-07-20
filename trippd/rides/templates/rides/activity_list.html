@@ -1,0 +1,141 @@
+{% extends 'rides/base.html' %}
+{% block style %}
+  <style>
+    .ts-wrapper {
+      width: 100%;
+    }
+    
+    .ts-control {
+      border-radius: 16px !important;
+      min-height: 73px;
+      border: 1px solid var(--blue-border) !important;
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08);
+      padding: 0 24px !important;
+      background: var(--bg);
+      padding-left: 56px !important;
+    }
+    
+    .ts-control input {
+      font-size: 18px !important;
+    }
+    
+    .ts-dropdown {
+      margin-top: 12px;
+      border-radius: 24px;
+      overflow: hidden;
+      border: none;
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.15);
+    }
+    
+    .ts-dropdown .option {
+      cursor: pointer;
+    
+      transition: 0.2s;
+    }
+    
+    .ts-dropdown .option:hover {
+      background: #f8fafc;
+    }
+    
+    .ts-dropdown .active {
+      background: #eef6ff !important;
+    }
+    
+    .ts-control.focus {
+      border-color: #4f8ef7 !important;
+    
+      box-shadow: 0 0 0 4px rgba(79, 142, 247, 0.15), 0 8px 30px rgba(0, 0, 0, 0.1);
+    }
+  </style>
+{% endblock %}
+
+{% block content %}
+  <div class="container mx-auto max-w-6xl px-4 py-8">
+    <div class="max-w-3xl mx-auto">
+      <div class="text-center mb-8">
+        <h1 class="text-5xl font-bold">Discover Places</h1>
+        <p class="text-base-content/70 mt-3">Search cities, attractions and activities</p>
+      </div>
+
+      <div class="max-w-3xl mx-auto">
+        <div class="relative">
+          <svg xmlns="http://www.w3.org/2000/svg" class="absolute left-5 top-1/2 -translate-y-1/2 size-6 text-base-content/50 z-10 pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" />
+          </svg>
+
+          <select id="place-search" placeholder="Search for places..."></select>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    new TomSelect('#place-search', {
+      valueField: 'id',
+      labelField: 'name',
+      searchField: ['name'],
+    
+      maxItems: 1,
+      create: false,
+    
+      options: [
+        {
+          id: 1,
+          name: 'Thrissur',
+          subtitle: 'City • Kerala',
+          icon: '📍'
+        },
+        {
+          id: 2,
+          name: 'Vadakkumnathan Temple',
+          subtitle: 'Temple • Thrissur',
+          icon: '🏛️'
+        },
+        {
+          id: 3,
+          name: 'Thrissur Zoo',
+          subtitle: 'Zoo • Thrissur',
+          icon: '🦁'
+        }
+      ],
+    
+      render: {
+        option(data, escape) {
+          return `
+                                                                                                                                        <div class="flex items-start gap-4 px-5 py-4">
+                                                                                                                        
+                                                                                                                                            <div class="text-2xl">
+                                                                                                                                                ${data.icon}
+                                                                                                                                            </div>
+                                                                                                                        
+                                                                                                                                            <div>
+                                                                                                                        
+                                                                                                                                                <div class="font-semibold text-base">
+                                                                                                                                                    ${escape(data.name)}
+                                                                                                                                                </div>
+                                                                                                                        
+                                                                                                                                                <div class="text-sm opacity-60 mt-1">
+                                                                                                                                                    ${escape(data.subtitle)}
+                                                                                                                                                </div>
+                                                                                                                        
+                                                                                                                                            </div>
+                                                                                                                        
+                                                                                                                                        </div>
+                                                                                                                                    `
+        },
+    
+        item(data, escape) {
+          return `
+                                                                                                                                        <div class="flex items-center gap-2">
+                                                                                                                        
+                                                                                                                                            <span>${data.icon}</span>
+                                                                                                                        
+                                                                                                                                            <span>${escape(data.name)}</span>
+                                                                                                                        
+                                                                                                                                        </div>
+                                                                                                                                    `
+        }
+      }
+    })
+  </script>
+{% endblock %}

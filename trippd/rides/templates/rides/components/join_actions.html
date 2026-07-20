@@ -15,7 +15,7 @@
       {% endif %}
     </div>
   {% else %}
-    <a href="{% url 'trip_chat' trip.pk %}" class="btn btn-outline {{ btn_cls }} hover:bg-(--card2) text-(--black)" style="border-radius:12px;">View Group</a>
+    <a href="{% url 'trip_hub' trip.pk %}" class="btn btn-outline {{ btn_cls }} hover:bg-(--card2) text-(--black)" style="border-radius:12px;">View Group</a>
   {% endif %}
 {% else %}
   <button class="btn btn-disabled {{ btn_cls }} hover:bg-(--card2) text-(--black)" style="border-radius:12px; ">Trip is full</button>

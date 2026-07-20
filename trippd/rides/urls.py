@@ -2,7 +2,7 @@ from django.urls import path
 from . import views
 
 urlpatterns = [
-    path("", views.TripListView.as_view(), name=""),
+    path("", views.CompanionListView.as_view(), name="home"),
     path("create-ride/", views.CreateTripView.as_view(), name="create_trip"),
     path("autopopulate/", views.auto_populate, name="autopopulate"),
     path("rides/", views.TripListView.as_view(), name="trip_list"),
@@ -22,20 +22,51 @@ urlpatterns = [
     path(
         "companion/<int:pk>/edit/", views.EditTripView.as_view(), name="edit_companion"
     ),
-    path("ride/chat/<int:pk>/", views.ChatView.as_view(), name="trip_chat"),
+    path("ride/chat/<int:pk>/", views.TripHubView.as_view(), name="trip_hub"),
     path("ride/inbox/", views.InboxView.as_view(), name="inbox"),
     path("ride/start-chat/<int:pk>/", views.StartChatView.as_view(), name="start_chat"),
     path(
         "ride/direct-chat/<int:pk>/", views.DirectChatView.as_view(), name="direct_chat"
     ),
     path(
-        "ride/advance-status/<int:pk>/",
-        views.advance_trip_status,
-        name="advance_trip_status",
+        "ride/complete-trip/<int:pk>/",
+        views.complete_trip,
+        name="complete_trip",
     ),
     path(
         "ride/finalize/<int:pk>/",
         views.FinalizeTripView.as_view(),
         name="finalize_trip",
+    ),
+    path(
+        "ride/confirm_ongoing/<int:pk>/",
+        views.confirm_ongoing,
+        name="confirm_ongoing",
+    ),
+    path(
+        "trip/<int:pk>/submit-reviews/",
+        views.submit_reviews,
+        name="submit_reviews",
+    ),
+    path("activities/", views.ActivityListView.as_view(), name="activity_list"),
+    path(
+        "activities/create/",
+        views.AcitvityCreateView.as_view(),
+        name="activity_create",
+    ),
+    path(
+        "activities/autocomplete/",
+        views.autocomplete_places_view,
+        name="autocomplete_places",
+    ),
+    path(
+        "activities/<int:pk>/",
+        views.ActivityDetailView.as_view(),
+        name="activity_detail",
+    ),
+    path(
+        "activities/<int:activity_id>/hero-image/",
+        views.get_place_hero_image,
+        name="activity_hero_image",
     ),
 ]

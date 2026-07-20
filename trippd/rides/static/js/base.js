@@ -18,5 +18,14 @@ document.addEventListener("DOMContentLoaded", function () {
     enableTime: true,
     dateFormat: "Y-m-d H:i",
   });
+
+  flatpickr("#departure_date", {
+    dateFormat: "Y-m-d",
+  });
+
+  flatpickr("#activity_start_time", {
+    enableTime: true,
+    dateFormat: "Y-m-d H:i",
+  });
 });
 

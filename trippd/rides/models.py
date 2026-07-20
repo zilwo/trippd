@@ -130,6 +130,7 @@ class TripGroup(models.Model):
 
     trip = models.OneToOneField(Trip, on_delete=models.CASCADE, primary_key=True)
     name = models.CharField(max_length=255)
+    whats_app_group_link = models.URLField(blank=True, null=True)
 
     def __str__(self):
         return self.name
@@ -180,3 +181,60 @@ class ConversationMessage(models.Model):
         return (
             f"Message by {self.sender.username} in conversation {self.conversation.id}"
         )
+
+
+class Place(models.Model):
+    """Represents a place associated with an activity."""
+
+    name = models.CharField(max_length=255)
+    description = models.TextField(blank=True)
+    address = models.CharField(max_length=255)
+    place_id = models.CharField(max_length=255, unique=True)
+    latitude = models.FloatField()
+    longitude = models.FloatField()
+    primary_type = models.CharField(max_length=100, blank=True, null=True)
+    photos = models.JSONField(blank=True, null=True)
+    map_url = models.URLField(blank=True, null=True)
+
+    def __str__(self):
+        return self.address
+
+
+class Activity(models.Model):
+    """Represents an activity associated with a trip."""
+
+    class Category(models.TextChoices):
+        FOOD = "food", "Food & Drinks"
+        SIGHTSEEING = "sightseeing", "Sightseeing"
+        NATURE = "nature", "Nature & Outdoors"
+        SHOPPING = "shopping", "Shopping"
+        ENTERTAINMENT = "entertainment", "Entertainment"
+        SPORTS = "sports", "Sports & Adventure"
+        NIGHTLIFE = "nightlife", "Nightlife"
+        RELAXATION = "relaxation", "Relaxation"
+        STAY = "stay", "Stay"
+        OTHER = "other", "Other"
+
+    organizer = models.ForeignKey(
+        User, on_delete=models.CASCADE, related_name="organized_activities"
+    )
+    trip = models.ForeignKey(
+        Trip, on_delete=models.CASCADE, related_name="activities", null=True, blank=True
+    )
+    title = models.CharField(max_length=255)
+    description = models.TextField(max_length=500, blank=True)
+    start_time = models.DateTimeField()
+    created_at = models.DateTimeField(auto_now_add=True)
+    place = models.ForeignKey(
+        Place, on_delete=models.PROTECT, related_name="activities"
+    )
+    max_participants = models.PositiveIntegerField(default=10)
+    category = models.CharField(
+        max_length=20,
+        choices=Category.choices,
+        null=True,
+        blank=True,
+    )
+
+    def __str__(self):
+        return f"{self.title} organized by {self.organizer.username}"

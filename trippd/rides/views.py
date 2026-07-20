@@ -1,8 +1,6 @@
-from turtle import mode
-
 from django.utils import timezone
 from django.http import JsonResponse
-from django.shortcuts import redirect, render
+from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse, reverse_lazy
 from django.views.generic import (
     CreateView,
@@ -14,8 +12,9 @@ from django.views.generic import (
 )
 from django import forms
 from django.conf import settings
+import requests
 
-from users.models import Language, User, Notification
+from users.models import Language, User, Notification, Rating
 from .models import (
     Conversation,
     Trip,
@@ -23,22 +22,32 @@ from .models import (
     TripMembership,
     TripGroup,
     TripGroupMessage,
+    Activity,
+    Place,
 )
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.http import require_POST
 from django.contrib.auth.mixins import LoginRequiredMixin
 from .services.autocomplete_location import autocomplete_location
+from .services.place import (
+    autocomplete_places,
+    get_description,
+    get_place_details,
+    get_place_photo_url,
+)
 from django.http import HttpResponse
 from channels.layers import get_channel_layer
 from asgiref.sync import async_to_sync
 from django.db.models import Count
 from .forms import (
+    ActivityForm,
     TripCreateForm,
     CompanionTravelForm,
     TripFilterForm,
     BUDGET_LIMITS,
     AGE_GROUPS,
+    FinalizeTripForm,
 )
 
 
@@ -51,6 +60,7 @@ def auto_populate(request):
 
     if query:
         results = autocomplete_location(query)
+        print(results)
         return JsonResponse({"results": results})
 
     else:
@@ -104,7 +114,7 @@ class CreateTripView(LoginRequiredMixin, CreateView):
 
     def get_form_class(self):
         """Determines which form to use"""
-        self.mode = self.request.POST.get("creation_mode", "trip")
+        self.mode = self.request.POST.get("creation_mode", "companion")
         if self.mode == "companion":
             return CompanionTravelForm
         return TripCreateForm
@@ -154,7 +164,7 @@ class TripListView(ListView):
     model = Trip
     template_name = "rides/trip_list.html"
     context_object_name = "trips"
-    paginate_by = 2
+    paginate_by = 5
 
     def get_queryset(self):
         queryset = super().get_queryset()
@@ -163,6 +173,8 @@ class TripListView(ListView):
         departure = self.request.GET.get("departure")
         tags = self.request.GET.getlist("tag")
         languages = self.request.GET.getlist("language")
+        lat = self.request.GET.get("lat")
+        lon = self.request.GET.get("lon")
         self.search_title = "Available Trips"
 
         form = TripFilterForm(self.request.GET)
@@ -181,6 +193,19 @@ class TripListView(ListView):
             queryset = queryset.filter(departure_time__date=departure)
         if passengers:
             queryset = queryset.filter(slots_available__gte=passengers)
+
+        if lat and lon:
+            try:
+                lat = float(lat)
+                lon = float(lon)
+                queryset = queryset.filter(
+                    origin_lat__gte=lat - 0.1,
+                    origin_lat__lte=lat + 0.1,
+                    origin_lon__gte=lon - 0.1,
+                    origin_lon__lte=lon + 0.1,
+                )
+            except ValueError:
+                pass
         if tags:
             queryset = queryset.filter(tag__name__in=tags)
         if languages:
@@ -189,18 +214,20 @@ class TripListView(ListView):
             )
         if budget:
             try:
-                budget_limit = self.BUDGET_LIMITS.get(budget, 100000)
+                budget_limit = BUDGET_LIMITS.get(budget, 100000)
                 queryset = (
                     queryset.filter(budget__lte=budget_limit)
                     .distinct()
-                    .order_by("-budget")
+                    .order_by("budget")
                 )
+
+                print("Budget filter applied. Budget limit:", budget_limit)
 
             except ValueError:
                 pass
 
         if age_group:
-            age_range = self.AGE_GROUPS.get(age_group)
+            age_range = AGE_GROUPS.get(age_group)
             if age_range:
                 min_age, max_age = age_range
                 queryset = queryset.filter(
@@ -217,8 +244,6 @@ class TripListView(ListView):
             self.search_title = f"Starting from {origin}"
         elif destination:
             self.search_title = f"Going to {destination}"
-
-        print("heeyeyeyye")
 
         return queryset.filter(status="upcoming").order_by("-departure_time")
 
@@ -252,7 +277,7 @@ class CompanionListView(ListView):
     model = Trip
     template_name = "rides/companion_list.html"
     context_object_name = "companion_requests"
-    paginate_by = 4
+    paginate_by = 5
 
     def get_queryset(self):
         queryset = super().get_queryset()
@@ -348,7 +373,7 @@ class TripDetailView(DetailView):
         context = super().get_context_data(**kwargs)
         trip = self.get_object()
         user = self.request.user
-        context["GOOGLE_MAPS_API_KEY"] = settings.GOOGLE_MAPS_API_KEY
+        context["GOOGLE_API_KEY"] = settings.GOOGLE_API_KEY
 
         if user.is_authenticated:
 
@@ -520,7 +545,7 @@ def accept_request(request, pk):
     Notification.objects.create(
         user=membership.user,
         text=acceptance_message,
-        link=reverse("trip_chat", kwargs={"pk": membership.trip.pk}),
+        link=reverse("trip_hub", kwargs={"pk": membership.trip.pk}),
     )
     async_to_sync(get_channel_layer().group_send)(
         f"notifications_{membership.user.id}",
@@ -555,9 +580,9 @@ def reject_request(request, pk):
     return HttpResponse(status=200)
 
 
-class ChatView(LoginRequiredMixin, DetailView):
+class TripHubView(LoginRequiredMixin, DetailView):
     model = TripGroup
-    template_name = "rides/trip_chat.html"
+    template_name = "rides/trip_hub.html"
     context_object_name = "tripgroup"
 
     def is_member(self, user):
@@ -571,79 +596,69 @@ class ChatView(LoginRequiredMixin, DetailView):
             return redirect("trip_detail", pk=self.object.trip.pk)
         return super().get(request, *args, **kwargs)
 
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+
+        context["has_submitted_ratings"] = Rating.objects.filter(
+            trip=self.object.trip,
+            rater=self.request.user,
+        ).exists()
+
+        return context
+
 
 @login_required
-def advance_trip_status(request, pk):
-    trip = Trip.objects.get(pk=pk)
+def complete_trip(request, pk):
+    trip = get_object_or_404(Trip, pk=pk)
+
     if trip.organizer != request.user:
         messages.error(
-            request, "You are not authorized to advance the status of this trip."
+            request,
+            "You are not authorized to complete this trip.",
         )
-        return HttpResponse(status=403)
+        return redirect("trip_hub", pk=trip.tripgroup.pk)
 
-    if trip.status == "completed":
-        messages.info(request, "This trip is already completed.")
-        return HttpResponse(status=400)
-
-    expected_finish_time = trip.expected_finish_time
-    if expected_finish_time and timezone.now() < expected_finish_time:
-        return HttpResponse(
-            "Cannot advance trip status before expected finish time.", status=400
+    if trip.status != "ongoing":
+        messages.info(
+            request,
+            "This trip is not currently ongoing.",
         )
+        return redirect("trip_hub", pk=trip.tripgroup.pk)
 
-    new_status = trip.next_status()
-    trip.status = new_status
+    if trip.expected_finish_time and timezone.now() < trip.expected_finish_time:
+        messages.error(
+            request,
+            "Cannot complete the trip before the expected finish time.",
+        )
+        return redirect("trip_hub", pk=trip.tripgroup.pk)
+
+    trip.status = "completed"
     trip.save()
-
-    message_updates = {
-        "upcoming": "The trip is now upcoming. Get ready for the adventure!",
-        "ongoing": "The trip is now ongoing. Enjoy the ride!",
-        "completed": "The trip has been completed. Hope you had a great time!",
-    }
 
     TripGroupMessage.objects.create(
         sender=request.user,
         group=trip.tripgroup,
-        activity=message_updates.get(
-            new_status,
-        ),
+        activity="The trip has been completed. Hope you had a great time!",
         is_system_message=True,
     )
+
     async_to_sync(get_channel_layer().group_send)(
         f"chat_{trip.pk}",
         {
             "type": "trip_activity",
-            "activity": message_updates.get(
-                new_status,
-            ),
+            "activity": "The trip has been completed. Hope you had a great time!",
         },
     )
 
-    return render(
-        request,
-        "rides/partials/trip_status.html",
-        context={"tripgroup": trip.tripgroup},
-    )
+    messages.success(request, "Trip marked as completed.")
+
+    return redirect("trip_hub", pk=trip.tripgroup.pk)
 
 
 class FinalizeTripView(LoginRequiredMixin, UpdateView):
     model = Trip
     template_name = "rides/create_trip.html"
-    fields = [
-        "from_address",
-        "origin",
-        "departure_time",
-        "expected_finish_time",
-        "to_address",
-        "destination",
-        "description",
-        "slots_available",
-        "budget",
-        "tag",
-        "looking_for",
-        "previous_experiences",
-        "trip_image",
-    ]
+    form_class = FinalizeTripForm
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -660,7 +675,55 @@ class FinalizeTripView(LoginRequiredMixin, UpdateView):
         return response
 
     def get_success_url(self):
-        return reverse("trip_chat", kwargs={"pk": self.object.pk})
+        return reverse("trip_hub", kwargs={"pk": self.object.pk})
+
+
+def confirm_ongoing(request, pk):
+    trip = get_object_or_404(Trip, pk=pk)
+    whatsappgrouplink = request.POST.get("whatsapplink")
+    if trip.organizer != request.user:
+        messages.error(
+            request,
+            "You are not authorized to confirm the ongoing status of this trip.",
+        )
+        return HttpResponse(status=403)
+
+    if trip.status != "upcoming":
+        messages.info(request, "This trip is not in an upcoming state.")
+        return HttpResponse(status=400)
+
+    trip.status = "ongoing"
+    trip.save()
+
+    if whatsappgrouplink:
+        if not (
+            whatsappgrouplink.startswith("https://chat.whatsapp.com/")
+            or whatsappgrouplink.startswith("https://www.whatsapp.com/channel/")
+        ):
+            messages.error(
+                request,
+                "Please enter a valid WhatsApp invite link.",
+            )
+            return HttpResponse(status=400)
+
+        trip.tripgroup.whats_app_group_link = whatsappgrouplink
+        trip.tripgroup.save()
+
+    TripGroupMessage.objects.create(
+        sender=request.user,
+        group=trip.tripgroup,
+        activity="The trip is now ongoing. Enjoy the ride!",
+        is_system_message=True,
+    )
+    async_to_sync(get_channel_layer().group_send)(
+        f"chat_{trip.pk}",
+        {
+            "type": "trip_activity",
+            "activity": "The trip is now ongoing. Enjoy the ride!",
+        },
+    )
+
+    return redirect("trip_hub", pk=trip.pk)
 
 
 class InboxView(LoginRequiredMixin, TemplateView):
@@ -718,3 +781,200 @@ class DirectChatView(LoginRequiredMixin, DetailView):
         other_participant = self.object.get_other_participant(self.request.user)
         context["other_user"] = other_participant
         return context
+
+
+@login_required
+@require_POST
+def submit_reviews(request, pk):
+    trip = get_object_or_404(Trip, pk=pk)
+
+    if trip.status != "completed":
+        messages.error(
+            request,
+            "Ratings can only be submitted after the trip is completed.",
+        )
+        return redirect("trip_hub", pk=trip.tripgroup.pk)
+
+    if not TripMembership.objects.filter(
+        trip=trip,
+        user=request.user,
+        status="accepted",
+    ).exists():
+        messages.error(
+            request,
+            "You are not a member of this trip.",
+        )
+        return redirect("trip_detail", pk=trip.pk)
+
+    if Rating.objects.filter(
+        trip=trip,
+        rater=request.user,
+    ).exists():
+        messages.info(
+            request,
+            "You have already submitted your ratings for this trip.",
+        )
+        return redirect("trip_hub", pk=trip.tripgroup.pk)
+
+    members = TripMembership.objects.filter(
+        trip=trip,
+        status="accepted",
+    ).select_related("user")
+
+    for member in members:
+        if member.user == request.user:
+            continue
+
+        rating = request.POST.get(f"rating_{member.user.id}")
+
+        if not rating:
+            messages.error(
+                request,
+                f"Please rate {member.user.username}.",
+            )
+            return redirect("trip_hub", pk=trip.tripgroup.pk)
+
+        Rating.objects.create(
+            rater=request.user,
+            ratee=member.user,
+            trip=trip,
+            rating=int(rating),
+        )
+
+    messages.success(
+        request,
+        "Your ratings have been submitted successfully.",
+    )
+
+    return redirect("trip_hub", pk=trip.tripgroup.pk)
+
+
+class ActivityListView(ListView):
+    model = Activity
+    template_name = "activities/activity_list.html"
+    context_object_name = "activities"
+    paginate_by = 10
+
+    def get_queryset(self):
+        return Activity.objects.select_related("organizer", "trip").order_by(
+            "-created_at"
+        )
+
+
+class AcitvityCreateView(LoginRequiredMixin, CreateView):
+
+    template_name = "rides/activity_create.html"
+    form_class = ActivityForm
+
+    def form_valid(self, form):
+        form.instance.organizer = self.request.user
+        trip_id = self.request.GET.get("trip_id")
+        if trip_id:
+
+            trip = get_object_or_404(Trip, pk=trip_id)
+            form.instance.trip = trip
+        else:
+            print("Creating activity without a trip association.")
+
+        place_id = self.request.POST.get("place_id")
+        session_token = self.request.POST.get("session_token")
+        if place_id:
+            place_details = get_place_details(place_id, session_token)
+            print(place_details, "this")
+            if place_details:
+
+                place, created = Place.objects.get_or_create(
+                    place_id=place_id,
+                    defaults={
+                        "name": place_details["name"],
+                        "address": place_details["address"],
+                        "latitude": place_details["latitude"],
+                        "longitude": place_details["longitude"],
+                        "primary_type": place_details.get("primary_type", ""),
+                        "photos": place_details.get("photos", []),
+                        "map_url": place_details.get("map_url", ""),
+                    },
+                )
+
+                if created:
+                    print("starting..")
+                    generated = get_description(place_details)
+
+                    print("ends..")
+                    place.description = generated
+                    place.save(update_fields=["description"])
+                else:
+                    print("Place already exists in the database:", place.name)
+                form.instance.place = place
+
+            else:
+                print("Failed to fetch place details for place_id:", place_id)
+
+        return super().form_valid(form)
+
+    def form_invalid(self, form):
+        print("Form is invalid. Errors:", form.errors)
+        return super().form_invalid(form)
+
+    def get_success_url(self):
+        return reverse("activity_list")
+
+
+def autocomplete_places_view(request):
+    query = request.GET.get("query", "")
+    session_token = request.GET.get("session_token")
+
+    if query:
+
+        results = autocomplete_places(query, session_token)
+        return JsonResponse({"results": results})
+    else:
+        return JsonResponse({"results": []})
+
+
+class ActivityDetailView(DetailView):
+    model = Activity
+    template_name = "rides/activity_detail.html"
+    context_object_name = "activity"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        activity = self.get_object()
+        participant_count = 0
+        if activity.trip:
+            context["trip"] = activity.trip
+            participant_count = activity.trip.memberships.count()
+
+        else:
+            participant_count = 1
+
+        if activity.place:
+            context["place"] = activity.place
+
+        context["participant_count"] = participant_count
+
+        return context
+
+
+def get_place_hero_image(request, activity_id):
+    activity = get_object_or_404(Activity, pk=activity_id)
+
+    if activity.place and activity.place.photos:
+
+        photo_name = activity.place.photos[0]
+        hero_image_url = get_place_photo_url(photo_name)
+        response = requests.get(hero_image_url, allow_redirects=True)
+        headers = {
+            "Content-Type": response.headers.get("Content-Type", "image/jpeg"),
+            "Cache-Control": response.headers.get(
+                "Cache-Control", "public, max-age=86400"
+            ),
+        }
+        if response.status_code == 200:
+
+            return HttpResponse(response.content, headers=headers)
+        else:
+            print(
+                f"Failed to fetch hero image for activity {activity_id}. Status code: {response.status_code}"
+            )
+    return HttpResponse(status=404)

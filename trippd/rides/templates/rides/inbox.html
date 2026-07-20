@@ -59,7 +59,7 @@
 
         <div class="bg-(--card) border border-(--blue-border) rounded-lg shadow-sm">
           {% for membership in joined_trips %}
-            <a href="{% url 'trip_chat' membership.trip.pk %}" class="flex items-center gap-4 p-4 hover:bg-base-200 transition border-b border-base-200 last:border-b-0">
+            <a href="{% url 'trip_hub' membership.trip.pk %}" class="flex items-center gap-4 p-4 hover:bg-base-200 transition border-b border-base-200 last:border-b-0">
               <!-- Trip Info -->
               <div class="flex-1 min-w-0 border-(--blue-border) rounded-lg p-3">
                 <div class="flex justify-between items-center gap-2">
