@@ -4,20 +4,19 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('rides', '0020_rename_price_trip_budget'),
+        ("rides", "0020_rename_price_trip_budget"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='trip',
-            name='orgin_lat',
+            model_name="trip",
+            name="orgin_lat",
             field=models.FloatField(blank=True, null=True),
         ),
         migrations.AddField(
-            model_name='trip',
-            name='origin_lon',
+            model_name="trip",
+            name="origin_lon",
             field=models.FloatField(blank=True, null=True),
         ),
     ]

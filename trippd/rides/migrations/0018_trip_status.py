@@ -4,15 +4,23 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('rides', '0017_conversation_conversationmessage'),
+        ("rides", "0017_conversation_conversationmessage"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='trip',
-            name='status',
-            field=models.CharField(choices=[('planning', 'Planning'), ('upcoming', 'Upcoming'), ('ongoing', 'Ongoing'), ('completed', 'Completed')], default='upcoming', max_length=20),
+            model_name="trip",
+            name="status",
+            field=models.CharField(
+                choices=[
+                    ("planning", "Planning"),
+                    ("upcoming", "Upcoming"),
+                    ("ongoing", "Ongoing"),
+                    ("completed", "Completed"),
+                ],
+                default="upcoming",
+                max_length=20,
+            ),
         ),
     ]

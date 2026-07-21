@@ -4,30 +4,32 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('rides', '0006_alter_trip_slots_available'),
+        ("rides", "0006_alter_trip_slots_available"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='trip',
-            name='duration',
-            field=models.CharField(choices=[('days', 'Days'), ('weeks', 'Weeks'), ('months', 'Months')], max_length=50),
+            model_name="trip",
+            name="duration",
+            field=models.CharField(
+                choices=[("days", "Days"), ("weeks", "Weeks"), ("months", "Months")],
+                max_length=50,
+            ),
         ),
         migrations.AlterField(
-            model_name='trip',
-            name='from_address',
+            model_name="trip",
+            name="from_address",
             field=models.CharField(max_length=255),
         ),
         migrations.AlterField(
-            model_name='trip',
-            name='price',
+            model_name="trip",
+            name="price",
             field=models.DecimalField(decimal_places=2, max_digits=10),
         ),
         migrations.AlterField(
-            model_name='trip',
-            name='to_address',
+            model_name="trip",
+            name="to_address",
             field=models.CharField(max_length=255),
         ),
     ]

@@ -4,15 +4,14 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('rides', '0034_place_photos'),
+        ("rides", "0034_place_photos"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='place',
-            name='map_url',
+            model_name="place",
+            name="map_url",
             field=models.URLField(blank=True, null=True),
         ),
     ]

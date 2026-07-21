@@ -4,7 +4,7 @@
     .ts-wrapper {
       width: 100%;
     }
-    
+
     .ts-control {
       border-radius: 16px !important;
       min-height: 73px;
@@ -14,11 +14,11 @@
       background: var(--bg);
       padding-left: 56px !important;
     }
-    
+
     .ts-control input {
       font-size: 18px !important;
     }
-    
+
     .ts-dropdown {
       margin-top: 12px;
       border-radius: 24px;
@@ -26,24 +26,24 @@
       border: none;
       box-shadow: 0 20px 50px rgba(0, 0, 0, 0.15);
     }
-    
+
     .ts-dropdown .option {
       cursor: pointer;
-    
+
       transition: 0.2s;
     }
-    
+
     .ts-dropdown .option:hover {
       background: #f8fafc;
     }
-    
+
     .ts-dropdown .active {
       background: #eef6ff !important;
     }
-    
+
     .ts-control.focus {
       border-color: #4f8ef7 !important;
-    
+
       box-shadow: 0 0 0 4px rgba(79, 142, 247, 0.15), 0 8px 30px rgba(0, 0, 0, 0.1);
     }
   </style>
@@ -89,7 +89,7 @@
   <script>
     let sessionToken = crypto.randomUUID()
     document.getElementById('session_token').value = sessionToken
-    
+
     new TomSelect('#place-search', {
       maxItems: 1,
       create: false,
@@ -97,7 +97,7 @@
       labelField: 'text',
       searchField: 'text',
       loadingClass: 'ts-loading',
-    
+
       load(query, callback) {
         if (query.length < 2) {
           callback()
@@ -108,13 +108,13 @@
           .then((data) => callback(data.results))
           .catch(() => callback())
       },
-    
+
       onItemAdd(value) {
         const selected = this.options[value]
-    
+
         document.getElementById('place_id').value = selected.place_id
         document.getElementById('loading-overlay').classList.remove('hidden')
-    
+
         this.input.form.submit()
       }
     })

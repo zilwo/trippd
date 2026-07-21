@@ -4,15 +4,14 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('users', '0009_alter_notification_created_at'),
+        ("users", "0009_alter_notification_created_at"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='profile',
-            name='instagram',
+            model_name="profile",
+            name="instagram",
             field=models.URLField(blank=True),
         ),
     ]

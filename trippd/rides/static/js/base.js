@@ -28,4 +28,3 @@ document.addEventListener("DOMContentLoaded", function () {
     dateFormat: "Y-m-d H:i",
   });
 });
-

@@ -5,19 +5,20 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('rides', '0009_alter_tripmembership_unique_together'),
+        ("rides", "0009_alter_tripmembership_unique_together"),
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
     ]
 
     operations = [
         migrations.AlterUniqueTogether(
-            name='tripmembership',
+            name="tripmembership",
             unique_together=set(),
         ),
         migrations.AddConstraint(
-            model_name='tripmembership',
-            constraint=models.UniqueConstraint(fields=('trip', 'user'), name='unique_trip_user'),
+            model_name="tripmembership",
+            constraint=models.UniqueConstraint(
+                fields=("trip", "user"), name="unique_trip_user"
+            ),
         ),
     ]

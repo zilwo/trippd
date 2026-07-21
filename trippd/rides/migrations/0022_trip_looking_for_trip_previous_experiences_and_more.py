@@ -4,25 +4,29 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('rides', '0021_trip_orgin_lat_trip_origin_lon'),
+        ("rides", "0021_trip_orgin_lat_trip_origin_lon"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='trip',
-            name='looking_for',
+            model_name="trip",
+            name="looking_for",
             field=models.CharField(blank=True, max_length=255),
         ),
         migrations.AddField(
-            model_name='trip',
-            name='previous_experiences',
+            model_name="trip",
+            name="previous_experiences",
             field=models.TextField(blank=True),
         ),
         migrations.AddField(
-            model_name='trip',
-            name='trip_image',
-            field=models.ImageField(blank=True, default='trip_images/default.jpg', null=True, upload_to='trip_images/'),
+            model_name="trip",
+            name="trip_image",
+            field=models.ImageField(
+                blank=True,
+                default="trip_images/default.jpg",
+                null=True,
+                upload_to="trip_images/",
+            ),
         ),
     ]

@@ -6,28 +6,39 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     initial = True
 
     dependencies = [
-        ('rides', '0001_initial'),
+        ("rides", "0001_initial"),
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='trip',
-            name='organizer',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='organized_trips', to=settings.AUTH_USER_MODEL),
+            model_name="trip",
+            name="organizer",
+            field=models.ForeignKey(
+                on_delete=django.db.models.deletion.CASCADE,
+                related_name="organized_trips",
+                to=settings.AUTH_USER_MODEL,
+            ),
         ),
         migrations.AddField(
-            model_name='tripmembership',
-            name='trip',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='memberships', to='rides.trip'),
+            model_name="tripmembership",
+            name="trip",
+            field=models.ForeignKey(
+                on_delete=django.db.models.deletion.CASCADE,
+                related_name="memberships",
+                to="rides.trip",
+            ),
         ),
         migrations.AddField(
-            model_name='tripmembership',
-            name='user',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='trip_memberships', to=settings.AUTH_USER_MODEL),
+            model_name="tripmembership",
+            name="user",
+            field=models.ForeignKey(
+                on_delete=django.db.models.deletion.CASCADE,
+                related_name="trip_memberships",
+                to=settings.AUTH_USER_MODEL,
+            ),
         ),
     ]

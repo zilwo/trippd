@@ -8,7 +8,6 @@ from django.utils import timezone
 
 
 async def get_profile_and_chat(user, room_name, chat_type):
-
     if chat_type == "trip":
         room = await TripGroup.objects.aget(trip=room_name)
     elif chat_type == "direct":
@@ -21,7 +20,7 @@ async def get_profile_and_chat(user, room_name, chat_type):
         "avatar": (
             profile.profile_picture.url
             if profile.profile_picture
-            else f"https://ui-avatars.com/api/?name={ user.username }"
+            else f"https://ui-avatars.com/api/?name={user.username}"
         ),
     }
     return chat_data
@@ -98,18 +97,18 @@ class ChatConsumer(AsyncWebsocketConsumer):
         current_username = self.user.username
 
         html = f"""
-        <div class="chat {'chat-end' if event['username'] == current_username else 'chat-start'}">
+        <div class="chat {"chat-end" if event["username"] == current_username else "chat-start"}">
          <div class="chat-image avatar">
                       <div class="w-10 rounded-full">
-                          <img src="{escape(event['avatar'])}" alt="avatar" />
+                          <img src="{escape(event["avatar"])}" alt="avatar" />
                       </div>
          </div>
           <div class="chat-header">
-            {escape(event['username'])}
-            <time class="text-xs opacity-50 ml-2">{event['sent_at']}</time>
+            {escape(event["username"])}
+            <time class="text-xs opacity-50 ml-2">{event["sent_at"]}</time>
           </div>
           <div class="chat-bubble">
-            {escape(event['message'])}
+            {escape(event["message"])}
           </div>
         </div>
         """
@@ -128,7 +127,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
         print("Received activity event:", event)
         html = f"""
          <div class="flex justify-center my-4">
-                  <div class="badge badge-soft">{escape(event['activity'])}</div>
+                  <div class="badge badge-soft">{escape(event["activity"])}</div>
                 </div>
         """
         await self.send(
@@ -201,18 +200,18 @@ class DirectMessageConsumer(AsyncWebsocketConsumer):
     async def dm_message(self, event):
         print("Received DM event:", event)
         html = f"""
-        <div class="chat {'chat-end' if event['username'] == self.user.username else 'chat-start'}">
+        <div class="chat {"chat-end" if event["username"] == self.user.username else "chat-start"}">
          <div class="chat-image avatar">
                       <div class="w-10 rounded-full">
-                          <img src="{escape(event['avatar'])}" alt="avatar" />
+                          <img src="{escape(event["avatar"])}" alt="avatar" />
                       </div>
          </div>
           <div class="chat-header">
-            {escape(event['username'])}
-            <time class="text-xs opacity-50 ml-2">{event['sent_at']}</time>
+            {escape(event["username"])}
+            <time class="text-xs opacity-50 ml-2">{event["sent_at"]}</time>
           </div>
           <div class="chat-bubble">
-            {escape(event['message'])}
+            {escape(event["message"])}
           </div>
         </div>
         """

@@ -4,20 +4,19 @@ from django.db import migrations
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('rides', '0013_remove_tripgroup_id_tripgroup_trip_and_more'),
+        ("rides", "0013_remove_tripgroup_id_tripgroup_trip_and_more"),
     ]
 
     operations = [
         migrations.RenameField(
-            model_name='tripgroupmessage',
-            old_name='created_at',
-            new_name='send_at',
+            model_name="tripgroupmessage",
+            old_name="created_at",
+            new_name="send_at",
         ),
         migrations.RenameField(
-            model_name='tripgroupmessage',
-            old_name='user',
-            new_name='sender',
+            model_name="tripgroupmessage",
+            old_name="user",
+            new_name="sender",
         ),
     ]

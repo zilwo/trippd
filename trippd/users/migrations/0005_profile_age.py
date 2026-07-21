@@ -4,15 +4,14 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('users', '0004_language_rename_hobbies_profile_interests_and_more'),
+        ("users", "0004_language_rename_hobbies_profile_interests_and_more"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='profile',
-            name='age',
+            model_name="profile",
+            name="age",
             field=models.PositiveIntegerField(blank=True, null=True),
         ),
     ]

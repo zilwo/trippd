@@ -6,26 +6,48 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('rides', '0029_tripgroup_whats_app_group_link'),
+        ("rides", "0029_tripgroup_whats_app_group_link"),
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='Activity',
+            name="Activity",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('title', models.CharField(max_length=255)),
-                ('description', models.TextField(blank=True, max_length=500)),
-                ('start_time', models.DateTimeField()),
-                ('created_at', models.DateTimeField(auto_now_add=True)),
-                ('place_id', models.CharField(max_length=255)),
-                ('place_name', models.CharField(max_length=255)),
-                ('max_participants', models.PositiveIntegerField(default=10)),
-                ('organizer', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='organized_activities', to=settings.AUTH_USER_MODEL)),
-                ('trip', models.ForeignKey(null=True, on_delete=django.db.models.deletion.CASCADE, related_name='activities', to='rides.trip')),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("title", models.CharField(max_length=255)),
+                ("description", models.TextField(blank=True, max_length=500)),
+                ("start_time", models.DateTimeField()),
+                ("created_at", models.DateTimeField(auto_now_add=True)),
+                ("place_id", models.CharField(max_length=255)),
+                ("place_name", models.CharField(max_length=255)),
+                ("max_participants", models.PositiveIntegerField(default=10)),
+                (
+                    "organizer",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="organized_activities",
+                        to=settings.AUTH_USER_MODEL,
+                    ),
+                ),
+                (
+                    "trip",
+                    models.ForeignKey(
+                        null=True,
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="activities",
+                        to="rides.trip",
+                    ),
+                ),
             ],
         ),
     ]

@@ -5,24 +5,43 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('rides', '0031_place_remove_activity_place_id_and_more'),
+        ("rides", "0031_place_remove_activity_place_id_and_more"),
     ]
 
     operations = [
         migrations.RemoveField(
-            model_name='place',
-            name='name',
+            model_name="place",
+            name="name",
         ),
         migrations.AddField(
-            model_name='activity',
-            name='category',
-            field=models.CharField(blank=True, choices=[('food', 'Food & Drinks'), ('sightseeing', 'Sightseeing'), ('nature', 'Nature & Outdoors'), ('shopping', 'Shopping'), ('entertainment', 'Entertainment'), ('sports', 'Sports & Adventure'), ('nightlife', 'Nightlife'), ('relaxation', 'Relaxation'), ('stay', 'Stay'), ('other', 'Other')], max_length=20, null=True),
+            model_name="activity",
+            name="category",
+            field=models.CharField(
+                blank=True,
+                choices=[
+                    ("food", "Food & Drinks"),
+                    ("sightseeing", "Sightseeing"),
+                    ("nature", "Nature & Outdoors"),
+                    ("shopping", "Shopping"),
+                    ("entertainment", "Entertainment"),
+                    ("sports", "Sports & Adventure"),
+                    ("nightlife", "Nightlife"),
+                    ("relaxation", "Relaxation"),
+                    ("stay", "Stay"),
+                    ("other", "Other"),
+                ],
+                max_length=20,
+                null=True,
+            ),
         ),
         migrations.AlterField(
-            model_name='activity',
-            name='place',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='activities', to='rides.place'),
+            model_name="activity",
+            name="place",
+            field=models.ForeignKey(
+                on_delete=django.db.models.deletion.CASCADE,
+                related_name="activities",
+                to="rides.place",
+            ),
         ),
     ]

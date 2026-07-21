@@ -5,15 +5,14 @@ from django.db import migrations
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('rides', '0008_alter_tripmembership_status'),
+        ("rides", "0008_alter_tripmembership_status"),
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
     ]
 
     operations = [
         migrations.AlterUniqueTogether(
-            name='tripmembership',
-            unique_together={('trip', 'user')},
+            name="tripmembership",
+            unique_together={("trip", "user")},
         ),
     ]

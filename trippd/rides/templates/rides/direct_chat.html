@@ -69,10 +69,10 @@
       const container = document.getElementById('message-container')
       container.scrollTop = container.scrollHeight
     })
-    
+
     const roomName = '{{ conversation.pk }}'
     const chatSocket = new WebSocket('ws://' + window.location.host + '/ws/direct/' + roomName + '/')
-    
+
     chatSocket.onmessage = function (e) {
       const data = JSON.parse(e.data)
       if (data.type === 'dm_message') {
@@ -82,11 +82,11 @@
         messageContainer.scrollTop = messageContainer.scrollHeight
       }
     }
-    
+
     chatSocket.onclose = function (e) {
       console.error('Chat socket closed unexpectedly')
     }
-    
+
     document.getElementById('message-form').onsubmit = function (e) {
       e.preventDefault()
       const input = document.getElementById('message-body')

@@ -4,19 +4,27 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('rides', '0018_trip_status'),
+        ("rides", "0018_trip_status"),
     ]
 
     operations = [
         migrations.RemoveField(
-            model_name='trip',
-            name='completed',
+            model_name="trip",
+            name="completed",
         ),
         migrations.AlterField(
-            model_name='trip',
-            name='status',
-            field=models.CharField(choices=[('planning', 'Planning'), ('upcoming', 'Upcoming'), ('ongoing', 'Ongoing'), ('completed', 'Completed')], default='planning', max_length=20),
+            model_name="trip",
+            name="status",
+            field=models.CharField(
+                choices=[
+                    ("planning", "Planning"),
+                    ("upcoming", "Upcoming"),
+                    ("ongoing", "Ongoing"),
+                    ("completed", "Completed"),
+                ],
+                default="planning",
+                max_length=20,
+            ),
         ),
     ]

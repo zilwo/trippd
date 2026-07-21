@@ -5,31 +5,40 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('rides', '0032_remove_place_name_activity_category_and_more'),
+        ("rides", "0032_remove_place_name_activity_category_and_more"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='place',
-            name='name',
-            field=models.CharField(default='TBD', max_length=255),
+            model_name="place",
+            name="name",
+            field=models.CharField(default="TBD", max_length=255),
             preserve_default=False,
         ),
         migrations.AddField(
-            model_name='place',
-            name='primary_type',
+            model_name="place",
+            name="primary_type",
             field=models.CharField(blank=True, max_length=100, null=True),
         ),
         migrations.AlterField(
-            model_name='activity',
-            name='place',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.PROTECT, related_name='activities', to='rides.place'),
+            model_name="activity",
+            name="place",
+            field=models.ForeignKey(
+                on_delete=django.db.models.deletion.PROTECT,
+                related_name="activities",
+                to="rides.place",
+            ),
         ),
         migrations.AlterField(
-            model_name='activity',
-            name='trip',
-            field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='activities', to='rides.trip'),
+            model_name="activity",
+            name="trip",
+            field=models.ForeignKey(
+                blank=True,
+                null=True,
+                on_delete=django.db.models.deletion.CASCADE,
+                related_name="activities",
+                to="rides.trip",
+            ),
         ),
     ]

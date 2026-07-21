@@ -1,7 +1,5 @@
-from pyexpat.errors import messages
-
 from django import forms
-from django.http import Http404, HttpResponse
+from django.http import Http404
 from django.shortcuts import redirect, render
 from django.contrib.auth.views import LoginView, LogoutView
 from django.urls import reverse_lazy

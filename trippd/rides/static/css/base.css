@@ -36,7 +36,7 @@ body {
   transition:
     border-color 0.2s,
     box-shadow 0.2s;
-  
+
 }
 .search-bar:focus-within {
   border-color: var(--blue-border2);
@@ -82,7 +82,7 @@ body {
 .ts-wrapper {
       width: 100%;
     }
-    
+
 .ts-control,
 .input {
     min-height: 3rem;

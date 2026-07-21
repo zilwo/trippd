@@ -4,15 +4,16 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('rides', '0024_alter_trip_duration_unit'),
+        ("rides", "0024_alter_trip_duration_unit"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='tripmembership',
-            name='message',
-            field=models.TextField(blank=True, default='I am interested in joining this trip!'),
+            model_name="tripmembership",
+            name="message",
+            field=models.TextField(
+                blank=True, default="I am interested in joining this trip!"
+            ),
         ),
     ]

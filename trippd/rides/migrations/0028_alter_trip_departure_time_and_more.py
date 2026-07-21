@@ -4,35 +4,34 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('rides', '0027_rename_orgin_lat_trip_origin_lat_and_more'),
+        ("rides", "0027_rename_orgin_lat_trip_origin_lat_and_more"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='trip',
-            name='departure_time',
+            model_name="trip",
+            name="departure_time",
             field=models.DateTimeField(blank=True, null=True),
         ),
         migrations.AlterField(
-            model_name='trip',
-            name='expected_finish_time',
+            model_name="trip",
+            name="expected_finish_time",
             field=models.DateTimeField(blank=True, null=True),
         ),
         migrations.AlterField(
-            model_name='trip',
-            name='from_address',
+            model_name="trip",
+            name="from_address",
             field=models.CharField(blank=True, max_length=255),
         ),
         migrations.AlterField(
-            model_name='trip',
-            name='origin',
+            model_name="trip",
+            name="origin",
             field=models.CharField(blank=True, max_length=255),
         ),
         migrations.AlterField(
-            model_name='trip',
-            name='to_address',
+            model_name="trip",
+            name="to_address",
             field=models.CharField(blank=True, max_length=255),
         ),
     ]

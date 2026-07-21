@@ -2,7 +2,6 @@ from django.db import models
 from .utils.formatdelta import format_delta
 from users.models import User
 from taggit.managers import TaggableManager
-from datetime import timedelta
 
 
 class Trip(models.Model):

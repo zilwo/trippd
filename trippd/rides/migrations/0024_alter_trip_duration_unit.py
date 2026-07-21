@@ -4,15 +4,22 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('rides', '0023_trip_trip_type'),
+        ("rides", "0023_trip_trip_type"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='trip',
-            name='duration_unit',
-            field=models.CharField(choices=[('hours', 'Hours'), ('days', 'Days'), ('weeks', 'Weeks'), ('months', 'Months')], max_length=50),
+            model_name="trip",
+            name="duration_unit",
+            field=models.CharField(
+                choices=[
+                    ("hours", "Hours"),
+                    ("days", "Days"),
+                    ("weeks", "Weeks"),
+                    ("months", "Months"),
+                ],
+                max_length=50,
+            ),
         ),
     ]

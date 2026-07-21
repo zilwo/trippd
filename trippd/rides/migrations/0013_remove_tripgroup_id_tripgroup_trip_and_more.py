@@ -5,25 +5,30 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('rides', '0012_tripgroup_tripgroupmessage'),
+        ("rides", "0012_tripgroup_tripgroupmessage"),
     ]
 
     operations = [
         migrations.RemoveField(
-            model_name='tripgroup',
-            name='id',
+            model_name="tripgroup",
+            name="id",
         ),
         migrations.AddField(
-            model_name='tripgroup',
-            name='trip',
-            field=models.OneToOneField(default=1, on_delete=django.db.models.deletion.CASCADE, primary_key=True, serialize=False, to='rides.trip'),
+            model_name="tripgroup",
+            name="trip",
+            field=models.OneToOneField(
+                default=1,
+                on_delete=django.db.models.deletion.CASCADE,
+                primary_key=True,
+                serialize=False,
+                to="rides.trip",
+            ),
             preserve_default=False,
         ),
         migrations.AlterField(
-            model_name='tripgroupmessage',
-            name='body',
+            model_name="tripgroupmessage",
+            name="body",
             field=models.TextField(max_length=500),
         ),
     ]

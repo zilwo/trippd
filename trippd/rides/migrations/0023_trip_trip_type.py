@@ -4,15 +4,18 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('rides', '0022_trip_looking_for_trip_previous_experiences_and_more'),
+        ("rides", "0022_trip_looking_for_trip_previous_experiences_and_more"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='trip',
-            name='trip_type',
-            field=models.CharField(choices=[('ride-sharing', 'Ride Sharing'), ('trip', 'Trip')], default='ride-sharing', max_length=20),
+            model_name="trip",
+            name="trip_type",
+            field=models.CharField(
+                choices=[("ride-sharing", "Ride Sharing"), ("trip", "Trip")],
+                default="ride-sharing",
+                max_length=20,
+            ),
         ),
     ]

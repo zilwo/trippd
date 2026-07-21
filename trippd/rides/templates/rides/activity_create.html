@@ -80,7 +80,7 @@
 
   <script>
     let sessionToken = crypto.randomUUID()
-    
+
     document.getElementById('session_token').value = sessionToken
     new TomSelect('.place-auto', {
       maxItems: 1,
@@ -89,7 +89,7 @@
       labelField: 'text',
       searchField: 'text',
       loadingClass: 'ts-loading',
-    
+
       load(query, callback) {
         if (query.length < 2) {
           callback()
@@ -100,10 +100,10 @@
           .then((data) => callback(data.results))
           .catch(() => callback())
       },
-    
+
       onItemAdd(value) {
         const selected = this.options[value]
-    
+
         document.getElementById('place_id').value = selected.place_id
       }
     })

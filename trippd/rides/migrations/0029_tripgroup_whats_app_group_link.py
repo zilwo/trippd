@@ -4,15 +4,14 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('rides', '0028_alter_trip_departure_time_and_more'),
+        ("rides", "0028_alter_trip_departure_time_and_more"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='tripgroup',
-            name='whats_app_group_link',
+            model_name="tripgroup",
+            name="whats_app_group_link",
             field=models.URLField(blank=True, null=True),
         ),
     ]

@@ -4,15 +4,14 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('rides', '0014_rename_created_at_tripgroupmessage_send_at_and_more'),
+        ("rides", "0014_rename_created_at_tripgroupmessage_send_at_and_more"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='tripgroup',
-            name='activity',
+            model_name="tripgroup",
+            name="activity",
             field=models.CharField(blank=True, max_length=255),
         ),
     ]

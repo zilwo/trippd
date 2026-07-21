@@ -1,7 +1,7 @@
 from django.utils import timezone
 from django.http import Http404, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
-from django.urls import reverse, reverse_lazy
+from django.urls import reverse
 from django.views.generic import (
     CreateView,
     DetailView,
@@ -10,7 +10,6 @@ from django.views.generic import (
     UpdateView,
     View,
 )
-from django import forms
 from django.conf import settings
 import requests
 
@@ -18,7 +17,6 @@ from users.models import Language, User, Notification, Rating
 from .models import (
     Conversation,
     Trip,
-    TripMembership,
     TripMembership,
     TripGroup,
     TripGroupMessage,
@@ -376,7 +374,6 @@ class TripDetailView(DetailView):
         context["GOOGLE_API_KEY"] = settings.GOOGLE_API_KEY
 
         if user.is_authenticated:
-
             context["is_member"] = TripMembership.objects.filter(
                 trip=trip, user=user, status="accepted"
             ).exists()
@@ -864,7 +861,6 @@ class DiscoverView(TemplateView):
 
 
 class AcitvityCreateView(LoginRequiredMixin, CreateView):
-
     template_name = "rides/activity_create.html"
     form_class = ActivityForm
 
@@ -872,7 +868,6 @@ class AcitvityCreateView(LoginRequiredMixin, CreateView):
         form.instance.organizer = self.request.user
         trip_id = self.request.GET.get("trip_id")
         if trip_id:
-
             trip = get_object_or_404(Trip, pk=trip_id)
             form.instance.trip = trip
         else:
@@ -900,7 +895,6 @@ def autocomplete_places_view(request):
     session_token = request.GET.get("session_token")
 
     if query:
-
         results = autocomplete_places(query, session_token)
         return JsonResponse({"results": results})
     else:
@@ -935,7 +929,6 @@ def get_place_hero_image(request, place_id):
     place = get_object_or_404(Place, pk=place_id)
 
     if place.photos:
-
         photo_name = place.photos[0]
         hero_image_url = get_place_photo_url(photo_name)
         response = requests.get(hero_image_url, allow_redirects=True)
@@ -946,7 +939,6 @@ def get_place_hero_image(request, place_id):
             ),
         }
         if response.status_code == 200:
-
             return HttpResponse(response.content, headers=headers)
         else:
             print(

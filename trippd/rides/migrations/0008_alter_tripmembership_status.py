@@ -4,15 +4,22 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('rides', '0007_alter_trip_duration_alter_trip_from_address_and_more'),
+        ("rides", "0007_alter_trip_duration_alter_trip_from_address_and_more"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='tripmembership',
-            name='status',
-            field=models.CharField(choices=[('pending', 'Pending'), ('accepted', 'Onboard'), ('rejected', 'Rejected')], default='pending', max_length=20),
+            model_name="tripmembership",
+            name="status",
+            field=models.CharField(
+                choices=[
+                    ("pending", "Pending"),
+                    ("accepted", "Onboard"),
+                    ("rejected", "Rejected"),
+                ],
+                default="pending",
+                max_length=20,
+            ),
         ),
     ]

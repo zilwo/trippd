@@ -153,7 +153,7 @@
 
               <div>
                 <label class="label" for="budget"><span class="label-text">Budget</span></label>
-                  
+
         <label class="input w-full">
                     <span class="border-r border-base-300 pr-3 mr-3"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
           <path stroke-linecap="round" stroke-linejoin="round" d="M15 8.25H9m6 3H9m3 6-3-3h1.5a3 3 0 1 0 0-6M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
@@ -164,7 +164,7 @@
                 name="budget"
                 placeholder="Expected Price per Person"
                 value="{{form.budget.value|default:''}}"
-            />  
+            />
         </label>
 
               </div>
@@ -267,7 +267,7 @@
         hideSelected: true,
         clearAfterSelect: true,
         loadingClass: 'ts-loading',
-    
+
         load: function (query, callback) {
           fetch(`{% url 'autopopulate' %}?query=${encodeURIComponent(query)}`)
             .then((response) => response.json())
@@ -276,7 +276,7 @@
               callback(data.results)
             })
         },
-    
+
         onItemAdd: function (value) {
           const selectedOption = this.options[value]
           if (selectedOption) {
@@ -286,7 +286,7 @@
               document.getElementById('origin').value = city
               document.getElementById('origin_lat').value = selectedOption.lat
               document.getElementById('origin_lon').value = selectedOption.lon
-    
+
               console.log('Latitude:', document.getElementById('origin_lat').value, 'Longitude:', document.getElementById('origin_lon').value)
             } else if (this.input.id === 'to_address') {
               document.getElementById('destination').value = city
@@ -303,9 +303,9 @@
     })
     document.getElementById('trip-image-input').addEventListener('change', function (event) {
       const file = event.target.files[0]
-    
+
       if (!file) return
-    
+
       const preview = document.getElementById('trip-preview')
       console.log('Selected file:', file)
       preview.src = URL.createObjectURL(file)
@@ -315,12 +315,12 @@
   {% if not trip %}
     <script>
       const tripMode = document.getElementById('trip-mode')
-      
+
       const companionMode = document.getElementById('companion-mode')
-      
+
       const tripFields = document.getElementById('trip-fields')
       const companionFields = document.getElementById('companion-fields')
-      
+
       function updateMode() {
         if (tripMode.checked) {
           tripFields.classList.remove('hidden')
@@ -330,10 +330,10 @@
           companionFields.classList.remove('hidden')
         }
       }
-      
+
       tripMode.addEventListener('change', updateMode)
       companionMode.addEventListener('change', updateMode)
-      
+
       updateMode()
     </script>
   {% endif %}

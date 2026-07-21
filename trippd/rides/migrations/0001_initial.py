@@ -4,34 +4,62 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     initial = True
 
-    dependencies = [
-    ]
+    dependencies = []
 
     operations = [
         migrations.CreateModel(
-            name='Trip',
+            name="Trip",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('origin', models.CharField(max_length=255)),
-                ('destination', models.CharField(max_length=255)),
-                ('departure_time', models.DateTimeField()),
-                ('expected_arrival_time', models.DateTimeField()),
-                ('price', models.DecimalField(decimal_places=2, default=0.0, max_digits=10)),
-                ('slots_available', models.PositiveIntegerField()),
-                ('from_address', models.CharField(default='Undecided', max_length=255)),
-                ('to_address', models.CharField(default='Undecided', max_length=255)),
-                ('duration', models.CharField(default='1 week', max_length=50)),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("origin", models.CharField(max_length=255)),
+                ("destination", models.CharField(max_length=255)),
+                ("departure_time", models.DateTimeField()),
+                ("expected_arrival_time", models.DateTimeField()),
+                (
+                    "price",
+                    models.DecimalField(decimal_places=2, default=0.0, max_digits=10),
+                ),
+                ("slots_available", models.PositiveIntegerField()),
+                ("from_address", models.CharField(default="Undecided", max_length=255)),
+                ("to_address", models.CharField(default="Undecided", max_length=255)),
+                ("duration", models.CharField(default="1 week", max_length=50)),
             ],
         ),
         migrations.CreateModel(
-            name='TripMembership',
+            name="TripMembership",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('joined_at', models.DateTimeField(auto_now_add=True)),
-                ('status', models.CharField(choices=[('pending', 'Pending'), ('accepted', 'Accepted'), ('rejected', 'Rejected')], default='pending', max_length=20)),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("joined_at", models.DateTimeField(auto_now_add=True)),
+                (
+                    "status",
+                    models.CharField(
+                        choices=[
+                            ("pending", "Pending"),
+                            ("accepted", "Accepted"),
+                            ("rejected", "Rejected"),
+                        ],
+                        default="pending",
+                        max_length=20,
+                    ),
+                ),
             ],
         ),
     ]

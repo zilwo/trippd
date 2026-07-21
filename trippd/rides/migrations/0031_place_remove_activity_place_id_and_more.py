@@ -5,34 +5,46 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('rides', '0030_activity'),
+        ("rides", "0030_activity"),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='Place',
+            name="Place",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('name', models.CharField(max_length=255)),
-                ('address', models.CharField(max_length=255)),
-                ('place_id', models.CharField(max_length=255, unique=True)),
-                ('latitude', models.FloatField()),
-                ('longitude', models.FloatField()),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("name", models.CharField(max_length=255)),
+                ("address", models.CharField(max_length=255)),
+                ("place_id", models.CharField(max_length=255, unique=True)),
+                ("latitude", models.FloatField()),
+                ("longitude", models.FloatField()),
             ],
         ),
         migrations.RemoveField(
-            model_name='activity',
-            name='place_id',
+            model_name="activity",
+            name="place_id",
         ),
         migrations.RemoveField(
-            model_name='activity',
-            name='place_name',
+            model_name="activity",
+            name="place_name",
         ),
         migrations.AddField(
-            model_name='activity',
-            name='place',
-            field=models.ForeignKey(null=True, on_delete=django.db.models.deletion.CASCADE, related_name='activities', to='rides.place'),
+            model_name="activity",
+            name="place",
+            field=models.ForeignKey(
+                null=True,
+                on_delete=django.db.models.deletion.CASCADE,
+                related_name="activities",
+                to="rides.place",
+            ),
         ),
     ]

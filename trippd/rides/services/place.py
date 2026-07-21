@@ -162,7 +162,6 @@ def get_nearby_places(latitude, longitude, radius=1000, type_filter=None):
             "rating": p.get("rating"),
             "user_rating_count": p.get("userRatingCount"),
             "photo": p.get("photos", [{}])[0].get("name"),
-            "primary_type": p.get("primaryType"),
             "maps_url": p.get("googleMapsUri"),
         }
         for p in data.get("places", [])[:5]

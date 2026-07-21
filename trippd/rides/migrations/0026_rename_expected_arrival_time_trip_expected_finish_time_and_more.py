@@ -4,23 +4,22 @@ from django.db import migrations
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('rides', '0025_tripmembership_message'),
+        ("rides", "0025_tripmembership_message"),
     ]
 
     operations = [
         migrations.RenameField(
-            model_name='trip',
-            old_name='expected_arrival_time',
-            new_name='expected_finish_time',
+            model_name="trip",
+            old_name="expected_arrival_time",
+            new_name="expected_finish_time",
         ),
         migrations.RemoveField(
-            model_name='trip',
-            name='duration_unit',
+            model_name="trip",
+            name="duration_unit",
         ),
         migrations.RemoveField(
-            model_name='trip',
-            name='duration_value',
+            model_name="trip",
+            name="duration_value",
         ),
     ]

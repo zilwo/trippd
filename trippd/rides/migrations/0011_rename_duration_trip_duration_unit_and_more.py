@@ -4,20 +4,19 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('rides', '0010_alter_tripmembership_unique_together_and_more'),
+        ("rides", "0010_alter_tripmembership_unique_together_and_more"),
     ]
 
     operations = [
         migrations.RenameField(
-            model_name='trip',
-            old_name='duration',
-            new_name='duration_unit',
+            model_name="trip",
+            old_name="duration",
+            new_name="duration_unit",
         ),
         migrations.AddField(
-            model_name='trip',
-            name='duration_value',
+            model_name="trip",
+            name="duration_value",
             field=models.PositiveIntegerField(blank=True, null=True),
         ),
     ]
