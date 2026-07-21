@@ -1,0 +1,45 @@
+<div class="flex justify-between items-center mb-4">
+  <h2 class="text-3xl font-bold">{{ section|title }} here</h2>
+</div>
+
+{% if places %}
+  <div class="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+    {% for place in places %}
+      <a href="{{ place.maps_url }}" target="_blank" class="group h-full">
+        <div class="h-full rounded-2xl overflow-hidden flex flex-col">
+          <div class="relative">
+            {% if not place.photo %}
+              <img src="https://picsum.photos/1200/675" alt="" class="w-full h-64 object-cover" />
+            {% else %}
+              <img src="{% url 'place_recommend_photo' %}?photo={{ place.photo|urlencode }}" class="w-full h-64 object-cover" />
+            {% endif %}
+            <button class="btn btn-circle btn-sm absolute top-3 right-3 bg-base-100 border-0 shadow">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12Z" />
+              </svg>
+            </button>
+          </div>
+
+          <div class="flex flex-col flex-1 pt-3">
+            <h3 class="font-bold text-lg leading-snug group-hover:text-(--blue) line-clamp-2">{{ place.name }}</h3>
+
+            {% if place.rating %}
+              <div class="flex items-center gap-2 mt-2 text-sm">
+                <span class="font-semibold">★ {{ place.rating|floatformat:1 }}</span>
+                <span class="text-base-content/60">({{ place.user_rating_count|default:0 }})</span>
+              </div>
+            {% endif %}
+          </div>
+        </div>
+      </a>
+    {% endfor %}
+  </div>
+{% else %}
+  <div class="hero bg-base-200 rounded-2xl">
+    <div class="hero-content py-16">
+      <div class="text-center">
+        <h2 class="text-2xl font-bold">No places found</h2>
+      </div>
+    </div>
+  </div>
+{% endif %}

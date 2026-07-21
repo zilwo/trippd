@@ -187,6 +187,7 @@ class Place(models.Model):
     """Represents a place associated with an activity."""
 
     name = models.CharField(max_length=255)
+    discoverable = models.BooleanField(default=False)
     description = models.TextField(blank=True)
     address = models.CharField(max_length=255)
     place_id = models.CharField(max_length=255, unique=True)

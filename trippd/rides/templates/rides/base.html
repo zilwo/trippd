@@ -29,7 +29,7 @@
         {% if user.is_authenticated %}
           {% include 'rides/components/notifications.html' %}
         {% endif %}
-        <a class="btn btn-ghost" href="{% url 'activity_list' %}" class="font-semibold">Activities</a>
+        <a class="btn btn-ghost" href="{% url 'discover' %}" class="font-semibold">Discover</a>
 
         <a class="btn btn-ghost" href="{% url 'companion_list' %}">Companions</a>
         <a class="btn btn-ghost" href="{% url 'trip_list' %}" class="font-semibold">Find Trip</a>

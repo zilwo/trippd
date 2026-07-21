@@ -1,5 +1,5 @@
 from django.utils import timezone
-from django.http import JsonResponse
+from django.http import Http404, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse, reverse_lazy
 from django.views.generic import (
@@ -32,9 +32,9 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from .services.autocomplete_location import autocomplete_location
 from .services.place import (
     autocomplete_places,
-    get_description,
-    get_place_details,
     get_place_photo_url,
+    get_or_create_place,
+    get_nearby_places,
 )
 from django.http import HttpResponse
 from channels.layers import get_channel_layer
@@ -849,16 +849,18 @@ def submit_reviews(request, pk):
     return redirect("trip_hub", pk=trip.tripgroup.pk)
 
 
-class ActivityListView(ListView):
-    model = Activity
-    template_name = "activities/activity_list.html"
-    context_object_name = "activities"
-    paginate_by = 10
+class DiscoverView(TemplateView):
+    template_name = "rides/discover.html"
 
-    def get_queryset(self):
-        return Activity.objects.select_related("organizer", "trip").order_by(
-            "-created_at"
-        )
+    def post(self, request, *args, **kwargs):
+        place_id = self.request.POST.get("place_id")
+        session_token = self.request.POST.get("session_token")
+        if place_id:
+            place = get_or_create_place(place_id, session_token)
+            return redirect("discover_place", pk=place.pk)
+        else:
+            messages.error(request, "Please select a valid place.")
+            return redirect("discover")
 
 
 class AcitvityCreateView(LoginRequiredMixin, CreateView):
@@ -879,36 +881,9 @@ class AcitvityCreateView(LoginRequiredMixin, CreateView):
         place_id = self.request.POST.get("place_id")
         session_token = self.request.POST.get("session_token")
         if place_id:
-            place_details = get_place_details(place_id, session_token)
-            print(place_details, "this")
-            if place_details:
-
-                place, created = Place.objects.get_or_create(
-                    place_id=place_id,
-                    defaults={
-                        "name": place_details["name"],
-                        "address": place_details["address"],
-                        "latitude": place_details["latitude"],
-                        "longitude": place_details["longitude"],
-                        "primary_type": place_details.get("primary_type", ""),
-                        "photos": place_details.get("photos", []),
-                        "map_url": place_details.get("map_url", ""),
-                    },
-                )
-
-                if created:
-                    print("starting..")
-                    generated = get_description(place_details)
-
-                    print("ends..")
-                    place.description = generated
-                    place.save(update_fields=["description"])
-                else:
-                    print("Place already exists in the database:", place.name)
+            place = get_or_create_place(place_id, session_token)
+            if place:
                 form.instance.place = place
-
-            else:
-                print("Failed to fetch place details for place_id:", place_id)
 
         return super().form_valid(form)
 
@@ -917,7 +892,7 @@ class AcitvityCreateView(LoginRequiredMixin, CreateView):
         return super().form_invalid(form)
 
     def get_success_url(self):
-        return reverse("activity_list")
+        return reverse("discover")
 
 
 def autocomplete_places_view(request):
@@ -956,12 +931,12 @@ class ActivityDetailView(DetailView):
         return context
 
 
-def get_place_hero_image(request, activity_id):
-    activity = get_object_or_404(Activity, pk=activity_id)
+def get_place_hero_image(request, place_id):
+    place = get_object_or_404(Place, pk=place_id)
 
-    if activity.place and activity.place.photos:
+    if place.photos:
 
-        photo_name = activity.place.photos[0]
+        photo_name = place.photos[0]
         hero_image_url = get_place_photo_url(photo_name)
         response = requests.get(hero_image_url, allow_redirects=True)
         headers = {
@@ -975,6 +950,68 @@ def get_place_hero_image(request, activity_id):
             return HttpResponse(response.content, headers=headers)
         else:
             print(
-                f"Failed to fetch hero image for activity {activity_id}. Status code: {response.status_code}"
+                f"Failed to fetch hero image for place {place_id}. Status code: {response.status_code}"
             )
+    return HttpResponse(status=404)
+
+
+class PlaceDetailView(DetailView):
+    model = Place
+    template_name = "rides/place_detail.html"
+    context_object_name = "place"
+
+
+def place_section(request, pk, section):
+    place = get_object_or_404(Place, pk=pk)
+    place_types = {
+        "attractions": "tourist_attraction",
+        "hotels": "lodging",
+        "restaurants": "restaurant",
+    }
+
+    if section == "activities":
+        activities = Activity.objects.filter(place=place)
+        print(activities)
+
+        return render(
+            request,
+            "rides/partials/activity_cards.html",
+            {
+                "activities": activities,
+                "section": section,
+            },
+        )
+
+    if section not in place_types:
+        raise Http404()
+
+    places = get_nearby_places(
+        place.latitude,
+        place.longitude,
+        type_filter=place_types[section],
+    )
+
+    return render(
+        request,
+        "rides/partials/place_cards.html",
+        {
+            "places": places,
+            "section": section,
+        },
+    )
+
+
+def place_recommend_photo(request):
+    """Fetches a recommended photo for a given place."""
+    photo_name = request.GET.get("photo")
+
+    hero_image_url = get_place_photo_url(photo_name)
+    response = requests.get(hero_image_url, allow_redirects=True)
+    headers = {
+        "Content-Type": response.headers.get("Content-Type", "image/jpeg"),
+        "Cache-Control": response.headers.get("Cache-Control", "public, max-age=86400"),
+    }
+    if response.status_code == 200:
+        return HttpResponse(response.content, headers=headers)
+
     return HttpResponse(status=404)

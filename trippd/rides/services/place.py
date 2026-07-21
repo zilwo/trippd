@@ -1,5 +1,9 @@
 from django.conf import settings
 import requests
+from rides.models import Place
+import time
+
+client_session = requests.Session()
 
 
 def autocomplete_places(query, session_token=None):
@@ -20,7 +24,7 @@ def autocomplete_places(query, session_token=None):
         "includedRegionCodes": ["IN"],
     }
 
-    response = requests.post(
+    response = client_session.post(
         url,
         headers=headers,
         json=payload,
@@ -65,7 +69,7 @@ def get_place_details(place_id, session_token=None):
     if session_token:
         params["sessionToken"] = session_token
 
-    response = requests.get(
+    response = client_session.get(
         url,
         headers=headers,
         params=params,
@@ -99,6 +103,72 @@ def get_place_photo_url(photo_name, max_width=1200):
     )
 
 
+def get_nearby_places(latitude, longitude, radius=1000, type_filter=None):
+    url = "https://places.googleapis.com/v1/places:searchNearby"
+
+    headers = {
+        "X-Goog-Api-Key": settings.GOOGLE_SECRET_KEY,
+        "Content-Type": "application/json",
+        "X-Goog-FieldMask": (
+            "places.id,"
+            "places.displayName,"
+            "places.shortFormattedAddress,"
+            "places.location,"
+            "places.types,"
+            "places.primaryType,"
+            "places.photos,"
+            "places.rating,"
+            "places.userRatingCount,"
+            "places.googleMapsUri"
+        ),
+    }
+
+    payload = {
+        "locationRestriction": {
+            "circle": {
+                "center": {
+                    "latitude": latitude,
+                    "longitude": longitude,
+                },
+                "radius": radius,
+            }
+        },
+        "maxResultCount": 5,
+    }
+
+    if type_filter:
+        payload["includedTypes"] = [type_filter]
+
+    response = client_session.post(
+        url,
+        headers=headers,
+        json=payload,
+        timeout=10,
+    )
+
+    response.raise_for_status()
+
+    data = response.json()
+
+    return [
+        {
+            "place_id": p["id"],
+            "name": p["displayName"]["text"],
+            "address": p["shortFormattedAddress"],
+            "latitude": p["location"]["latitude"],
+            "longitude": p["location"]["longitude"],
+            "types": p.get("types", []),
+            "primary_type": p.get("primaryType"),
+            "rating": p.get("rating"),
+            "user_rating_count": p.get("userRatingCount"),
+            "photo": p.get("photos", [{}])[0].get("name"),
+            "primary_type": p.get("primaryType"),
+            "maps_url": p.get("googleMapsUri"),
+        }
+        for p in data.get("places", [])[:5]
+    ]
+
+
 def get_description(place):
     url = "https://generativelanguage.googleapis.com/v1beta/interactions"
 
@@ -112,11 +182,12 @@ def get_description(place):
     )
 
     prompt = (
-        f"Write a natural-sounding description (2-4 sentences) "
-        f"for a travel activity at '{place['name']}', "
-        f"a {place_type} located at {place['address']}. "
-        f"Mention what makes this place worth visiting. "
-        f"No quotation marks, no markdown, no exclamation marks."
+        f"Write a natural travel guide description for {place['name']}, "
+        f"a {place_type} in {place['address']}. "
+        f"Keep it to 2-3 sentences (40-70 words). "
+        f"Focus on what visitors can expect or enjoy, mentioning notable features if appropriate. "
+        f"Write in a warm, human style that feels like a travel website, not AI-generated text. "
+        f"Do not invent facts, avoid generic phrases, and use plain text only."
     )
 
     payload = {
@@ -125,7 +196,7 @@ def get_description(place):
         "generation_config": {"thinking_level": "minimal"},
     }
 
-    response = requests.post(url, headers=headers, json=payload, timeout=10)
+    response = client_session.post(url, headers=headers, json=payload, timeout=10)
     print(response.text)
     if response.status_code != 200:
         print("Error generating description:", response.text)
@@ -137,3 +208,34 @@ def get_description(place):
         return data["steps"][-1]["content"][0]["text"].strip()
     except (KeyError, IndexError):
         return None
+
+
+def get_or_create_place(place_id, session_token=None):
+    start = time.perf_counter()
+
+    place_details = get_place_details(place_id, session_token)
+    print("Place details:", time.perf_counter() - start)
+
+    if not place_details:
+        return None
+
+    place, created = Place.objects.get_or_create(
+        place_id=place_id,
+        defaults={
+            "name": place_details["name"],
+            "address": place_details["address"],
+            "latitude": place_details["latitude"],
+            "longitude": place_details["longitude"],
+            "primary_type": place_details.get("primary_type", ""),
+            "photos": place_details.get("photos", []),
+            "map_url": place_details.get("map_url", ""),
+        },
+    )
+
+    if created:
+        start = time.perf_counter()
+        place.description = get_description(place_details)
+        print("Gemini:", time.perf_counter() - start)
+        place.save(update_fields=["description"])
+
+    return place

@@ -1,0 +1,122 @@
+{% extends 'rides/base.html' %}
+{% block style %}
+  <style>
+    .ts-wrapper {
+      width: 100%;
+    }
+    
+    .ts-control {
+      border-radius: 16px !important;
+      min-height: 73px;
+      border: 1px solid var(--blue-border) !important;
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08);
+      padding: 0 24px !important;
+      background: var(--bg);
+      padding-left: 56px !important;
+    }
+    
+    .ts-control input {
+      font-size: 18px !important;
+    }
+    
+    .ts-dropdown {
+      margin-top: 12px;
+      border-radius: 24px;
+      overflow: hidden;
+      border: none;
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.15);
+    }
+    
+    .ts-dropdown .option {
+      cursor: pointer;
+    
+      transition: 0.2s;
+    }
+    
+    .ts-dropdown .option:hover {
+      background: #f8fafc;
+    }
+    
+    .ts-dropdown .active {
+      background: #eef6ff !important;
+    }
+    
+    .ts-control.focus {
+      border-color: #4f8ef7 !important;
+    
+      box-shadow: 0 0 0 4px rgba(79, 142, 247, 0.15), 0 8px 30px rgba(0, 0, 0, 0.1);
+    }
+  </style>
+{% endblock %}
+
+{% block content %}
+  <div id="loading-overlay" class="hidden fixed inset-0 bg-base-100/80 backdrop-blur-sm z-50">
+    <div class="flex h-full items-center justify-center">
+      <div class="text-center">
+        <span class="loading loading-spinner loading-xl text-(blue)"></span>
+
+        <p class="mt-4 text-lg font-medium">Searching your destination...</p>
+
+        <p class="text-sm opacity-70">This usually takes a few seconds.</p>
+      </div>
+    </div>
+  </div>
+  <div class="container mx-auto max-w-6xl px-4 py-8">
+    <div class="max-w-3xl mx-auto">
+      <div class="text-center mb-8">
+        <h1 class="text-5xl font-bold">Discover Places</h1>
+        <p class="text-base-content/70 mt-3">Search cities, attractions and activities</p>
+      </div>
+
+      <div class="max-w-3xl mx-auto">
+        <div class="relative">
+          <svg xmlns="http://www.w3.org/2000/svg" class="absolute left-5 top-1/2 -translate-y-1/2 size-6 text-base-content/50 z-10 pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" />
+          </svg>
+
+          <form method="post">
+            {% csrf_token %}
+
+            <select id="place-search" placeholder="Search for places..."></select>
+            <input type="hidden" id="place_id" name="place_id" value="{{ form.place_id.value|default:'' }}" />
+            <input type="hidden" id="session_token" name="session_token" />
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let sessionToken = crypto.randomUUID()
+    document.getElementById('session_token').value = sessionToken
+    
+    new TomSelect('#place-search', {
+      maxItems: 1,
+      create: false,
+      valueField: 'place_id',
+      labelField: 'text',
+      searchField: 'text',
+      loadingClass: 'ts-loading',
+    
+      load(query, callback) {
+        if (query.length < 2) {
+          callback()
+          return
+        }
+        fetch(`/discover/autocomplete/?query=${encodeURIComponent(query)}&session_token=${encodeURIComponent(sessionToken)}`)
+          .then((res) => res.json())
+          .then((data) => callback(data.results))
+          .catch(() => callback())
+      },
+    
+      onItemAdd(value) {
+        const selected = this.options[value]
+    
+        document.getElementById('place_id').value = selected.place_id
+        document.getElementById('loading-overlay').classList.remove('hidden')
+    
+        this.input.form.submit()
+      }
+    })
+  </script>
+{% endblock %}

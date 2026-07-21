@@ -48,14 +48,14 @@ urlpatterns = [
         views.submit_reviews,
         name="submit_reviews",
     ),
-    path("activities/", views.ActivityListView.as_view(), name="activity_list"),
+    path("discover/", views.DiscoverView.as_view(), name="discover"),
     path(
         "activities/create/",
         views.AcitvityCreateView.as_view(),
         name="activity_create",
     ),
     path(
-        "activities/autocomplete/",
+        "discover/autocomplete/",
         views.autocomplete_places_view,
         name="autocomplete_places",
     ),
@@ -65,8 +65,23 @@ urlpatterns = [
         name="activity_detail",
     ),
     path(
-        "activities/<int:activity_id>/hero-image/",
+        "places/<int:place_id>/hero-image/",
         views.get_place_hero_image,
-        name="activity_hero_image",
+        name="place_hero_image",
+    ),
+    path(
+        "discover/place/<int:pk>/",
+        views.PlaceDetailView.as_view(),
+        name="discover_place",
+    ),
+    path(
+        "discover/place/<int:pk>/<str:section>/",
+        views.place_section,
+        name="place_section",
+    ),
+    path(
+        "discover/place_photo",
+        views.place_recommend_photo,
+        name="place_recommend_photo",
     ),
 ]

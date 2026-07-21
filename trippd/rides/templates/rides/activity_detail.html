@@ -7,25 +7,6 @@
 
       <div class="lg:col-span-2 space-y-6">
         <!-- Hero image with map overlay button -->
-        <div class="rounded-box overflow-hidden border border-base-300 shadow-sm relative h-96">
-          <img src="{% url 'activity_hero_image' activity.pk %}" alt="{{ activity.place.name }}" class="w-full h-full object-cover" />
-
-          {% if activity.place.map_url %}
-            <a href="{{ activity.place.map_url }}" target="_blank" rel="noopener noreferrer" class="btn btn-sm rounded-full absolute bottom-4 right-4 bg-base-100 border-none shadow-lg">View more photos</a>
-          {% endif %}
-        </div>
-
-        <div class="card bg-base-100 shadow-md rounded-box">
-          <div class="card-body gap-5">
-            <div>
-              <p class="text-xs uppercase tracking-[0.2em] text-(--blue) font-semibold">Discover</p>
-
-              <h2 class="text-3xl font-bold mt-1">{{ activity.place.name }}</h2>
-            </div>
-
-            <p class="leading-8 text-base-content/80">{{ activity.place.description }}</p>
-          </div>
-        </div>
 
         <!-- Hero Card -->
         <div class="card bg-base-100 border border-base-300 shadow-sm">
