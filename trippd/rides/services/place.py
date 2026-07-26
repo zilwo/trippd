@@ -9,7 +9,7 @@ client_session = requests.Session()
 def autocomplete_places(query, session_token=None):
     url = "https://places.googleapis.com/v1/places:autocomplete"
     headers = {
-        "X-Goog-Api-Key": settings.GOOGLE_SECRET_KEY,
+        "X-Goog-Api-Key": settings.GOOGLE_PLACES_SECRET_KEY,
         "Content-Type": "application/json",
         "X-Goog-FieldMask": (
             "suggestions.placePrediction.placeId,"
@@ -53,7 +53,7 @@ def get_place_details(place_id, session_token=None):
     url = f"https://places.googleapis.com/v1/places/{place_id}"
 
     headers = {
-        "X-Goog-Api-Key": settings.GOOGLE_SECRET_KEY,
+        "X-Goog-Api-Key": settings.GOOGLE_PLACES_SECRET_KEY,
         "X-Goog-FieldMask": (
             "id,"
             "displayName,"
@@ -99,15 +99,15 @@ def get_place_photo_url(photo_name, max_width=1200):
     return (
         f"https://places.googleapis.com/v1/{photo_name}/media"
         f"?maxWidthPx={max_width}"
-        f"&key={settings.GOOGLE_SECRET_KEY}"
+        f"&key={settings.GOOGLE_PLACES_SECRET_KEY}"
     )
 
 
-def get_nearby_places(latitude, longitude, radius=1000, type_filter=None):
+def get_nearby_places(latitude, longitude, radius=10000, type_filter=None):
     url = "https://places.googleapis.com/v1/places:searchNearby"
 
     headers = {
-        "X-Goog-Api-Key": settings.GOOGLE_SECRET_KEY,
+        "X-Goog-Api-Key": settings.GOOGLE_PLACES_SECRET_KEY,
         "Content-Type": "application/json",
         "X-Goog-FieldMask": (
             "places.id,"
@@ -133,7 +133,7 @@ def get_nearby_places(latitude, longitude, radius=1000, type_filter=None):
                 "radius": radius,
             }
         },
-        "maxResultCount": 5,
+        "maxResultCount": 20,
     }
 
     if type_filter:
@@ -150,22 +150,40 @@ def get_nearby_places(latitude, longitude, radius=1000, type_filter=None):
 
     data = response.json()
 
-    return [
-        {
-            "place_id": p["id"],
-            "name": p["displayName"]["text"],
-            "address": p["shortFormattedAddress"],
-            "latitude": p["location"]["latitude"],
-            "longitude": p["location"]["longitude"],
-            "types": p.get("types", []),
-            "primary_type": p.get("primaryType"),
-            "rating": p.get("rating"),
-            "user_rating_count": p.get("userRatingCount"),
-            "photo": p.get("photos", [{}])[0].get("name"),
-            "maps_url": p.get("googleMapsUri"),
-        }
-        for p in data.get("places", [])[:5]
-    ]
+    places = []
+
+    for p in data.get("places", []):
+        # Skip places without photos
+        if not p.get("photos"):
+            continue
+
+        rating = p.get("rating") or 0
+        reviews = p.get("userRatingCount") or 0
+
+        places.append(
+            {
+                "place_id": p["id"],
+                "name": p["displayName"]["text"],
+                "address": p["shortFormattedAddress"],
+                "latitude": p["location"]["latitude"],
+                "longitude": p["location"]["longitude"],
+                "types": p.get("types", []),
+                "primary_type": p.get("primaryType"),
+                "rating": rating,
+                "user_rating_count": reviews,
+                "photo": p["photos"][0]["name"],
+                "maps_url": p.get("googleMapsUri"),
+            }
+        )
+    places.sort(
+        key=lambda p: (
+            p["user_rating_count"],
+            p["rating"],
+        ),
+        reverse=True,
+    )
+
+    return places[:2]
 
 
 def get_description(place):
@@ -181,12 +199,12 @@ def get_description(place):
     )
 
     prompt = (
-        f"Write a natural travel guide description for {place['name']}, "
+        f"Write a concise description of {place['name']}, "
         f"a {place_type} in {place['address']}. "
         f"Keep it to 2-3 sentences (40-70 words). "
-        f"Focus on what visitors can expect or enjoy, mentioning notable features if appropriate. "
-        f"Write in a warm, human style that feels like a travel website, not AI-generated text. "
-        f"Do not invent facts, avoid generic phrases, and use plain text only."
+        f"Explain what the place is, what it is best known for, and highlight any significant landmarks, architecture, natural features, culture, or activities associated with it. "
+        f"Write in a neutral, informative style using plain text only. "
+        f"Do not invent facts, exaggerate, or use generic promotional phrases."
     )
 
     payload = {

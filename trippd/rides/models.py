@@ -185,23 +185,24 @@ class ConversationMessage(models.Model):
 class Place(models.Model):
     """Represents a place associated with an activity."""
 
-    name = models.CharField(max_length=255)
-    discoverable = models.BooleanField(default=False)
-    description = models.TextField(blank=True)
-    address = models.CharField(max_length=255)
     place_id = models.CharField(max_length=255, unique=True)
+
+    name = models.CharField(max_length=255)
+    address = models.CharField(max_length=255)
     latitude = models.FloatField()
     longitude = models.FloatField()
     primary_type = models.CharField(max_length=100, blank=True, null=True)
     photos = models.JSONField(blank=True, null=True)
     map_url = models.URLField(blank=True, null=True)
+    description = models.TextField(blank=True)
+    featured = models.BooleanField(default=False)
 
     def __str__(self):
         return self.address
 
 
 class Activity(models.Model):
-    """Represents an activity associated with a trip."""
+    """Represents an activity at a place."""
 
     class Category(models.TextChoices):
         FOOD = "food", "Food & Drinks"

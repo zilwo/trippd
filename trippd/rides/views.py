@@ -13,7 +13,7 @@ from django.views.generic import (
 from django.conf import settings
 import requests
 
-from users.models import Language, User, Notification, Rating
+from users.models import Language, User, Notification, Rating, SavedPlace
 from .models import (
     Conversation,
     Trip,
@@ -371,7 +371,7 @@ class TripDetailView(DetailView):
         context = super().get_context_data(**kwargs)
         trip = self.get_object()
         user = self.request.user
-        context["GOOGLE_API_KEY"] = settings.GOOGLE_API_KEY
+        context["GOOGLE_MAP_API_KEY"] = settings.GOOGLE_MAP_API_KEY
 
         if user.is_authenticated:
             context["is_member"] = TripMembership.objects.filter(
@@ -663,7 +663,6 @@ class FinalizeTripView(LoginRequiredMixin, UpdateView):
         return context
 
     def form_valid(self, form):
-        """Finalizes a companion travel request and changes its status to 'upcoming'."""
         trip = form.instance
         trip.status = "upcoming"
         messages.success(self.request, "Trip finalized successfully!")
@@ -689,9 +688,6 @@ def confirm_ongoing(request, pk):
         messages.info(request, "This trip is not in an upcoming state.")
         return HttpResponse(status=400)
 
-    trip.status = "ongoing"
-    trip.save()
-
     if whatsappgrouplink:
         if not (
             whatsappgrouplink.startswith("https://chat.whatsapp.com/")
@@ -705,6 +701,9 @@ def confirm_ongoing(request, pk):
 
         trip.tripgroup.whats_app_group_link = whatsappgrouplink
         trip.tripgroup.save()
+
+    trip.status = "ongoing"
+    trip.save()
 
     TripGroupMessage.objects.create(
         sender=request.user,
@@ -846,21 +845,9 @@ def submit_reviews(request, pk):
     return redirect("trip_hub", pk=trip.tripgroup.pk)
 
 
-class DiscoverView(TemplateView):
-    template_name = "rides/discover.html"
-
-    def post(self, request, *args, **kwargs):
-        place_id = self.request.POST.get("place_id")
-        session_token = self.request.POST.get("session_token")
-        if place_id:
-            place = get_or_create_place(place_id, session_token)
-            return redirect("discover_place", pk=place.pk)
-        else:
-            messages.error(request, "Please select a valid place.")
-            return redirect("discover")
-
-
 class AcitvityCreateView(LoginRequiredMixin, CreateView):
+    """View to create an activity, optionally associated with a trip and a place."""
+
     template_name = "rides/activity_create.html"
     form_class = ActivityForm
 
@@ -909,7 +896,6 @@ class ActivityDetailView(DetailView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         activity = self.get_object()
-        participant_count = 0
         if activity.trip:
             context["trip"] = activity.trip
             participant_count = activity.trip.memberships.count()
@@ -925,8 +911,36 @@ class ActivityDetailView(DetailView):
         return context
 
 
-def get_place_hero_image(request, place_id):
-    place = get_object_or_404(Place, pk=place_id)
+class DiscoverView(TemplateView):
+    template_name = "rides/discover.html"
+
+    def post(self, request, *args, **kwargs):
+        place_id = self.request.POST.get("place_id")
+        session_token = self.request.POST.get("session_token")
+        if place_id:
+            place = get_or_create_place(place_id, session_token)
+            return redirect("discover_place", pk=place.pk)
+        else:
+            messages.error(request, "Please select a valid place.")
+            return redirect("discover")
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        featured_places = Place.objects.filter(featured=True)[:2]
+        saved_place_ids = set(
+            self.request.user.saved_places.values_list("place_id", flat=True)
+        )
+
+        for place in featured_places:
+            place.is_saved = place.pk in saved_place_ids
+
+        context["featured_places"] = featured_places
+        return context
+
+
+def get_place_hero_image(request, pk):
+    """Return the first available photo for the requested place."""
+    place = get_object_or_404(Place, pk=pk)
 
     if place.photos:
         photo_name = place.photos[0]
@@ -942,8 +956,23 @@ def get_place_hero_image(request, place_id):
             return HttpResponse(response.content, headers=headers)
         else:
             print(
-                f"Failed to fetch hero image for place {place_id}. Status code: {response.status_code}"
+                f"Failed to fetch hero image for place {place.pk}. Status code: {response.status_code}"
             )
+    return HttpResponse(status=404)
+
+
+def place_recommend_photo(request):
+    photo_name = request.GET.get("photo")
+
+    hero_image_url = get_place_photo_url(photo_name)
+    response = requests.get(hero_image_url, allow_redirects=True)
+    headers = {
+        "Content-Type": response.headers.get("Content-Type", "image/jpeg"),
+        "Cache-Control": response.headers.get("Cache-Control", "public, max-age=86400"),
+    }
+    if response.status_code == 200:
+        return HttpResponse(response.content, headers=headers)
+
     return HttpResponse(status=404)
 
 
@@ -952,9 +981,24 @@ class PlaceDetailView(DetailView):
     template_name = "rides/place_detail.html"
     context_object_name = "place"
 
+    def get(self, request, *args, **kwargs):
+        self.object = self.get_object()
+        section = request.GET.get("tab", "activities")
+        is_saved = SavedPlace.objects.filter(
+            user=request.user, place=self.object
+        ).exists()
+        if request.headers.get("HX-Request") == "true":
+            print("callign it")
+            return place_section(request, self.object, section)
 
-def place_section(request, pk, section):
-    place = get_object_or_404(Place, pk=pk)
+        context = self.get_context_data()
+        context["tab"] = section
+        context["is_saved"] = is_saved
+        return self.render_to_response(context)
+
+
+def place_section(request, place, section):
+    """Return the requested place section as a partial template."""
     place_types = {
         "attractions": "tourist_attraction",
         "hotels": "lodging",
@@ -982,28 +1026,74 @@ def place_section(request, pk, section):
         place.longitude,
         type_filter=place_types[section],
     )
+    db_places = []
+
+    saved_place_ids = set(request.user.saved_places.values_list("place_id", flat=True))
+
+    for p in places:
+        nearby_place, created = Place.objects.get_or_create(
+            place_id=p["place_id"],
+            defaults={
+                "name": p["name"],
+                "latitude": p["latitude"],
+                "longitude": p["longitude"],
+                "address": p.get("address", ""),
+                "map_url": p.get("maps_url"),
+            },
+        )
+        nearby_place.photo = p.get("photo")
+        nearby_place.rating = p.get("rating")
+        nearby_place.user_rating_count = p.get("user_rating_count")
+        nearby_place.maps_url = p.get("maps_url")
+        nearby_place.is_saved = nearby_place.pk in saved_place_ids
+        db_places.append(nearby_place)
+
+    print("place created or retrieved:", place)
 
     return render(
         request,
         "rides/partials/place_cards.html",
         {
-            "places": places,
+            "places": db_places,
             "section": section,
         },
     )
 
 
-def place_recommend_photo(request):
-    """Fetches a recommended photo for a given place."""
-    photo_name = request.GET.get("photo")
+@login_required
+@require_POST
+def toggle_saved_place(request, pk):
+    place = get_object_or_404(Place, pk=pk)
 
-    hero_image_url = get_place_photo_url(photo_name)
-    response = requests.get(hero_image_url, allow_redirects=True)
-    headers = {
-        "Content-Type": response.headers.get("Content-Type", "image/jpeg"),
-        "Cache-Control": response.headers.get("Cache-Control", "public, max-age=86400"),
-    }
-    if response.status_code == 200:
-        return HttpResponse(response.content, headers=headers)
+    saved, created = SavedPlace.objects.get_or_create(
+        user=request.user,
+        place=place,
+    )
 
-    return HttpResponse(status=404)
+    if not created:
+        saved.delete()
+        is_saved = False
+    else:
+        is_saved = True
+
+    response = render(
+        request,
+        "rides/components/save_button.html",
+        {
+            "place": place,
+            "is_saved": is_saved,
+        },
+    )
+    response["HX-Trigger"] = "savedPlacesChanged"
+
+    return response
+
+
+class SavedPlaceListView(LoginRequiredMixin, ListView):
+    model = SavedPlace
+    template_name = "rides/partials/save_places.html"
+    context_object_name = "saved_places"
+
+    def get_queryset(self):
+        print("ok ok")
+        return SavedPlace.objects.filter(user=self.request.user).select_related("place")

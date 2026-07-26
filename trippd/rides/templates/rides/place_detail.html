@@ -23,7 +23,9 @@
       </div>
 
       <div class="flex gap-3">
-        <button class="btn btn-outline rounded-full">Save</button>
+        <div id="save-place">
+          {% include 'rides/components/save_button.html' with is_saved=is_saved place=place %}
+        </div>
       </div>
     </div>
 
@@ -58,18 +60,18 @@
     <h2 class="text-2xl font-bold mb-5">Discover {{ place.name }}</h2>
 
     <div class="flex flex-wrap gap-3">
-      <button class="btn btn-sm rounded-full btn-outline" hx-get="{% url 'place_section' place.pk 'activities' %}" hx-target="#discover-content" hx-swap="innerHTML">Activities</button>
-      <button class="btn btn-sm rounded-full btn-outline" hx-get="{% url 'place_section' place.pk 'attractions' %}" hx-target="#discover-content" hx-swap="innerHTML">Attractions</button>
+      <button class="btn btn-sm rounded-full btn-outline" hx-get="{% url 'discover_place' place.pk %}?tab=activities" hx-target="#discover-content" hx-swap="innerHTML" hx-push-url="true">Activities</button>
+      <button class="btn btn-sm rounded-full btn-outline" hx-get="{% url 'discover_place' place.pk %}?tab=attractions" hx-target="#discover-content" hx-swap="innerHTML" hx-push-url="true">Attractions</button>
 
-      <button class="btn btn-sm rounded-full btn-outline" hx-get="{% url 'place_section' place.pk 'hotels' %}" hx-target="#discover-content" hx-swap="innerHTML">Hotels</button>
+      <button class="btn btn-sm rounded-full btn-outline" hx-get="{% url 'discover_place' place.pk %}?tab=hotels" hx-target="#discover-content" hx-swap="innerHTML" hx-push-url="true">Hotels</button>
 
-      <button class="btn btn-sm rounded-full btn-outline" hx-get="{% url 'place_section' place.pk 'restaurants' %}" hx-target="#discover-content" hx-swap="innerHTML">Restaurants</button>
+      <button class="btn btn-sm rounded-full btn-outline" hx-get="{% url 'discover_place' place.pk %}?tab=restaurants" hx-target="#discover-content" hx-swap="innerHTML" hx-push-url="true">Restaurants</button>
     </div>
   </div>
 
   <div class="max-w-6xl mx-auto px-6 mt-10">
     <div class="flex justify-between items-center mb-6" hx-swap-oob="true"></div>
 
-    <div id="discover-content" class="mt-6" hx-get="{% url 'place_section' place.pk 'activities' %}" hx-trigger="load" hx-swap="innerHTML"></div>
+    <div id="discover-content" class="mt-6" hx-get="{% url 'discover_place' place.pk %}?tab={{ tab }}" hx-trigger="load" hx-swap="innerHTML"></div>
   </div>
 {% endblock %}

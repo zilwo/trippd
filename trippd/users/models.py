@@ -100,3 +100,22 @@ class Notification(models.Model):
 
     class Meta:
         ordering = ["created_at"]
+
+
+class SavedPlace(models.Model):
+    user = models.ForeignKey(
+        User, on_delete=models.CASCADE, related_name="saved_places"
+    )
+    place = models.ForeignKey("rides.Place", on_delete=models.CASCADE)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=["user", "place"],
+                name="unique_saved_place",
+            )
+        ]
+
+    def __str__(self):
+        return f"{self.user.username} saved {self.place.name}"

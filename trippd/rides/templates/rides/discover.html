@@ -1,4 +1,5 @@
 {% extends 'rides/base.html' %}
+
 {% block style %}
   <style>
     .ts-wrapper {
@@ -29,7 +30,6 @@
 
     .ts-dropdown .option {
       cursor: pointer;
-
       transition: 0.2s;
     }
 
@@ -43,7 +43,6 @@
 
     .ts-control.focus {
       border-color: #4f8ef7 !important;
-
       box-shadow: 0 0 0 4px rgba(79, 142, 247, 0.15), 0 8px 30px rgba(0, 0, 0, 0.1);
     }
   </style>
@@ -54,14 +53,13 @@
     <div class="flex h-full items-center justify-center">
       <div class="text-center">
         <span class="loading loading-spinner loading-xl text-(blue)"></span>
-
         <p class="mt-4 text-lg font-medium">Searching your destination...</p>
-
         <p class="text-sm opacity-70">This usually takes a few seconds.</p>
       </div>
     </div>
   </div>
-  <div class="container mx-auto max-w-6xl px-4 py-8">
+
+  <div class="container mx-auto max-w-6xl px-4 py-8 mb-4">
     <div class="max-w-3xl mx-auto">
       <div class="text-center mb-8">
         <h1 class="text-5xl font-bold">Discover Places</h1>
@@ -76,12 +74,44 @@
 
           <form method="post">
             {% csrf_token %}
-
             <select id="place-search" placeholder="Search for places..."></select>
             <input type="hidden" id="place_id" name="place_id" value="{{ form.place_id.value|default:'' }}" />
             <input type="hidden" id="session_token" name="session_token" />
           </form>
         </div>
+      </div>
+    </div>
+    <div class="mt-8">
+      <div class="flex justify-between items-center mb-4">
+        <h2 class="text-3xl font-bold">Featured Places</h2>
+      </div>
+
+      <div class="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+        {% for place in featured_places %}
+          <div class="group rounded-t-2xl overflow-hidden">
+            <div class="relative">
+              <a href="{% url 'discover_place' place.pk %}" class="block">
+                {% if place.photos %}
+                  <img src="{% url 'place_hero_image' place.pk %}" class="w-full h-64 object-cover" />
+                {% else %}
+                  <img src="https://dummyimage.com/1200x675/e5e7eb/6b7280&text=No+Image" class="w-full h-64 object-cover" />
+                {% endif %}
+              </a>
+
+              <div class="absolute top-3 right-3 z-10">
+                {% include 'rides/components/save_button.html' with is_saved=place.is_saved %}
+              </div>
+            </div>
+
+            <a href="{% url 'discover_place' place.pk %}" class="block">
+              <div class="pt-3">
+                <h3 class="font-bold text-lg leading-snug line-clamp-2 group-hover:text-(--blue)">{{ place.name }}</h3>
+
+                <p class="mt-2 text-sm text-base-content/70 line-clamp-2">{{ place.description }}</p>
+              </div>
+            </a>
+          </div>
+        {% endfor %}
       </div>
     </div>
   </div>
@@ -103,18 +133,16 @@
           callback()
           return
         }
+
         fetch(`/discover/autocomplete/?query=${encodeURIComponent(query)}&session_token=${encodeURIComponent(sessionToken)}`)
-          .then((res) => res.json())
+          .then((r) => r.json())
           .then((data) => callback(data.results))
           .catch(() => callback())
       },
 
       onItemAdd(value) {
-        const selected = this.options[value]
-
-        document.getElementById('place_id').value = selected.place_id
+        document.getElementById('place_id').value = this.options[value].place_id
         document.getElementById('loading-overlay').classList.remove('hidden')
-
         this.input.form.submit()
       }
     })

@@ -1,0 +1,8 @@
+{% for saved in saved_places %}
+  <a href="{% url 'discover_place' saved.place.pk %}" class="block p-3 rounded hover:bg-base-200">
+    <div class="font-semibold">{{ saved.place.name }}</div>
+    <div class="text-sm opacity-70">{{ saved.place.address }}</div>
+  </a>
+{% empty %}
+  <p>No saved places.</p>
+{% endfor %}

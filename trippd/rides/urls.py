@@ -65,7 +65,7 @@ urlpatterns = [
         name="activity_detail",
     ),
     path(
-        "places/<int:place_id>/hero-image/",
+        "places/<int:pk>/hero-image/",
         views.get_place_hero_image,
         name="place_hero_image",
     ),
@@ -75,13 +75,18 @@ urlpatterns = [
         name="discover_place",
     ),
     path(
-        "discover/place/<int:pk>/<str:section>/",
-        views.place_section,
-        name="place_section",
-    ),
-    path(
         "discover/place_photo",
         views.place_recommend_photo,
         name="place_recommend_photo",
+    ),
+    path(
+        "toggle-saved-place/<int:pk>/",
+        views.toggle_saved_place,
+        name="toggle_saved_place",
+    ),
+    path(
+        "saved-places/",
+        views.SavedPlaceListView.as_view(),
+        name="saved_places",
     ),
 ]
