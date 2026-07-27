@@ -23,6 +23,11 @@
       </div>
 
       <div class="flex gap-3">
+            <button
+        id="ask-ai-btn"
+        class="rounded-full bg-transparent border border-base-content/20 px-4 py-2 text-base-content/80 hover:bg-base-content/5 transition-colors">
+        ✨ Ask AI
+    </button>
         <div id="save-place">
           {% include 'rides/components/save_button.html' with is_saved=is_saved place=place %}
         </div>
@@ -30,19 +35,25 @@
     </div>
 
     <!-- AI Summary -->
+  <div x-data="{ expanded: false }" class="mt-6 max-w-4xl">
+    <p class="leading-8 text-base-content/80">
+      <span x-show="!expanded">{{ place.description|truncatewords:70 }}</span>
+      <span x-show="expanded">{{ place.description }}</span>
+    </p>
 
-    <div class="mt-6 max-w-4xl">
-      <p class="leading-8 text-base-content/80">{{ place.description|truncatewords:70 }}</p>
-
-      {% if place.description|wordcount > 70 %}
-        <button class="link mt-2">Read more</button>
-      {% endif %}
-    </div>
+    {% if place.description|wordcount > 70 %}
+      <button
+        class="link mt-2"
+        @click="expanded = !expanded"
+        x-text="expanded ? 'Show less' : 'Read more'">
+      </button>
+    {% endif %}
+  </div>
   </div>
 
   <div class="max-w-6xl mx-auto px-6 mt-4">
     <div class="relative rounded-2xl overflow-hidden border border-base-300 shadow-sm">
-      <img src="{% url 'place_hero_image' place.pk %}" alt="{{ place.name }}" class="w-full h-[520px] object-cover" />
+      <img src="{% url 'place_hero_image' place.place_id %}" alt="{{ place.name }}" class="w-full h-[520px] object-cover" />
 
       <div class="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent"></div>
 
@@ -74,4 +85,151 @@
 
     <div id="discover-content" class="mt-6" hx-get="{% url 'discover_place' place.pk %}?tab={{ tab }}" hx-trigger="load" hx-swap="innerHTML"></div>
   </div>
+<div id="ai-sidebar"
+     class="fixed inset-y-0 left-0
+            w-full md:w-[450px]
+            bg-base-100 shadow-2xl border-r border-base-300
+            transition-transform duration-300 z-50 flex flex-col">
+
+    <!-- Header -->
+    <div class="flex items-center justify-between p-4 border-b">
+        <h2 class="font-bold text-lg">
+            Ask AI about {{ place.name }}
+        </h2>
+
+        <button id="close-ai" class="btn btn-sm btn-circle">
+            ✕
+        </button>
+    </div>
+
+    <!-- Messages -->
+ <!-- Messages -->
+<div id="chat-messages"
+     class="flex-1 overflow-y-auto p-4">
+
+    <!-- Context -->
+    <div class="mb-6">
+        <p class="text-xs uppercase tracking-wide text-base-content/50 mb-2">
+            Asking about
+        </p>
+
+        <div class="font-semibold text-lg">
+           {{ place.name }}
+        </div>
+
+        <p class="text-sm text-base-content/60 mt-1">
+            Get quick travel insights about this destination.
+        </p>
+    </div>
+
+<!-- Suggested questions -->
+<div class="flex flex-wrap gap-2 mb-6">
+
+    <button
+        type="button"
+        class="ai-question rounded-full border border-blue-200 bg-blue-50 px-3 py-2 text-sm hover:bg-blue-100 transition"
+        data-question="What are the highlights of {{ place.name }}?"
+        data-type="highlights">
+      Highlights of the place
+    </button>
+
+    <button
+        type="button"
+        class="ai-question rounded-full border border-blue-200 bg-blue-50 px-3 py-2 text-sm hover:bg-blue-100 transition"
+        data-question="Who is {{ place.name }} best suited for?"
+        data-type="best_for">
+        Best for
+    </button>
+
+    <button
+        type="button"
+        class="ai-question rounded-full border border-blue-200 bg-blue-50 px-3 py-2 text-sm hover:bg-blue-100 transition"
+        data-question="When is the best time to visit {{ place.name }}?"
+        data-type="best_time">
+        Best time to visit
+    </button>
+
+</div>
+
+    <!-- Chat responses will appear below -->
+</div>
+
+    <!-- Input -->
+    <div class="border-t p-4">
+      <form
+    id="ai-form"
+    hx-post="{% url 'ask_ai' place.pk %}"
+    hx-target="#chat-messages"
+    hx-swap="beforeend">
+
+    {% csrf_token %}
+
+    <textarea
+        id="ai-message"
+        name="message"
+        placeholder="Ask anything about the Place"
+        class="textarea textarea-bordered w-full"></textarea>
+
+      <input type="hidden" name="question_type" id="question-type">
+
+    <button class="btn btn-primary w-full mt-3">
+        Send
+    </button>
+</form>
+    </div>
+
+</div>
+
+<div id="ai-overlay"
+     class="fixed inset-0 bg-black/40 hidden z-40">
+</div>
+
+
+<style>
+#ai-sidebar {
+    transform: translateX(-100%);
+}
+#ai-sidebar.sidebar-open {
+    transform: translateX(0);
+}
+</style>
+
+
+<script>
+const sidebar = document.getElementById("ai-sidebar");
+const overlay = document.getElementById("ai-overlay");
+
+document.getElementById("ask-ai-btn").onclick = () => {
+    sidebar.classList.add("sidebar-open");
+    overlay.classList.remove("hidden");
+};
+
+function closeSidebar() {
+    sidebar.classList.remove("sidebar-open");
+    overlay.classList.add("hidden");
+}
+
+document.getElementById("close-ai").onclick = closeSidebar;
+overlay.onclick = closeSidebar;
+
+
+const textarea = document.getElementById("ai-message");
+const form = document.getElementById("ai-form");
+const typeInput = document.getElementById("question-type");
+
+document.querySelectorAll(".ai-question").forEach(btn => {
+    btn.addEventListener("click", function () {
+        textarea.value = this.dataset.question;
+        typeInput.value = this.dataset.type;
+
+        htmx.trigger(form, "submit");
+        console.log("Form submitted with question:", textarea.value, "and type:", typeInput.value);
+        textarea.value = "";
+        typeInput.value = "";
+    });
+});
+
+
+
+</script>
 {% endblock %}

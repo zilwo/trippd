@@ -7,13 +7,7 @@
     {% for place in places %}
       <div class="h-full rounded-t-2xl overflow-hidden flex flex-col">
         <div class="relative">
-          <a href="{{ place.maps_url }}" target="_blank" class="group h-full">
-            {% if not place.photo %}
-              <img src="https://dummyimage.com/1200x675/e5e7eb/6b7280&text=No%20Image%20Provided" alt="" class="w-full h-64 object-cover" />
-            {% else %}
-              <img src="{% url 'place_recommend_photo' %}?photo={{ place.photo|urlencode }}" class="w-full h-64 object-cover" />
-            {% endif %}
-          </a>
+          <a href="{{ place.maps_url }}" target="_blank" class="group h-full"><img src="{% url 'place_hero_image' place.place_id %}" class="w-full h-64 object-cover" /></a>
           <div class="absolute top-3 right-3 z-10">
             {% include 'rides/components/save_button.html' with is_saved=place.is_saved place=place %}
           </div>

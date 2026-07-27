@@ -2,6 +2,7 @@ from django.conf import settings
 import requests
 from rides.models import Place
 import time
+from ai.service import generate_place_info
 
 client_session = requests.Session()
 
@@ -55,14 +56,7 @@ def get_place_details(place_id, session_token=None):
     headers = {
         "X-Goog-Api-Key": settings.GOOGLE_PLACES_SECRET_KEY,
         "X-Goog-FieldMask": (
-            "id,"
-            "displayName,"
-            "formattedAddress,"
-            "location,"
-            "types,"
-            "primaryType,"
-            "photos,"
-            "googleMapsLinks"
+            "id,displayName,formattedAddress,location,types,googleMapsLinks"
         ),
     }
     params = {}
@@ -79,9 +73,6 @@ def get_place_details(place_id, session_token=None):
     response.raise_for_status()
 
     data = response.json()
-
-    photos = [photo["name"] for photo in data.get("photos", [])[:5]]
-
     return {
         "name": data["displayName"]["text"],
         "place_id": data["id"],
@@ -89,18 +80,41 @@ def get_place_details(place_id, session_token=None):
         "latitude": data["location"]["latitude"],
         "longitude": data["location"]["longitude"],
         "types": data.get("types", []),
-        "primary_type": data.get("primaryType", None),
-        "photos": photos,
         "map_url": data.get("googleMapsLinks", {}).get("photosUri", None),
     }
 
 
-def get_place_photo_url(photo_name, max_width=1200):
-    return (
+def get_place_photos(place_id, session_token=None):
+    print("Fetching photos for place_id:", place_id)
+    url = f"https://places.googleapis.com/v1/places/{place_id}"
+    headers = {
+        "X-Goog-Api-Key": settings.GOOGLE_PLACES_SECRET_KEY,
+        "X-Goog-FieldMask": "photos",
+    }
+    params = {"sessionToken": session_token} if session_token else {}
+
+    response = client_session.get(url, headers=headers, params=params, timeout=10)
+    response.raise_for_status()
+    data = response.json()
+
+    return [photo["name"] for photo in data.get("photos", [])[:5]]
+
+
+def get_place_photo_response(place_id, max_width=1200):
+    photos = get_place_photos(place_id)
+    if not photos:
+        return None
+
+    photo_name = photos[0]
+    url = (
         f"https://places.googleapis.com/v1/{photo_name}/media"
         f"?maxWidthPx={max_width}"
         f"&key={settings.GOOGLE_PLACES_SECRET_KEY}"
     )
+
+    response = client_session.get(url, timeout=10)
+    response.raise_for_status()
+    return response
 
 
 def get_nearby_places(latitude, longitude, radius=10000, type_filter=None):
@@ -115,7 +129,6 @@ def get_nearby_places(latitude, longitude, radius=10000, type_filter=None):
             "places.shortFormattedAddress,"
             "places.location,"
             "places.types,"
-            "places.primaryType,"
             "places.photos,"
             "places.rating,"
             "places.userRatingCount,"
@@ -164,11 +177,10 @@ def get_nearby_places(latitude, longitude, radius=10000, type_filter=None):
             {
                 "place_id": p["id"],
                 "name": p["displayName"]["text"],
-                "address": p["shortFormattedAddress"],
+                "address": p.get("shortFormattedAddress", ""),
                 "latitude": p["location"]["latitude"],
                 "longitude": p["location"]["longitude"],
                 "types": p.get("types", []),
-                "primary_type": p.get("primaryType"),
                 "rating": rating,
                 "user_rating_count": reviews,
                 "photo": p["photos"][0]["name"],
@@ -186,73 +198,49 @@ def get_nearby_places(latitude, longitude, radius=10000, type_filter=None):
     return places[:2]
 
 
-def get_description(place):
-    url = "https://generativelanguage.googleapis.com/v1beta/interactions"
-
-    headers = {
-        "x-goog-api-key": settings.GEMINI_API_KEY,
-        "Content-Type": "application/json",
+def enrich_place_with_ai_info(place):
+    """Enrich a Place object with AI-generated information."""
+    place_details = {
+        "name": place.name,
+        "address": place.address,
+        "latitude": place.latitude,
+        "longitude": place.longitude,
+        "types": place.types.split(",") if place.types else [],
     }
 
-    place_type = place.get("primary_type") or (
-        place["types"][0] if place.get("types") else "place"
-    )
-
-    prompt = (
-        f"Write a concise description of {place['name']}, "
-        f"a {place_type} in {place['address']}. "
-        f"Keep it to 2-3 sentences (40-70 words). "
-        f"Explain what the place is, what it is best known for, and highlight any significant landmarks, architecture, natural features, culture, or activities associated with it. "
-        f"Write in a neutral, informative style using plain text only. "
-        f"Do not invent facts, exaggerate, or use generic promotional phrases."
-    )
-
-    payload = {
-        "model": "gemini-3.1-flash-lite",
-        "input": prompt,
-        "generation_config": {"thinking_level": "minimal"},
-    }
-
-    response = client_session.post(url, headers=headers, json=payload, timeout=10)
-    print(response.text)
-    if response.status_code != 200:
-        print("Error generating description:", response.text)
-    response.raise_for_status()
-
-    data = response.json()
-
-    try:
-        return data["steps"][-1]["content"][0]["text"].strip()
-    except (KeyError, IndexError):
-        return None
+    ai_info = generate_place_info(place_details)
+    place.description = ai_info.summary
+    place.highlights = ai_info.highlight
+    place.best_time_to_visit = ai_info.best_time_to_visit
+    place.best_for = ai_info.best_for
+    place.save()
 
 
 def get_or_create_place(place_id, session_token=None):
     start = time.perf_counter()
 
-    place_details = get_place_details(place_id, session_token)
-    print("Place details:", time.perf_counter() - start)
+    try:
+        place = Place.objects.get(place_id=place_id)
+    except Place.DoesNotExist:
+        place_details = get_place_details(place_id, session_token)
+        print("Place details:", time.perf_counter() - start)
 
-    if not place_details:
-        return None
+        if not place_details:
+            return None
 
-    place, created = Place.objects.get_or_create(
-        place_id=place_id,
-        defaults={
-            "name": place_details["name"],
-            "address": place_details["address"],
-            "latitude": place_details["latitude"],
-            "longitude": place_details["longitude"],
-            "primary_type": place_details.get("primary_type", ""),
-            "photos": place_details.get("photos", []),
-            "map_url": place_details.get("map_url", ""),
-        },
-    )
+        place = Place.objects.create(
+            place_id=place_id,
+            name=place_details["name"],
+            address=place_details["address"],
+            latitude=place_details["latitude"],
+            longitude=place_details["longitude"],
+            types=",".join(place_details.get("types", [])),
+            map_url=place_details.get("map_url", ""),
+        )
+        print("place created:", time.perf_counter() - start)
 
-    if created:
         start = time.perf_counter()
-        place.description = get_description(place_details)
-        print("Gemini:", time.perf_counter() - start)
-        place.save(update_fields=["description"])
+        enrich_place_with_ai_info(place)
+        print("AI:", time.perf_counter() - start)
 
     return place

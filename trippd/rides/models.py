@@ -191,11 +191,13 @@ class Place(models.Model):
     address = models.CharField(max_length=255)
     latitude = models.FloatField()
     longitude = models.FloatField()
-    primary_type = models.CharField(max_length=100, blank=True, null=True)
-    photos = models.JSONField(blank=True, null=True)
+    types = models.CharField(max_length=100, blank=True, null=True)
     map_url = models.URLField(blank=True, null=True)
     description = models.TextField(blank=True)
     featured = models.BooleanField(default=False)
+    highlights = models.TextField(blank=True)
+    best_time_to_visit = models.CharField(max_length=255, blank=True)
+    best_for = models.CharField(max_length=255, blank=True)
 
     def __str__(self):
         return self.address

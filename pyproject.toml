@@ -11,6 +11,7 @@ dependencies = [
     "django-allauth>=65.17.0",
     "django-phonenumber-field[phonenumbers]>=8.4.0",
     "django-taggit>=6.1.0",
+    "markdown>=3.10.2",
     "pillow>=12.2.0",
     "pydantic-ai>=2.18.0",
     "pyjwt>=2.13.0",

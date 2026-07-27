@@ -11,8 +11,8 @@ from django.views.generic import (
     View,
 )
 from django.conf import settings
-import requests
 
+from ai.service import generate_place_chat_response
 from users.models import Language, User, Notification, Rating, SavedPlace
 from .models import (
     Conversation,
@@ -30,9 +30,10 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from .services.autocomplete_location import autocomplete_location
 from .services.place import (
     autocomplete_places,
-    get_place_photo_url,
+    get_place_photo_response,
     get_or_create_place,
     get_nearby_places,
+    enrich_place_with_ai_info,
 )
 from django.http import HttpResponse
 from channels.layers import get_channel_layer
@@ -47,6 +48,7 @@ from .forms import (
     AGE_GROUPS,
     FinalizeTripForm,
 )
+from markdown import markdown
 
 
 def home(request):
@@ -926,7 +928,7 @@ class DiscoverView(TemplateView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        featured_places = Place.objects.filter(featured=True)[:2]
+        featured_places = Place.objects.filter(featured=True)[:4]
         saved_place_ids = set(
             self.request.user.saved_places.values_list("place_id", flat=True)
         )
@@ -938,41 +940,22 @@ class DiscoverView(TemplateView):
         return context
 
 
-def get_place_hero_image(request, pk):
+def get_place_hero_image(request, place_id):
     """Return the first available photo for the requested place."""
-    place = get_object_or_404(Place, pk=pk)
-
-    if place.photos:
-        photo_name = place.photos[0]
-        hero_image_url = get_place_photo_url(photo_name)
-        response = requests.get(hero_image_url, allow_redirects=True)
-        headers = {
-            "Content-Type": response.headers.get("Content-Type", "image/jpeg"),
-            "Cache-Control": response.headers.get(
-                "Cache-Control", "public, max-age=86400"
-            ),
-        }
-        if response.status_code == 200:
-            return HttpResponse(response.content, headers=headers)
-        else:
-            print(
-                f"Failed to fetch hero image for place {place.pk}. Status code: {response.status_code}"
-            )
-    return HttpResponse(status=404)
-
-
-def place_recommend_photo(request):
-    photo_name = request.GET.get("photo")
-
-    hero_image_url = get_place_photo_url(photo_name)
-    response = requests.get(hero_image_url, allow_redirects=True)
+    response = get_place_photo_response(place_id)
+    print("response is ", response)
+    if response is None:
+        return redirect(settings.DEFAULT_PLACE_HERO_IMAGE_URL)
     headers = {
         "Content-Type": response.headers.get("Content-Type", "image/jpeg"),
         "Cache-Control": response.headers.get("Cache-Control", "public, max-age=86400"),
     }
     if response.status_code == 200:
         return HttpResponse(response.content, headers=headers)
-
+    else:
+        print(
+            f"Failed to fetch hero image for place {place_id}. Status code: {response.status_code}"
+        )
     return HttpResponse(status=404)
 
 
@@ -983,6 +966,10 @@ class PlaceDetailView(DetailView):
 
     def get(self, request, *args, **kwargs):
         self.object = self.get_object()
+        if (
+            not self.object.description
+        ):  # if there is no description, set the place with AI info and save it
+            enrich_place_with_ai_info(self.object)
         section = request.GET.get("tab", "activities")
         is_saved = SavedPlace.objects.filter(
             user=request.user, place=self.object
@@ -1041,7 +1028,6 @@ def place_section(request, place, section):
                 "map_url": p.get("maps_url"),
             },
         )
-        nearby_place.photo = p.get("photo")
         nearby_place.rating = p.get("rating")
         nearby_place.user_rating_count = p.get("user_rating_count")
         nearby_place.maps_url = p.get("maps_url")
@@ -1097,3 +1083,38 @@ class SavedPlaceListView(LoginRequiredMixin, ListView):
     def get_queryset(self):
         print("ok ok")
         return SavedPlace.objects.filter(user=self.request.user).select_related("place")
+
+
+@require_POST
+@login_required
+def ask_ai_about_place(request, place_id):
+    print("hiii")
+    place = get_object_or_404(Place, pk=place_id)
+    question_type = request.POST.get("question_type").strip().lower()
+    print(question_type)
+    message = request.POST.get("message", "").strip()
+    html_response = "Sorry, I couldn't find any information on that topic."
+
+    if question_type == "highlights":
+        print("highlights")
+        response = place.highlights
+
+    elif question_type == "best_for":
+        response = place.best_for
+
+    elif question_type == "best_time":
+        response = place.best_time_to_visit
+
+    else:
+        response = generate_place_chat_response(place, message)
+
+    html_response = markdown(response)
+
+    return render(
+        request,
+        "rides/partials/ai_response.html",
+        {
+            "message": message,
+            "response": html_response,
+        },
+    )
