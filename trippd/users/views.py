@@ -38,11 +38,11 @@ class SignupForm(UserCreationForm):
 
 class CustomLoginView(LoginView):
     template_name = "users/login.html"
-    next_page = "home"
+    next_page = "discover"
 
 
 class CustomLogoutView(LogoutView):
-    next_page = "home"
+    next_page = "discover"
 
 
 class SignUpView(CreateView):

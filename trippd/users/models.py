@@ -62,6 +62,11 @@ class Profile(models.Model):
             return sum(r.rating for r in ratings) / ratings.count()
         return 0
 
+    def trips_completed(self):
+        return self.user.trip_memberships.filter(
+            status="accepted", trip__status="completed"
+        ).count()
+
     def total_ratings(self):
         return self.user.received_ratings.count()
 

@@ -231,5 +231,13 @@ document.querySelectorAll(".ai-question").forEach(btn => {
 
 
 
+document.addEventListener("click", function (e) {
+  const link = e.target.closest("a.place-link");
+  if (link) {
+    document.getElementById("loading-overlay").classList.remove("hidden");
+  }
+});
+
+
 </script>
 {% endblock %}

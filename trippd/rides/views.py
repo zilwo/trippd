@@ -51,10 +51,6 @@ from .forms import (
 from markdown import markdown
 
 
-def home(request):
-    return render(request, "rides/home.html")
-
-
 def auto_populate(request):
     query = request.GET.get("query", "")
 
@@ -349,6 +345,7 @@ class CompanionListView(ListView):
 
         if not self.request.headers.get("HX-Request"):
             companion_trips = Trip.objects.filter(status="planning")
+
             context["popular_tags"] = Trip.tag.most_common(
                 extra_filters={
                     "taggit_taggeditem_items__object_id__in": companion_trips
@@ -358,6 +355,7 @@ class CompanionListView(ListView):
             context["languages"] = Language.objects.annotate(
                 num_users=Count("profile")
             ).order_by("-num_users")[:6]
+
             context["filter_form"] = TripFilterForm(self.request.GET)
         else:
             context["search_title"] = self.search_title
@@ -929,14 +927,21 @@ class DiscoverView(TemplateView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         featured_places = Place.objects.filter(featured=True)[:4]
-        saved_place_ids = set(
-            self.request.user.saved_places.values_list("place_id", flat=True)
-        )
+
+        if self.request.user.is_authenticated:
+            saved_place_ids = set(
+                self.request.user.saved_places.values_list("place_id", flat=True)
+            )
+        else:
+            saved_place_ids = set()
 
         for place in featured_places:
             place.is_saved = place.pk in saved_place_ids
 
         context["featured_places"] = featured_places
+        context["companion_requests"] = Trip.objects.filter(status="planning").order_by(
+            "-created_at"
+        )[:5]
         return context
 
 
@@ -971,9 +976,13 @@ class PlaceDetailView(DetailView):
         ):  # if there is no description, set the place with AI info and save it
             enrich_place_with_ai_info(self.object)
         section = request.GET.get("tab", "activities")
-        is_saved = SavedPlace.objects.filter(
-            user=request.user, place=self.object
-        ).exists()
+        if request.user.is_authenticated:
+            is_saved = SavedPlace.objects.filter(
+                user=request.user, place=self.object
+            ).exists()
+        else:
+            is_saved = False
+
         if request.headers.get("HX-Request") == "true":
             print("callign it")
             return place_section(request, self.object, section)
@@ -1046,11 +1055,14 @@ def place_section(request, place, section):
     )
 
 
-@login_required
 @require_POST
 def toggle_saved_place(request, pk):
-    place = get_object_or_404(Place, pk=pk)
+    if not request.user.is_authenticated:
+        response = HttpResponse(status=401)
+        response["HX-Redirect"] = reverse("login")
+        return response
 
+    place = get_object_or_404(Place, pk=pk)
     saved, created = SavedPlace.objects.get_or_create(
         user=request.user,
         place=place,
@@ -1088,15 +1100,12 @@ class SavedPlaceListView(LoginRequiredMixin, ListView):
 @require_POST
 @login_required
 def ask_ai_about_place(request, place_id):
-    print("hiii")
     place = get_object_or_404(Place, pk=place_id)
     question_type = request.POST.get("question_type").strip().lower()
-    print(question_type)
     message = request.POST.get("message", "").strip()
     html_response = "Sorry, I couldn't find any information on that topic."
 
     if question_type == "highlights":
-        print("highlights")
         response = place.highlights
 
     elif question_type == "best_for":

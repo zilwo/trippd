@@ -49,16 +49,6 @@
 {% endblock %}
 
 {% block content %}
-  <div id="loading-overlay" class="hidden fixed inset-0 bg-base-100/80 backdrop-blur-sm z-50">
-    <div class="flex h-full items-center justify-center">
-      <div class="text-center">
-        <span class="loading loading-spinner loading-xl text-(blue)"></span>
-        <p class="mt-4 text-lg font-medium">Searching your destination...</p>
-        <p class="text-sm opacity-70">This usually takes a few seconds.</p>
-      </div>
-    </div>
-  </div>
-
   <div class="container mx-auto max-w-6xl px-4 py-8 mb-4">
     <div class="max-w-3xl mx-auto">
       <div class="text-center mb-8">
@@ -107,6 +97,15 @@
           </div>
         {% endfor %}
       </div>
+    </div>
+
+    <div class="mt-16">
+      <div class="flex justify-between items-center mb-4">
+        <h2 class="text-3xl font-bold">Join Travellers</h2>
+
+        <a href="{% url 'companion_list' %}" class="font-medium text-(--blue) hover:underline">View all →</a>
+      </div>
+      {% include 'rides/partials/companion_cards.html' with companion_requests=companion_requests %}
     </div>
   </div>
 

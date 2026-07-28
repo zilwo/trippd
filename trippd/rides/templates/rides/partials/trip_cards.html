@@ -56,11 +56,14 @@
             {% endif %}
 
             <div class="driver-meta">
-              {% if t.organizer.profile.rating %}
-                {{ t.organizer.profile.rating }}★
+              {% if t.organizer.profile.average_rating %}
+                ★ {{ t.organizer.profile.average_rating }}
               {% else %}
-                No ratings yet
-              {% endif %}·
+                ★ 0
+              {% endif %}
+
+              <span class="mx-1 text-base-content/40">•</span>
+
               {{ t.organizer.profile.trips_completed }} trips
             </div>
           </div>
