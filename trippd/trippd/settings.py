@@ -26,10 +26,12 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = os.getenv("SECRET_KEY")
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False
 
 ALLOWED_HOSTS = [
-    "727lcnlk-8000.inc1.devtunnels.ms",
+    "https://trippd.in",
+    "trippd.in",
+    "20.197.10.76",
     "localhost",
     "127.0.0.1",
     "demo-trippd.centralindia.cloudapp.azure.com",
@@ -190,6 +192,11 @@ GEOAPIFY_API_KEY = os.getenv("GEOAPIFY_API_KEY")
 
 MEDIA_URL = "/media/"
 MEDIA_ROOT = BASE_DIR / "media"
+
+
+STATIC_URL = "static/"
+STATIC_ROOT = BASE_DIR / "staticfiles"
+
 
 CSRF_TRUSTED_ORIGINS = [
     "https://727lcnlk-8000.inc1.devtunnels.ms",
