@@ -10,14 +10,13 @@ https://docs.djangoproject.com/en/6.0/howto/deployment/asgi/
 import os
 from channels.auth import AuthMiddlewareStack
 from channels.routing import ProtocolTypeRouter, URLRouter
-from django.core.asgi import get_asgi_application
 from channels.security.websocket import AllowedHostsOriginValidator
+from django.core.asgi import get_asgi_application
 from rides.routing import websocket_urlpatterns
 
-os.environ.setdefault("DJANGO_SETTINGS_MODULE", "mysite.settings")
+os.environ.setdefault("DJANGO_SETTINGS_MODULE", "trippd.settings")
 
 django_asgi_app = get_asgi_application()
-
 
 application = ProtocolTypeRouter(
     {
