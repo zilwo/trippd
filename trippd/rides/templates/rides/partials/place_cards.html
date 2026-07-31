@@ -1,24 +1,29 @@
 <div class="flex justify-between items-center mb-4">
-  <h2 class="text-3xl font-bold">{{ section|title }} here</h2>
+  <h2 class="text-xl sm:text-3xl font-bold">{{ section|title }} here</h2>
 </div>
 
 {% if places %}
-  <div class="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 mb-4">
+  <div class="grid gap-3 sm:gap-6 grid-cols-2 lg:grid-cols-4">
     {% for place in places %}
-      <div class="h-full rounded-t-2xl overflow-hidden flex flex-col">
+      <div class="group rounded-t-xl sm:rounded-t-2xl overflow-hidden">
         <div class="relative">
-          <a href="{% url 'discover_place' place.pk %}" class="place-link group h-full"><img src="{% url 'place_hero_image' place.place_id %}" class="w-full h-64 object-cover" /></a>
-          <div class="absolute top-3 right-3 z-10">
+          <a href="{% url 'discover_place' place.pk %}" class="block">
+            <div class="aspect-[4/3] overflow-hidden rounded-t-xl sm:rounded-t-2xl">
+              <img src="{% url 'place_hero_image' place.place_id %}" class="w-full h-full object-cover" loading="lazy" decoding="async" />
+            </div>
+          </a>
+
+          <div class="absolute top-1.5 right-1.5 sm:top-3 sm:right-3">
             {% include 'rides/components/save_button.html' with is_saved=place.is_saved place=place %}
           </div>
         </div>
 
-        <a href="{{ place.maps_url }}" target="_blank" class="group h-full">
-          <div class="flex flex-col flex-1 pt-3">
-            <h3 class="font-bold text-lg leading-snug group-hover:text-(--blue) line-clamp-2">{{ place.name|truncatechars:35 }}</h3>
+        <a href="{{ place.maps_url }}" target="_blank" class="block">
+          <div class="pt-2.5 sm:pt-3">
+            <h3 class="text-sm sm:text-lg font-bold leading-snug line-clamp-2 group-hover:text-(--blue)">{{ place.name|truncatechars:20 }}</h3>
 
             {% if place.rating %}
-              <div class="flex items-center gap-2 mt-2 text-sm">
+              <div class="flex items-center gap-1.5 sm:gap-2 mt-1 sm:mt-2 text-xs sm:text-sm">
                 <span class="font-semibold">★ {{ place.rating|floatformat:1 }}</span>
                 <span class="text-base-content/60">({{ place.user_rating_count|default:0 }})</span>
               </div>
@@ -30,9 +35,9 @@
   </div>
 {% else %}
   <div class="hero bg-base-200 rounded-2xl">
-    <div class="hero-content py-16">
+    <div class="hero-content py-10 sm:py-16 px-4 text-center">
       <div class="text-center">
-        <h2 class="text-2xl font-bold">No places found</h2>
+        <h2 class="text-lg sm:text-2xl font-bold">No places found</h2>
       </div>
     </div>
   </div>

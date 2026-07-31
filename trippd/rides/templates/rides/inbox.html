@@ -7,31 +7,32 @@
       <label class="tab">
         <input type="radio" name="my_tabs_4" checked="checked" />
 
-        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M12 20.25c4.97 0 9-3.694 9-8.25s-4.03-8.25-9-8.25S3 7.444 3 12c0 2.104.859 4.023 2.273 5.48.432.447.74 1.04.586 1.641a4.483 4.483 0 0 1-.923 1.785A5.969 5.969 0 0 0 6 21c1.282 0 2.47-.402 3.445-1.087.81.22 1.668.337 2.555.337Z" />
-        </svg><span class="ml-2">Chats</span>
+        <span class="ml-2">Chats</span>
       </label>
       <div class="tab-content border-base-300 p-6">
         <div class="mb-6">
-          <h1 class="text-3xl font-bold">Inbox</h1>
+          <h1 class="text-2xl font-bold">Inbox</h1>
+
+          <p class="text-sm opacity-60">Your direct conversations and trip hubs.</p>
         </div>
 
         <div class="bg-(--card) border border-(--blue-border) rounded-lg shadow-sm">
           {% for conversation in dm_conversations %}
-            <a href="{% url 'direct_chat' conversation.pk %}" class="flex items-center gap-4 p-4 hover:bg-base-200 transition border-b border-base-200 last:border-b-0">
-              <!-- Trip Info -->
-              <div class="flex-1 min-w-0 border-(--blue-border) rounded-lg p-3">
-                <div class="flex items-center gap-2 mt-1 hover:bg-(--card2)">
-                  {% include 'rides/components/avatar.html' with user=conversation.other style='w-10 rounded-full ' %}
-                  <span class="text-sm opacity-70">{{ conversation.other.username }}</span>
-                </div>
-              </div>
+            <a href="{% url 'direct_chat' conversation.pk %}" class="group card bg-(--card) border border-(--blue-border) cursor-pointer transition-all hover:-translate-y-0.5 hover:shadow-lg hover:shadow-black/5">
+              <div class="card-body py-4 px-5">
+                <div class="flex justify-between items-center">
+                  <div class="flex items-center gap-3">
+                    {% include 'rides/components/avatar.html' with user=conversation.other style='w-12 h-12 rounded-full ring-1 ring-(--blue-border)' %}
 
-              <!-- Arrow -->
-              <div class="text-base-content/40 text-lg">
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M17.25 8.25 21 12m0 0-3.75 3.75M21 12H3" />
-                </svg>
+                    <div>
+                      <div class="font-semibold">{{ conversation.other.username }}</div>
+
+                      <div class="text-xs opacity-60">Direct Messages</div>
+                    </div>
+                  </div>
+
+                  <span class="badge badge-soft bg-(--blue)/10 text-(--blue) border-0">Chat</span>
+                </div>
               </div>
             </a>
           {% empty %}
@@ -45,9 +46,6 @@
       <label class="tab">
         <input type="radio" name="my_tabs_4" />
 
-        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M18 18.72a9.094 9.094 0 0 0 3.741-.479 3 3 0 0 0-4.682-2.72m.94 3.198.001.031c0 .225-.012.447-.037.666A11.944 11.944 0 0 1 12 21c-2.17 0-4.207-.576-5.963-1.584A6.062 6.062 0 0 1 6 18.719m12 0a5.971 5.971 0 0 0-.941-3.197m0 0A5.995 5.995 0 0 0 12 12.75a5.995 5.995 0 0 0-5.058 2.772m0 0a3 3 0 0 0-4.681 2.72 8.986 8.986 0 0 0 3.74.477m.94-3.197a5.971 5.971 0 0 0-.94 3.197M15 6.75a3 3 0 1 1-6 0 3 3 0 0 1 6 0Zm6 3a2.25 2.25 0 1 1-4.5 0 2.25 2.25 0 0 1 4.5 0Zm-13.5 0a2.25 2.25 0 1 1-4.5 0 2.25 2.25 0 0 1 4.5 0Z" />
-        </svg>
         <span class="ml-2">Trip Hubs</span>
       </label>
       <div class="tab-content bg-(--card) p-6">
@@ -59,34 +57,29 @@
 
         <div class="bg-(--card) border border-(--blue-border) rounded-lg shadow-sm">
           {% for membership in joined_trips %}
-            <a href="{% url 'trip_hub' membership.trip.pk %}" class="flex items-center gap-4 p-4 hover:bg-base-200 transition border-b border-base-200 last:border-b-0">
-              <!-- Trip Info -->
-              <div class="flex-1 min-w-0 border-(--blue-border) rounded-lg p-3">
-                <div class="flex justify-between items-center gap-2">
-                  <h2 class="font-semibold">
-                    {{ membership.trip.origin }}
-                    →
-                    {{ membership.trip.destination }}
-                  </h2>
+            <a href="{% url 'trip_hub' membership.trip.pk %}" class="group card bg-(--card) border border-(--blue-border) cursor-pointer transition-all hover:-translate-y-0.5 hover:shadow-lg hover:shadow-black/5">
+              <div class="card-body py-4 px-5">
+                <div class="flex justify-between items-center gap-4">
+                  <div class="min-w-0">
+                    {% if membership.trip.origin %}
+                      <span>{{ membership.trip.origin }} → {{ membership.trip.destination }}</span>
+                    {% else %}
+                      <span>{{ membership.trip.destination }}</span>
+                    {% endif %}
 
-                  <span class="text-xs opacity-60 whitespace-nowrap">{{ membership.trip.departure_time|date:'M d' }}</span>
+                    <div class="text-xs opacity-60 mt-1">Organizer • {{ membership.trip.organizer.username }}</div>
+                  </div>
+
+                  <div class="flex items-center gap-2">
+                    <div class="badge badge-soft bg-(--blue)/10 text-(--blue) border-0">
+                      {% if membership.trip.status == 'planning' %}
+                        Companion
+                      {% else %}
+                        Trip
+                      {% endif %}
+                    </div>
+                  </div>
                 </div>
-
-                <div class="flex items-center gap-2 mt-1">
-                  <span class="text-sm opacity-70">
-                    Organizer:
-                    {{ membership.trip.organizer.username }}
-                  </span>
-
-                  <div class="badge badge-ghost badge-sm">{{ membership.trip.get_accepted_members.count }}</div>
-                </div>
-              </div>
-
-              <!-- Arrow -->
-              <div class="text-base-content/40 text-lg">
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M17.25 8.25 21 12m0 0-3.75 3.75M21 12H3" />
-                </svg>
               </div>
             </a>
           {% empty %}

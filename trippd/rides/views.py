@@ -478,14 +478,17 @@ class DashboardView(LoginRequiredMixin, TemplateView):
         ).order_by("-departure_time")
 
         context["joined_trips"] = (
-            TripMembership.objects.filter(user=self.request.user)
+            TripMembership.objects.filter(
+                user=self.request.user,
+            )
             .exclude(trip__organizer=self.request.user)
             .select_related("trip")
             .order_by("-joined_at")
         )
         context["pending_requests"] = (
             TripMembership.objects.filter(
-                trip__organizer=self.request.user, status="pending"
+                trip__organizer=self.request.user,
+                status="pending",
             )
             .select_related("user", "trip")
             .order_by("-joined_at")
@@ -990,6 +993,12 @@ class PlaceDetailView(DetailView):
         context = self.get_context_data()
         context["tab"] = section
         context["is_saved"] = is_saved
+        context["companion_posts"] = Trip.objects.filter(status="planning").order_by(
+            "-created_at"
+        )[:5]
+        context["GOOGLE_MAP_API_KEY"] = settings.GOOGLE_MAP_API_KEY
+
+        print("companion posts are ", context["companion_posts"])
         return self.render_to_response(context)
 
 
@@ -1127,3 +1136,7 @@ def ask_ai_about_place(request, place_id):
             "response": html_response,
         },
     )
+
+
+def homes(request):
+    return render(request, "rides/homes.html")

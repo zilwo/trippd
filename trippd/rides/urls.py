@@ -88,4 +88,9 @@ urlpatterns = [
         views.ask_ai_about_place,
         name="ask_ai",
     ),
+    path(
+        "homescreen/",
+        views.homes,
+        name="homes",
+    ),
 ]
