@@ -23,6 +23,7 @@ def autocomplete_places(query, session_token=None):
         "input": query,
         "sessionToken": session_token or "",
         "includedRegionCodes": ["IN"],
+        "includedPrimaryTypes": ["(regions)"],
     }
 
     response = client_session.post(
@@ -31,7 +32,8 @@ def autocomplete_places(query, session_token=None):
         json=payload,
         timeout=10,
     )
-    response.raise_for_status()
+    print(response.status_code)
+    print(response.text)
 
     data = response.json()
 
@@ -89,18 +91,27 @@ def get_place_photos(place_id, session_token=None):
     url = f"https://places.googleapis.com/v1/places/{place_id}"
     headers = {
         "X-Goog-Api-Key": settings.GOOGLE_PLACES_SECRET_KEY,
-        "X-Goog-FieldMask": "photos",
+        "X-Goog-FieldMask": "photos.name,photos.widthPx,photos.heightPx",
     }
     params = {"sessionToken": session_token} if session_token else {}
 
     response = client_session.get(url, headers=headers, params=params, timeout=10)
     response.raise_for_status()
     data = response.json()
+    photos = data.get("photos", [])
 
-    return [photo["name"] for photo in data.get("photos", [])[:5]]
+    photos.sort(
+        key=lambda p: (
+            p.get("widthPx", 0) >= p.get("heightPx", 0),  # Landscape first
+            p.get("widthPx", 0) * p.get("heightPx", 0),  # Then largest resolution
+        ),
+        reverse=True,
+    )
+
+    return [photo.get("name") for photo in photos[:5]]
 
 
-def get_place_photo_response(place_id, max_width=1200):
+def get_place_photo_response(place_id, max_width=2400):
     photos = get_place_photos(place_id)
     if not photos:
         return None

@@ -1,0 +1,318 @@
+{% extends 'rides/base.html' %}
+
+{% block style %}
+  <style>
+    :root {
+      --cr-primary: #5b4ff0;
+      --cr-primary-hover: #4c40e0;
+    }
+
+    .cr-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 50;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 1rem;
+      background: rgba(0, 0, 0, 0.4);
+    }
+    .cr-overlay.open {
+      display: flex;
+    }
+
+    .cr-modal {
+      width: 100%;
+      max-width: 48rem;
+      background: #fff;
+      border-radius: 28px;
+      box-shadow: 0 20px 60px -15px rgba(0, 0, 0, 0.25);
+      padding: 1.5rem;
+    }
+    @media (min-width: 640px) {
+      .cr-modal {
+        padding: 2rem;
+      }
+    }
+
+    .cr-title {
+      font-size: 22px;
+      font-weight: 600;
+      color: #111827;
+    }
+    .cr-subtitle {
+      font-size: 14px;
+      color: #6b7280;
+      margin-top: 4px;
+    }
+
+    .cr-progress-track {
+      width: 96px;
+      height: 6px;
+      border-radius: 999px;
+      background: #e5e7eb;
+      overflow: hidden;
+    }
+    .cr-progress-fill {
+      height: 100%;
+      border-radius: 999px;
+      background: var(--cr-primary);
+      transition: width 0.3s ease;
+    }
+    .cr-progress-label {
+      font-size: 14px;
+      color: #4b5563;
+      white-space: nowrap;
+    }
+
+    .cr-close-btn {
+      width: 32px;
+      height: 32px;
+      border-radius: 999px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #9ca3af;
+      background: transparent;
+      transition: background 0.15s ease, color 0.15s ease;
+    }
+    .cr-close-btn:hover {
+      background: #f3f4f6;
+      color: #4b5563;
+    }
+
+    .cr-field-label {
+      display: block;
+      font-size: 13px;
+      font-weight: 500;
+      color: #1f2937;
+      margin-bottom: 8px;
+    }
+    .cr-field {
+      width: 100%;
+      border: 1px solid #e5e7eb;
+      border-radius: 12px;
+      padding: 10px 14px;
+      font-size: 14px;
+      color: #374151;
+      outline: none;
+      background: #fff;
+      transition: border-color 0.15s ease;
+    }
+    .cr-field:focus {
+      border-color: #9ca3af;
+    }
+    .cr-field::placeholder {
+      color: #9ca3af;
+    }
+
+    .cr-card {
+      margin-top: 1.5rem;
+      border: 1px solid #e5e7eb;
+      border-radius: 16px;
+    }
+    .cr-dashed-row {
+      border-bottom: 1px dashed #e5e7eb;
+    }
+    .cr-cell {
+      padding: 20px;
+    }
+    @media (min-width: 640px) {
+      .cr-cell-border {
+        border-right: 1px solid #f3f4f6;
+      }
+    }
+
+    .cr-btn {
+      padding: 10px 24px;
+      border-radius: 12px;
+      font-size: 14px;
+      font-weight: 500;
+      transition: background 0.15s ease;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .cr-btn-primary {
+      background: var(--cr-primary);
+      color: #fff;
+      border: none;
+    }
+    .cr-btn-primary:hover {
+      background: var(--cr-primary-hover);
+    }
+    .cr-btn-secondary {
+      background: #fff;
+      color: #374151;
+      border: 1px solid #e5e7eb;
+    }
+    .cr-btn-secondary:hover {
+      background: #f9fafb;
+    }
+
+    .cr-panel {
+      animation: cr-fade 0.2s ease;
+    }
+    @keyframes cr-fade {
+      from {
+        opacity: 0;
+        transform: translateY(6px);
+      }
+      to {
+        opacity: 1;
+        transform: none;
+      }
+    }
+
+    .cr-summary-box {
+      border-radius: 12px;
+      border: 1px solid #f3f4f6;
+      background: #f9fafb;
+      padding: 16px;
+    }
+  </style>
+{% endblock %}
+
+{% block content %}
+  <button type="button" onclick="document.getElementById('companion_modal').classList.add('open')" class="cr-btn cr-btn-primary">Create Companion Request</button>
+
+  <div id="companion_modal" class="cr-overlay">
+    <div class="cr-modal">
+      <!-- Header -->
+      <div class="flex items-start justify-between">
+        <div>
+          <h1 class="cr-title">Create Companion Request</h1>
+          <p class="cr-subtitle">Find the perfect travel companion in three steps.</p>
+        </div>
+
+        <div class="flex items-center gap-4 shrink-0 pl-4">
+          <div class="flex items-center gap-2">
+            <div class="cr-progress-track">
+              <div id="progressFill" class="cr-progress-fill" style="width:33%"></div>
+            </div>
+            <span id="progressLabel" class="cr-progress-label">1/3 completed</span>
+          </div>
+          <button type="button" onclick="document.getElementById('companion_modal').classList.remove('open')" class="cr-close-btn" aria-label="Close">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+              <line x1="18" y1="6" x2="6" y2="18" />
+              <line x1="6" y1="6" x2="18" y2="18" />
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      <form method="POST" enctype="multipart/form-data">
+        {% csrf_token %}
+
+        <!-- Step 1: Trip details -->
+        <section id="step1" class="cr-panel">
+          <div class="cr-card">
+            <div class="grid sm:grid-cols-2 cr-dashed-row">
+              <div class="cr-cell cr-cell-border">
+                <label class="cr-field-label">Destination address</label>
+                <input name="destination_address" type="text" placeholder="e.g. 221B Baker Street" class="cr-field" />
+              </div>
+              <div class="cr-cell">
+                <label class="cr-field-label">Destination city</label>
+                <input name="destination_city" type="text" placeholder="e.g. Kochi" class="cr-field" />
+              </div>
+            </div>
+            <div class="grid sm:grid-cols-2">
+              <div class="cr-cell cr-cell-border">
+                <label class="cr-field-label">Budget</label>
+                <input name="budget" type="number" min="0" placeholder="₹ per person" class="cr-field" />
+              </div>
+              <div class="cr-cell">
+                <label class="cr-field-label">Slots</label>
+                <input name="slots" type="number" min="1" placeholder="Number of companions" class="cr-field" />
+              </div>
+            </div>
+          </div>
+
+          <div class="mt-6 flex items-center justify-between">
+            <a href="#" class="text-sm text-gray-700 underline">Need Help?</a>
+            <button type="button" onclick="gotoStep(2)" class="cr-btn cr-btn-primary">Next Step</button>
+          </div>
+        </section>
+
+        <!-- Step 2: Companion preferences -->
+        <section id="step2" class="cr-panel hidden">
+          <div class="cr-card">
+            <div class="cr-cell cr-dashed-row">
+              <label class="cr-field-label">Looking for</label>
+              <textarea name="looking_for" rows="3" placeholder="Who would make a great companion for this trip?" class="cr-field"></textarea>
+            </div>
+            <div class="cr-cell cr-dashed-row">
+              <label class="cr-field-label">Trip description</label>
+              <textarea name="trip_description" rows="3" placeholder="Share the plan, dates, and anything companions should know" class="cr-field"></textarea>
+            </div>
+            <div class="cr-cell">
+              <label class="cr-field-label">Tags</label>
+              <input name="tags" type="text" placeholder="e.g. trekking, budget, weekend" class="cr-field" />
+            </div>
+          </div>
+
+          <div class="mt-6 flex items-center justify-between">
+            <button type="button" onclick="gotoStep(1)" class="cr-btn cr-btn-secondary">Back</button>
+            <button type="button" onclick="gotoStep(3)" class="cr-btn cr-btn-primary">Next Step</button>
+          </div>
+        </section>
+
+        <!-- Step 3: Review & publish -->
+        <section id="step3" class="cr-panel hidden">
+          <div class="cr-card" style="padding:20px;">
+            <div class="grid sm:grid-cols-2 gap-5">
+              <div>
+                <img id="preview" src="/media/trip_images/default.jpg" style="border-radius:12px;height:11rem;width:100%;object-fit:cover;border:1px solid #e5e7eb;" alt="Trip cover preview" />
+                <label class="cr-field-label" style="margin-top:16px;">Cover image</label>
+                <input id="upload" name="cover_image" type="file" accept="image/*" class="cr-field" />
+              </div>
+              <div class="cr-summary-box">
+                <h4 style="font-size:14px;font-weight:600;color:#111827;">Ready to publish</h4>
+                <p style="font-size:14px;color:#6b7280;margin-top:8px;">Double-check everything before your request goes live.</p>
+                <ul style="margin-top:16px;font-size:14px;color:#374151;display:flex;flex-direction:column;gap:8px;">
+                  <li class="flex items-center gap-2">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--cr-primary)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                      <polyline points="20 6 9 17 4 12" />
+                    </svg>Trip details
+                  </li>
+                  <li class="flex items-center gap-2">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--cr-primary)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                      <polyline points="20 6 9 17 4 12" />
+                    </svg>Companion preferences
+                  </li>
+                  <li class="flex items-center gap-2">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--cr-primary)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                      <polyline points="20 6 9 17 4 12" />
+                    </svg>Cover image
+                  </li>
+                </ul>
+              </div>
+            </div>
+          </div>
+
+          <div class="mt-6 flex items-center justify-between">
+            <button type="button" onclick="gotoStep(2)" class="cr-btn cr-btn-secondary">Back</button>
+            <button type="submit" class="cr-btn cr-btn-primary">Publish Request</button>
+          </div>
+        </section>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    function gotoStep(step) {
+      ;['step1', 'step2', 'step3'].forEach((id, i) => {
+        document.getElementById(id).classList.toggle('hidden', i !== step - 1)
+      })
+      document.getElementById('progressFill').style.width = [33, 66, 100][step - 1] + '%'
+      document.getElementById('progressLabel').textContent = step + '/3 completed'
+    }
+
+    document.getElementById('upload').addEventListener('change', (e) => {
+      if (e.target.files.length) {
+        document.getElementById('preview').src = URL.createObjectURL(e.target.files[0])
+      }
+    })
+  </script>
+{% endblock %}

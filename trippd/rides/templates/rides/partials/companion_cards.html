@@ -1,30 +1,32 @@
-<div class="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 mb-4">
+<div class="grid gap-3 sm:gap-6 grid-cols-2 lg:grid-cols-4 mb-4">
   {% for companion_trip in companion_requests %}
     <a href="{% url 'trip_detail' companion_trip.id %}" class="group flex flex-col h-full">
       <!-- Hero -->
-      <div class="relative overflow-hidden rounded-2xl">
+      <div class="relative overflow-hidden rounded-t-xl sm:rounded-t-2xl">
         {% if companion_trip.trip_image %}
-          <img src="{{ companion_trip.trip_image.url }}" alt="{{ companion_trip.destination }}" class="w-full h-60 object-cover transition-transform duration-300 group-hover:scale-105" />
+          <div class="aspect-[4/3] overflow-hidden">
+            <img src="{{ companion_trip.trip_image.url }}" alt="{{ companion_trip.destination }}" class="w-full h-full object-cover transition-transform duration-300 sm:group-hover:scale-105" />
+          </div>
         {% else %}
-          <div class="w-full h-60 bg-base-200 flex items-center justify-center">
-            <span class="text-base-content/60">No image available</span>
+          <div class="aspect-[4/3] bg-base-200 flex items-center justify-center">
+            <span class="text-base-content/60 text-xs sm:text-base">No image available</span>
           </div>
         {% endif %}
 
-        <div class="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 to-transparent p-4 text-white">
-          <h3 class="text-xl font-bold group-hover:text-(--blue)">{{ companion_trip.destination }}</h3>
+        <div class="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 to-transparent p-2.5 sm:p-4 text-white">
+          <h3 class="text-sm sm:text-lg font-bold leading-tight line-clamp-1 group-hover:text-(--blue)">{{ companion_trip.destination }}</h3>
 
-          <p class="text-sm opacity-90">Posted {{ companion_trip.created_at|timesince }} ago</p>
+          <p class="text-[11px] sm:text-sm opacity-90">Posted {{ companion_trip.created_at|timesince }} ago</p>
         </div>
       </div>
 
       <!-- Content -->
-      <div class="pt-4 flex flex-col flex-1">
-        <div class="flex items-center gap-3">
-          {% include 'rides/components/avatar.html' with user=companion_trip.organizer style='w-10 rounded-full' %}
+      <div class="pt-2.5 sm:pt-4 flex flex-col flex-1">
+        <div class="flex items-center gap-2 sm:gap-3">
+          {% include 'rides/components/avatar.html' with user=companion_trip.organizer style='w-7 sm:w-10 rounded-full' %}
 
-          <div>
-            <p class="font-semibold">
+          <div class="min-w-0">
+            <p class="text-xs sm:text-base font-semibold truncate">
               {% if companion_trip.organizer.first_name and companion_trip.organizer.last_name %}
                 {{ companion_trip.organizer.first_name }} {{ companion_trip.organizer.last_name }}
               {% else %}
@@ -32,7 +34,7 @@
               {% endif %}
             </p>
 
-            <p class="text-sm text-base-content/60">
+            <p class="text-[11px] sm:text-sm text-base-content/60 truncate">
               {% if companion_trip.organizer.profile.average_rating %}
                 ★ {{ companion_trip.organizer.profile.average_rating }}
               {% else %}
@@ -45,12 +47,12 @@
           </div>
         </div>
 
-        <p class="mt-4 text-base-content/70 line-clamp-3">{{ companion_trip.looking_for|truncatechars:50 }}</p>
+        <p class="mt-2 sm:mt-4 text-xs sm:text-base text-base-content/70 line-clamp-2 sm:line-clamp-3">{{ companion_trip.looking_for|truncatechars:50 }}</p>
 
         {% if companion_trip.tag.all %}
-          <div class="flex flex-wrap gap-2 mt-4">
+          <div class="flex flex-wrap gap-1 sm:gap-2 mt-2 sm:mt-4">
             {% for tag in companion_trip.tag.all %}
-              <span class="badge badge-outline badge-sm">{{ tag.name }}</span>
+              <span class="badge badge-outline badge-xs sm:badge-sm">{{ tag.name }}</span>
             {% endfor %}
           </div>
         {% endif %}
@@ -58,8 +60,8 @@
     </a>
   {% empty %}
     <div class="hero bg-base-200 rounded-2xl col-span-full">
-      <div class="hero-content py-16">
-        <h2 class="text-2xl font-bold">No companion requests found</h2>
+      <div class="hero-content py-10 sm:py-16 px-4 text-center">
+        <h2 class="text-lg sm:text-2xl font-bold">No companion requests found</h2>
       </div>
     </div>
   {% endfor %}

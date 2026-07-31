@@ -24,7 +24,7 @@
                 {% if profile_user.first_name or profile_user.last_name %}
                   {{ profile_user.first_name }} {{ profile_user.last_name }}
                 {% else %}
-                  Anonymous User
+                  {{ profile_user.email }}
                 {% endif %}
               </h1>
 

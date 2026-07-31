@@ -3,116 +3,166 @@
 
 {% block content %}
   <div class="max-w-5xl mx-auto px-4 py-8">
-    <div role="tablist" class="tabs tabs-box bg-(--bg)">
+
+    <div class="mb-6">
+      <h1 class="text-2xl font-bold">Your Dashboard</h1>
+      <p class="text-sm opacity-60">Trips you're part of, trips you run, and people waiting on you.</p>
+    </div>
+
+    <div role="tablist" class="tabs tabs-lift">
       <input type="radio" name="dashboard_tabs" role="tab" class="tab" aria-label="Trips Joined" checked />
+      <div role="tabpanel" class="tab-content bg-(--bg) border-base-300 rounded-box p-6">
 
-      <div role="tabpanel" class="tab-content bg-b border-(--blue-border) rounded-box p-6">
-        <h2 class="text-xl font-bold mb-4">Trips Joined</h2>
+        <div class="grid gap-3">
+          {% for membership in joined_trips %}
+            <div onclick="window.location.href='{% url 'trip_detail' membership.trip.pk %}'"
+                 class="group card bg-(--card) border border-(--blue-border) cursor-pointer transition-all hover:-translate-y-0.5 hover:shadow-lg hover:shadow-black/5">
+              <div class="card-body py-4 px-5">
+                <div class="flex justify-between items-center gap-4">
+                  <div class="min-w-0">
+                    <div class="flex items-center gap-2 text-sm font-semibold">
+                      {% if membership.trip.origin %}
+                      <span>    {{ membership.trip.origin }} → {{ membership.trip.destination }}
+</span>
 
-        {% for membership in joined_trips %}
-          <div class="card bg-(--card) mb-3 hover:bg-(--card2)" onclick="window.location.href='{% url 'trip_detail' membership.trip.pk %}'" style="cursor: pointer;">
-            <div class="card-body py-4">
-              <div class="flex justify-between items-center">
-                <div>
-                  <h3 class="font-semibold">
-                    {{ membership.trip.origin }}
-                    →
-                    {{ membership.trip.destination }}
-                  </h3>
+                      {% else %}
+                      <span>{{ membership.trip.destination }}</span>
+                      {% endif %}
 
-                  <p class="text-sm opacity-70">{{ membership.trip.departure_time }}</p>
+                    </div>
+                    {% if membership.trip.departure_time %}
+                      <p class="text-xs opacity-60 mt-1">{{ membership.trip.departure_time }}</p>
+                    {% else %}
+                      <p class="text-xs opacity-60 mt-1">No departure time set</p>
+                    {% endif %}
+                  </div>
+
+                  <span class="badge badge-soft bg-(--blue)/10 text-(--blue) border-0 font-medium whitespace-nowrap">
+                    {% if membership.trip.status == "planning" %}
+                    Companion
+
+                    {% else %}
+                    Trip
+
+                    {% endif %}
+
+
+                  </span>
                 </div>
-
-                <span class="badge btn bg-(--blue)">{{ membership.get_status_display }}</span>
               </div>
             </div>
-          </div>
-        {% empty %}
-          <p>No trips joined yet.</p>
-        {% endfor %}
+          {% empty %}
+            <div class="text-center py-10 opacity-60">
+              <p class="text-sm">You haven't joined any trips yet.</p>
+            </div>
+          {% endfor %}
+        </div>
+
       </div>
 
       <input type="radio" name="dashboard_tabs" role="tab" class="tab" aria-label="Trips Organized" />
+      <div role="tabpanel" class="tab-content bg-(--bg) border-base-300 rounded-box p-6">
 
-      <div role="tabpanel" class="tab-content bg-(--card) border-(--blue-border) rounded-box p-6">
-        <h2 class="text-xl font-bold mb-4">Trips Organized</h2>
+        <div class="grid gap-3">
+          {% for trip in organized_trips %}
+            <div onclick="window.location.href='{% url 'trip_detail' trip.pk %}'"
+                 class="group card bg-(--card) border border-(--blue-border) cursor-pointer transition-all hover:-translate-y-0.5 hover:shadow-lg hover:shadow-black/5">
+              <div class="card-body py-4 px-5">
+                <div class="flex justify-between items-center gap-4">
+                  <div class="min-w-0">
+                    <div class="flex items-center gap-2 text-sm font-semibold">
+                       {% if trip.origin %}
+                      <span>    {{ trip.origin }} → {{ trip.destination }}
+</span>
 
-        {% for trip in organized_trips %}
-          <div class="card mb-3 hover:bg-(--card2)" onclick="window.location.href='{% url 'trip_detail' trip.pk %}'" style="cursor: pointer;">
-            <div class="card-body py-4">
-              <div class="flex justify-between items-center">
-                <div>
-                  <h3 class="font-semibold">
-                    {{ trip.origin }}
-                    →
-                    {{ trip.destination }}
-                  </h3>
+                      {% else %}
+                      <span>{{ trip.destination }}</span>
+                      {% endif %}
+                    </div>
+  {% if trip.departure_time %}
+                      <p class="text-xs opacity-60 mt-1">{{ trip.departure_time }}</p>
+                    {% else %}
+                      <p class="text-xs opacity-60 mt-1">No departure time set</p>
+                    {% endif %}                  </div>
 
-                  <p class="text-sm opacity-70">{{ trip.departure_time }}</p>
-                </div>
+     <span class="badge badge-soft bg-(--blue)/10 text-(--blue) border-0 font-medium whitespace-nowrap">
+                    {% if trip.status == "planning" %}
+                    Companion
 
-                <a href="#" class="btn bg-(--blue) text-(--white) btn-sm">Manage</a>
+                    {% else %}
+
+                    Trip
+                    {% endif %}
+
+
+                  </span>                </div>
               </div>
             </div>
-          </div>
-        {% empty %}
-          <p>You haven't organized any trips yet.</p>
-        {% endfor %}
+          {% empty %}
+            <div class="text-center py-10 opacity-60">
+              <p class="text-sm">You haven't organized any trips yet.</p>
+            </div>
+          {% endfor %}
+        </div>
+
       </div>
 
-      <input type="radio" name="dashboard_tabs" role="tab" class="tab" aria-label="Join Requests" {% if request.GET.tab == "joinrequests" %}checked{% endif %} />
+      <input type="radio" name="dashboard_tabs" role="tab" class="tab" aria-label="Join Requests"
+             {% if request.GET.tab == "joinrequests" %}checked{% endif %} />
+      <div role="tabpanel" class="tab-content bg-(--bg) border-base-300 rounded-box p-6">
 
-      <div role="tabpanel" class="tab-content bg-(--card) border-(--blue-border) rounded-box p-6">
-        <h2 class="text-xl font-bold mb-4" id="pending-join-requests">Pending Join Requests</h2>
+        <h2 class="text-sm font-semibold opacity-70 mb-4 uppercase tracking-wide" id="pending-join-requests">
+          Pending Requests
+        </h2>
 
-{% for membership in pending_requests %}
-<div id="request-card-{{ membership.id }}" class="card bg-(--card) mb-3">
-  <div class="card-body">
+        <div class="grid gap-3">
+          {% for membership in pending_requests %}
+            <div id="request-card-{{ membership.id }}"
+                 class="card bg-(--card) border border-(--blue-border)">
+              <div class="card-body py-4 px-5 gap-3">
 
-    <div class="flex justify-between items-center">
+                <div class="flex justify-between items-start gap-4">
+                  <a href="{% url 'profile' membership.user.username %}" class="flex items-center gap-3 min-w-0">
+                    {% include 'rides/components/avatar.html' with user=membership.user style='w-10 h-10 rounded-full ring-1 ring-(--blue-border)' %}
+                    <div class="min-w-0">
+                      <span class="font-medium truncate block">{{ membership.user.username }}</span>
+                      <span class="text-xs opacity-60 truncate block">
+                        {{ membership.trip.origin }} → {{ membership.trip.destination }}
+                      </span>
+                    </div>
+                  </a>
 
-      <a href="{% url 'profile' membership.user.username %}" class="flex items-center gap-3">
-        {% include 'rides/components/avatar.html' with user=membership.user style='w-10 rounded-full' %}
-        <span>{{ membership.user.username }}</span>
-      </a>
+                  <div class="flex gap-2 shrink-0">
+                    <form hx-post="{% url 'accept_request' membership.id %}"
+                          hx-target="#request-card-{{ membership.id }}"
+                          hx-swap="delete">
+                      {% csrf_token %}
+                      <button class="btn btn-success btn-sm btn-soft">Accept</button>
+                    </form>
 
-      <div class="flex gap-2">
-        <form hx-post="{% url 'accept_request' membership.id %}"
-              hx-target="#request-card-{{ membership.id }}"
-              hx-swap="delete">
-          {% csrf_token %}
-          <button class="btn btn-success btn-sm">Accept</button>
-        </form>
+                    <form hx-post="{% url 'reject_request' membership.id %}"
+                          hx-target="#request-card-{{ membership.id }}"
+                          hx-swap="delete">
+                      {% csrf_token %}
+                      <button class="btn btn-error btn-sm btn-soft">Reject</button>
+                    </form>
+                  </div>
+                </div>
 
-        <form hx-post="{% url 'reject_request' membership.id %}"
-              hx-target="#request-card-{{ membership.id }}"
-              hx-swap="delete">
-          {% csrf_token %}
-          <button class="btn btn-error btn-sm">Reject</button>
-        </form>
-      </div>
+                {% if membership.message %}
+                  <p class="text-sm opacity-70 bg-base-200/50 rounded-lg px-3 py-2">
+                    "{{ membership.message }}"
+                  </p>
+                {% endif %}
 
-    </div>
-
-    <p class="text-sm opacity-70 min-w-0">
-      {{ membership.trip.origin }} → {{ membership.trip.destination }}
-    </p>
-
-    <p class="text-sm opacity-70">
-      {{ membership.message }}
-    </p>
-
-  </div>
-</div>
-{% empty %}
-<p>No pending requests.</p>
-{% endfor %}
-
-
-
-
-
-
+              </div>
+            </div>
+          {% empty %}
+            <div class="text-center py-10 opacity-60">
+              <p class="text-sm">No pending requests right now.</p>
+            </div>
+          {% endfor %}
+        </div>
 
       </div>
     </div>
