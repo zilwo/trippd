@@ -18,13 +18,12 @@
 }
 
 body {
-
   background-color: var(--bg);
 
   background-image:
-    radial-gradient(circle at 1px 1px, rgba(79, 142, 255, 0.08) 1px, transparent 0),
-    linear-gradient(rgba(79, 142, 255, 0.03) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(79, 142, 255, 0.03) 1px, transparent 1px);
+    radial-gradient(circle at 1px 1px, rgba(6, 58, 25, 0.1) 1px, transparent 0),
+    linear-gradient(rgba(4, 59, 24, 0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(68, 223, 125, 0.04) 1px, transparent 1px);
 
   background-size:
     32px 32px,
@@ -35,7 +34,6 @@ body {
   font-family: "Plus Jakarta Sans", sans-serif;
   min-height: 100vh;
 }
-
 
 
 

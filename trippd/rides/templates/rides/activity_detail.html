@@ -4,138 +4,136 @@
   <div class="max-w-7xl mx-auto px-4 py-8">
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
       <!-- Left -->
-
       <div class="lg:col-span-2 space-y-6">
-        <!-- Hero image with map overlay button -->
 
         <!-- Hero Card -->
-        <div class="card bg-base-100 border border-base-300 shadow-sm">
-          <div class="card-body">
-            <div class="flex justify-between items-start gap-6">
-              <div class="flex-1">
-                <div class="flex items-center gap-3 mb-3"></div>
+        <div class="bg-(--card) rounded-2xl border border-(--blue-border) shadow-sm p-5 md:p-6">
+          <div class="flex-1">
+            <h1 class="text-2xl md:text-3xl font-bold">{{ activity.title }}</h1>
+            <p class="text-base-content/70 mt-2">
+              Hosted by
+              <span class="font-medium">{{ activity.organizer.get_full_name|default:activity.organizer.username }}</span>
+            </p>
+          </div>
 
-                <h1 class="text-3xl font-bold">{{ activity.title }}</h1>
+          <div class="divider"></div>
 
-                <p class="text-base-content/70 mt-2">
-                  Hosted by
-                  <span class="font-medium">{{ activity.organizer.get_full_name|default:activity.organizer.username }}</span>
-                </p>
+          <div class="space-y-5">
+            <div class="flex gap-4">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6 text-primary shrink-0">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 11.25v7.5m-9-6h.008v.008H12v-.008ZM12 15h.008v.008H12V15Zm0 2.25h.008v.008H12v-.008ZM9.75 15h.008v.008H9.75V15Zm0 2.25h.008v.008H9.75v-.008ZM7.5 15h.008v.008H7.5V15Zm0 2.25h.008v.008H7.5v-.008Zm6.75-4.5h.008v.008h-.008v-.008Zm0 2.25h.008v.008h-.008V15Zm0 2.25h.008v.008h-.008v-.008Zm2.25-4.5h.008v.008H16.5v-.008Zm0 2.25h.008v.008H16.5V15Z" />
+              </svg>
+              <div>
+                <p class="font-semibold">{{ activity.start_time|date:'l, d M Y' }}</p>
+                <p class="text-sm text-base-content/60">{{ activity.start_time|time:'g:i A' }}</p>
               </div>
             </div>
 
-            <div class="divider"></div>
-
-            <div class="space-y-5">
-              <div class="flex gap-4">
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 11.25v7.5m-9-6h.008v.008H12v-.008ZM12 15h.008v.008H12V15Zm0 2.25h.008v.008H12v-.008ZM9.75 15h.008v.008H9.75V15Zm0 2.25h.008v.008H9.75v-.008ZM7.5 15h.008v.008H7.5V15Zm0 2.25h.008v.008H7.5v-.008Zm6.75-4.5h.008v.008h-.008v-.008Zm0 2.25h.008v.008h-.008V15Zm0 2.25h.008v.008h-.008v-.008Zm2.25-4.5h.008v.008H16.5v-.008Zm0 2.25h.008v.008H16.5V15Z" />
-                </svg>
-
-                <div>
-                  <p class="font-semibold">{{ activity.start_time|date:'l, d M Y' }}</p>
-                  <p class="text-sm opacity-70">{{ activity.start_time|time:'g:i A' }}</p>
-                </div>
-              </div>
-
-              <div class="flex gap-4">
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M15 10.5a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1 1 15 0Z" />
-                </svg>
-
-                <div>
-                  <p class="font-medium">{{ activity.place.address }}</p>
-                </div>
-              </div>
-
-              <div class="flex gap-4">
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M15 19.128a9.38 9.38 0 0 0 2.625.372 9.337 9.337 0 0 0 4.121-.952 4.125 4.125 0 0 0-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 0 1 8.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0 1 11.964-3.07M12 6.375a3.375 3.375 0 1 1-6.75 0 3.375 3.375 0 0 1 6.75 0Zm8.25 2.25a2.625 2.625 0 1 1-5.25 0 2.625 2.625 0 0 1 5.25 0Z" />
-                </svg>
-
-                <div>
-                  <p class="font-medium">Max Participants</p>
-
-                  <p class="text-sm opacity-70">{{ activity.max_participants }}</p>
-                </div>
+            <div class="flex gap-4">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6 text-primary shrink-0">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M15 10.5a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
+                <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1 1 15 0Z" />
+              </svg>
+              <div>
+                <p class="font-medium">{{ activity.place.address }}</p>
               </div>
             </div>
 
-            <div class="mt-6">
-              <a href="https://www.google.com/maps?q={{ activity.place.latitude }},{{ activity.place.longitude }}" target="_blank" class="btn btn-outline">
-                Show on Map<svg xmlns="http://www.w3.org/2000/svg" class="size-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 3h7m0 0v7m0-7L10 14" />
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 5v14h14" />
-                </svg>
-              </a>
+            <div class="flex gap-4">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6 text-primary shrink-0">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M15 19.128a9.38 9.38 0 0 0 2.625.372 9.337 9.337 0 0 0 4.121-.952 4.125 4.125 0 0 0-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 0 1 8.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0 1 11.964-3.07M12 6.375a3.375 3.375 0 1 1-6.75 0 3.375 3.375 0 0 1 6.75 0Zm8.25 2.25a2.625 2.625 0 1 1-5.25 0 2.625 2.625 0 0 1 5.25 0Z" />
+              </svg>
+              <div>
+                <p class="font-medium">Max Participants</p>
+                <p class="text-sm text-base-content/60">{{ activity.max_participants }}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Venue -->
+        <div class="bg-(--card) rounded-2xl border border-(--blue-border) shadow-sm overflow-hidden" x-data="{ mapOpen: false }">
+          <div class="relative aspect-[16/9] bg-base-200">
+            {% if activity.place.place_id %}
+              <img src="{% url 'place_hero_image' activity.place.place_id %}" alt="{{ activity.place.name }}" class="w-full h-full object-cover" loading="lazy" decoding="async" />
+            {% endif %}
+          </div>
+
+          <div class="p-5 flex items-center justify-between gap-4">
+            <div class="min-w-0">
+              <h2 class="font-bold text-lg truncate">{{ activity.place.name }}</h2>
+              <p class="text-sm text-base-content/60 truncate">{{ activity.place.address }}</p>
+            </div>
+            <button type="button" @click="mapOpen = true" class="btn btn-sm rounded-full bg-(--blue) text-white border-0 shrink-0">
+              View map
+            </button>
+          </div>
+
+          <div x-show="mapOpen" x-cloak @keydown.escape.window="mapOpen = false"
+            class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" @click.self="mapOpen = false">
+            <div class="bg-(--card) rounded-2xl shadow-2xl border border-(--blue-border) w-full max-w-2xl overflow-hidden">
+              <div class="flex items-center justify-between p-4 border-b border-(--blue-border)">
+                <span class="font-bold truncate">{{ activity.place.name }}</span>
+                <div class="flex items-center gap-2 shrink-0">
+                  <a href="https://www.google.com/maps/place/?q=place_id:{{ activity.place.place_id }}" target="_blank" rel="noopener noreferrer"
+                    class="btn btn-sm rounded-full bg-(--blue) text-white border-0">Open in Maps</a>
+                  <button class="btn btn-sm btn-circle" @click="mapOpen = false">✕</button>
+                </div>
+              </div>
+              <template x-if="mapOpen">
+                <iframe src="https://www.google.com/maps/embed/v1/place?key={{ GOOGLE_MAP_API_KEY }}&q=place_id:{{ activity.place.place_id }}"
+                  class="w-full h-[400px]" style="border:0" loading="lazy" referrerpolicy="no-referrer-when-downgrade" allowfullscreen></iframe>
+              </template>
             </div>
           </div>
         </div>
 
         <!-- Description -->
-        <div class="card bg-base-100 border border-base-300 shadow-sm">
-          <div class="card-body">
-            <h2 class="card-title">About this Activity</h2>
-
-            {% if activity.description %}
-              <p class="leading-8 whitespace-pre-line">{{ activity.description }}</p>
-            {% else %}
-              <p class="opacity-60">No description provided.</p>
-            {% endif %}
-          </div>
+        <div class="bg-(--card) rounded-2xl border border-(--blue-border) shadow-sm p-5 md:p-6">
+          <h2 class="font-bold text-lg mb-3">About this Activity</h2>
+          {% if activity.description %}
+            <p class="leading-8 whitespace-pre-line text-base-content/80">{{ activity.description }}</p>
+          {% else %}
+            <p class="text-base-content/50">No description provided.</p>
+          {% endif %}
         </div>
       </div>
 
       <!-- Sidebar -->
       <div class="space-y-6">
         <!-- Organizer -->
-        <div class="card bg-base-100 border border-base-300 shadow-sm">
-          <div class="card-body">
-            <h2 class="card-title mb-3">Members</h2>
-
-            <div class="flex items-center gap-4">
-              <div class="avatar">
-                <div class="w-14 rounded-full">
-                  <img src="{{ activity.organizer.profile.profile_picture.url }}" />
-                </div>
+        <div class="bg-(--card) rounded-2xl border border-(--blue-border) shadow-sm p-5 md:p-6">
+          <h2 class="font-bold text-lg mb-3">Members</h2>
+          <div class="flex items-center gap-4">
+            <div class="avatar">
+              <div class="w-14 rounded-full">
+                <img src="{{ activity.organizer.profile.profile_picture.url }}" />
               </div>
-
-              <div>
-                <p class="font-semibold">{{ activity.organizer.get_full_name|default:activity.organizer.username }}</p>
-
-                <p class="text-sm opacity-60">Activity Host</p>
-              </div>
+            </div>
+            <div>
+              <p class="font-semibold">{{ activity.organizer.get_full_name|default:activity.organizer.username }}</p>
+              <p class="text-sm text-base-content/60">Activity Host</p>
             </div>
           </div>
         </div>
 
         <!-- Trip -->
         {% if activity.trip %}
-          <div class="card bg-base-100 border border-base-300 shadow-sm">
-            <div class="card-body">
-              <h2 class="card-title">Trip</h2>
-
-              <p>{{ activity.trip.title }}</p>
-
-              <a href="{% url 'trip_hub' trip.pk %}" class="btn btn-outline btn-sm mt-3">View Trip</a>
-            </div>
+          <div class="bg-(--card) rounded-2xl border border-(--blue-border) shadow-sm p-5 md:p-6">
+            <h2 class="font-bold text-lg mb-2">Trip</h2>
+            <p class="text-base-content/80">{{ activity.trip.title }}</p>
+            <a href="{% url 'trip_hub' activity.trip.pk %}" class="btn btn-outline btn-sm mt-3 rounded-full">View Trip</a>
           </div>
         {% endif %}
 
         <!-- Participants -->
-        <div class="card bg-base-100 border border-base-300 shadow-sm">
-          <div class="card-body">
-            <h2 class="card-title">Participants</h2>
-
-            <div class="text-center py-6">
-              <div class="text-4xl font-bold">{{ participant_count }} / {{ activity.max_participants }}</div>
-
-              <p class="opacity-60 mt-2">Participants joined</p>
-            </div>
-
-            <button class="btn bg-(--blue) w-full text-white">Join Activity</button>
+        <div class="bg-(--card) rounded-2xl border border-(--blue-border) shadow-sm p-5 md:p-6">
+          <h2 class="font-bold text-lg">Participants</h2>
+          <div class="text-center py-6">
+            <div class="text-4xl font-bold">{{ participant_count }} / {{ activity.max_participants }}</div>
+            <p class="text-base-content/60 mt-2">Participants joined</p>
           </div>
+          <button class="btn bg-(--blue) w-full text-white rounded-full">Join Activity</button>
         </div>
       </div>
     </div>

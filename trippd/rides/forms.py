@@ -191,12 +191,17 @@ class ActivityForm(forms.ModelForm):
         widget=forms.TextInput(attrs={"placeholder": "Search for a place..."}),
     )
     place_id = forms.CharField(widget=forms.HiddenInput())
+    duration_hours = forms.IntegerField(required=False, min_value=0)
+    duration_minutes = forms.IntegerField(required=False, min_value=0, max_value=59)
 
     class Meta:
         model = Activity
         fields = [
-            "title",
+            "name",
+            "search_query",
             "description",
             "start_time",
             "max_participants",
+            "activity_image",
+            "category",
         ]

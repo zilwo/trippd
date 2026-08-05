@@ -1,3 +1,5 @@
+from datetime import timedelta
+
 from django.utils import timezone
 from django.http import Http404, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
@@ -27,6 +29,7 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.http import require_POST
 from django.contrib.auth.mixins import LoginRequiredMixin
+from .utils.distance import distance_km
 from .services.autocomplete_location import autocomplete_location
 from .services.place import (
     autocomplete_places,
@@ -34,6 +37,7 @@ from .services.place import (
     get_or_create_place,
     get_nearby_places,
     enrich_place_with_ai_info,
+    text_search,
 )
 from django.http import HttpResponse
 from channels.layers import get_channel_layer
@@ -49,6 +53,9 @@ from .forms import (
     FinalizeTripForm,
 )
 from markdown import markdown
+from ai.weather import get_current_weather
+from django.core.paginator import Paginator
+from django.utils.http import urlencode
 
 
 def auto_populate(request):
@@ -856,10 +863,16 @@ class AcitvityCreateView(LoginRequiredMixin, CreateView):
 
     def form_valid(self, form):
         form.instance.organizer = self.request.user
+
         trip_id = self.request.GET.get("trip_id")
+
+        hours = form.cleaned_data.get("duration_hours") or 0
+        minutes = form.cleaned_data.get("duration_minutes") or 0
+        form.instance.duration = timedelta(hours=int(hours), minutes=int(minutes))
         if trip_id:
             trip = get_object_or_404(Trip, pk=trip_id)
             form.instance.trip = trip
+            print("search query is ", self.request.GET.get("search_query"))
         else:
             print("Creating activity without a trip association.")
 
@@ -867,6 +880,7 @@ class AcitvityCreateView(LoginRequiredMixin, CreateView):
         session_token = self.request.POST.get("session_token")
         if place_id:
             place = get_or_create_place(place_id, session_token)
+            print(place)
             if place:
                 form.instance.place = place
 
@@ -883,9 +897,12 @@ class AcitvityCreateView(LoginRequiredMixin, CreateView):
 def autocomplete_places_view(request):
     query = request.GET.get("query", "")
     session_token = request.GET.get("session_token")
+    region_primary_type = request.GET.get("region_primary_type", "").lower() == "true"
 
     if query:
-        results = autocomplete_places(query, session_token)
+        results = autocomplete_places(
+            query, region_primary_type=region_primary_type, session_token=session_token
+        )
         return JsonResponse({"results": results})
     else:
         return JsonResponse({"results": []})
@@ -910,6 +927,7 @@ class ActivityDetailView(DetailView):
             context["place"] = activity.place
 
         context["participant_count"] = participant_count
+        context["GOOGLE_MAP_API_KEY"] = settings.GOOGLE_MAP_API_KEY
 
         return context
 
@@ -986,55 +1004,23 @@ class PlaceDetailView(DetailView):
         else:
             is_saved = False
 
-        if request.headers.get("HX-Request") == "true":
-            print("callign it")
-            return place_section(request, self.object, section)
-
         context = self.get_context_data()
         context["tab"] = section
+        context["place"] = self.object
         context["is_saved"] = is_saved
-        context["companion_posts"] = Trip.objects.filter(status="planning").order_by(
-            "-created_at"
-        )[:5]
+        context["companion_posts"] = Trip.objects.filter(
+            status="planning", destination__contains=self.object.name
+        ).order_by("-created_at")[:5]
         context["GOOGLE_MAP_API_KEY"] = settings.GOOGLE_MAP_API_KEY
-
+        context["weather_info"] = get_current_weather(
+            self.object.latitude, self.object.longitude
+        )
         print("companion posts are ", context["companion_posts"])
         return self.render_to_response(context)
 
 
-def place_section(request, place, section):
-    """Return the requested place section as a partial template."""
-    place_types = {
-        "attractions": "tourist_attraction",
-        "hotels": "lodging",
-        "restaurants": "restaurant",
-    }
-
-    if section == "activities":
-        activities = Activity.objects.filter(place=place)
-        print(activities)
-
-        return render(
-            request,
-            "rides/partials/activity_cards.html",
-            {
-                "activities": activities,
-                "section": section,
-            },
-        )
-
-    if section not in place_types:
-        raise Http404()
-
-    places = get_nearby_places(
-        place.latitude,
-        place.longitude,
-        type_filter=place_types[section],
-    )
-    db_places = []
-
-    saved_place_ids = set(request.user.saved_places.values_list("place_id", flat=True))
-
+def create_places(places, saved_place_ids, region_lat, region_lon):
+    created_places = []
     for p in places:
         nearby_place, created = Place.objects.get_or_create(
             place_id=p["place_id"],
@@ -1046,11 +1032,68 @@ def place_section(request, place, section):
                 "map_url": p.get("maps_url"),
             },
         )
-        nearby_place.rating = p.get("rating")
+        nearby_place.rating = p.get(
+            "rating"
+        )  # rating and rating count fields are not stored in the database, but are used for display purposes
         nearby_place.user_rating_count = p.get("user_rating_count")
         nearby_place.maps_url = p.get("maps_url")
+        nearby_place.distance_from_region = distance_km(
+            region_lat, region_lon, p["latitude"], p["longitude"]
+        )
         nearby_place.is_saved = nearby_place.pk in saved_place_ids
-        db_places.append(nearby_place)
+        created_places.append(nearby_place)
+    return created_places
+
+
+def get_activities_for_place(place):
+    nearby_ids = Place.objects.filter(
+        latitude__gte=place.viewport_low_lat,
+        latitude__lte=place.viewport_high_lat,
+        longitude__gte=place.viewport_low_lng,
+        longitude__lte=place.viewport_high_lng,
+    ).values_list("id", flat=True)
+
+    return Activity.objects.filter(place_id__in=nearby_ids).order_by("-created_at")
+
+
+def place_section(request, pk):
+    """Return the requested place section as a partial template."""
+
+    section = request.GET.get("tab", "activities")
+    place = get_object_or_404(Place, pk=pk)
+
+    place_types = {
+        "attractions": "tourist_attraction",
+        "hotels": "lodging",
+        "restaurants": "restaurant",
+    }
+
+    if section == "activities":
+        activities = get_activities_for_place(place)
+        return render(
+            request,
+            "rides/partials/activity_cards.html",
+            {
+                "activities": activities,
+                "section": section,
+                "place": place,
+            },
+        )
+
+    if section not in place_types:
+        raise Http404()
+
+    places = get_nearby_places(
+        place.latitude,
+        place.longitude,
+        type_filter=place_types[section],
+        limit=3,
+    )
+
+    saved_place_ids = set(request.user.saved_places.values_list("place_id", flat=True))
+    created_places = create_places(
+        places, saved_place_ids, place.latitude, place.longitude
+    )
 
     print("place created or retrieved:", place)
 
@@ -1058,10 +1101,130 @@ def place_section(request, place, section):
         request,
         "rides/partials/place_cards.html",
         {
-            "places": db_places,
+            "places": created_places,
             "section": section,
+            "place": place,
         },
     )
+
+
+class PlaceSectionListView(TemplateView):
+    template_name = "rides/place_section_list.html"
+    items_template_name = "rides/partials/place_section_items.html"
+
+    place_types = {
+        "attractions": "tourist_attraction",
+        "hotels": "lodging",
+        "restaurants": "restaurant",
+    }
+    PAGE_SIZE = 3
+
+    def get_template_names(self):
+        if self.request.headers.get("HX-Request"):
+            return [self.items_template_name]
+        return [self.template_name]
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+
+        place = get_object_or_404(Place, pk=self.kwargs["pk"])
+        section = self.kwargs["section"]
+        context["place"] = place
+        context["section"] = section
+
+        search = self.request.GET.get("q", "").strip()
+        distance = self.request.GET.get("distance", "")
+        sort = self.request.GET.get("sort", "recommended")
+
+        if section == "activities":
+            items = get_activities_for_place(place)
+            category = self.request.GET.get("category", "")
+
+            if category:
+                items = [a for a in items if a.category == category]
+
+            sort_keys = {
+                "price": lambda a: (a.price or 0),
+                "distance": lambda a: a.distance_from_region or float("inf"),
+            }
+            filters = {
+                "q": search,
+                "category": category,
+                "sort": sort,
+                "distance": distance,
+            }
+            context["categories"] = [
+                ("hiking", "Hiking"),
+                ("museum", "Museum"),
+                ("food", "Food"),
+            ]
+
+        else:
+            if section not in self.place_types:
+                raise Http404()
+
+            raw_places = get_nearby_places(
+                place.latitude,
+                place.longitude,
+                type_filter=self.place_types[section],
+                limit=9,
+            )
+            saved_place_ids = set(
+                self.request.user.saved_places.values_list("place_id", flat=True)
+            )
+            items = create_places(
+                raw_places, saved_place_ids, place.latitude, place.longitude
+            )
+            min_rating = self.request.GET.get("rating", "")
+
+            if min_rating:
+                items = [p for p in items if (p.rating or 0) >= float(min_rating)]
+
+            sort_keys = {
+                "rating": lambda p: -(p.rating or 0),
+                "distance": lambda p: p.distance_from_region or float("inf"),
+            }
+
+            if distance:
+                items = [
+                    i
+                    for i in items
+                    if (i.distance_from_region or float("inf")) <= float(distance)
+                ]
+            if sort in sort_keys:
+                items = sorted(items, key=sort_keys[sort])
+
+            filters = {
+                "q": search,
+                "rating": min_rating,
+                "sort": sort,
+                "distance": distance,
+            }
+
+        if search:
+            items = [i for i in items if search.lower() in i.name.lower()]
+
+        paginator = Paginator(items, self.PAGE_SIZE)
+        page_obj = paginator.get_page(self.request.GET.get("page", 1))
+
+        context["places"] = page_obj.object_list
+        context["page_obj"] = page_obj
+        context["has_next"] = page_obj.has_next()
+        context["filters"] = filters
+        context["next_url"] = self.build_next_url(page_obj, filters)
+
+        return context
+
+    def build_next_url(self, page_obj, filters):
+        if not page_obj.has_next():
+            return ""
+        params = {k: v for k, v in filters.items() if v}
+        params["page"] = page_obj.next_page_number()
+        base = reverse(
+            "place_section_list",
+            kwargs={"pk": self.kwargs["pk"], "section": self.kwargs["section"]},
+        )
+        return f"{base}?{urlencode(params)}"
 
 
 @require_POST
@@ -1117,16 +1280,13 @@ def ask_ai_about_place(request, place_id):
     if question_type == "highlights":
         response = place.highlights
 
-    elif question_type == "best_for":
-        response = place.best_for
-
     elif question_type == "best_time":
         response = place.best_time_to_visit
 
     else:
         response = generate_place_chat_response(place, message)
 
-    html_response = markdown(response)
+    html_response = markdown(response, extensions=["extra"])
 
     return render(
         request,
@@ -1140,3 +1300,34 @@ def ask_ai_about_place(request, place_id):
 
 def homes(request):
     return render(request, "rides/homes.html")
+
+
+class PlaceSearchView(TemplateView):
+    template_name = "rides/place_list.html"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+
+        query = self.request.GET.get("q", "").strip()
+        place = get_object_or_404(Place, pk=self.request.GET.get("place"))
+
+        if query:
+            places = text_search(
+                query=query,
+                place=place,
+            )
+            print("places are ", places)
+
+        saved_place_ids = set(
+            self.request.user.saved_places.values_list("place_id", flat=True)
+        )
+
+        created_places = create_places(
+            places, saved_place_ids, place.latitude, place.longitude
+        )
+        print("created places are ", created_places)
+
+        context["places"] = created_places
+        context["query"] = query
+        context["place"] = place
+        return context

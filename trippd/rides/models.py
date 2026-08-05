@@ -1,3 +1,4 @@
+from datetime import timedelta
 from django.db import models
 from .utils.formatdelta import format_delta
 from users.models import User
@@ -189,6 +190,7 @@ class Place(models.Model):
 
     name = models.CharField(max_length=255)
     address = models.CharField(max_length=255)
+    region = models.CharField(max_length=255, blank=True, null=True)
     latitude = models.FloatField()
     longitude = models.FloatField()
     types = models.CharField(max_length=100, blank=True, null=True)
@@ -198,9 +200,18 @@ class Place(models.Model):
     highlights = models.TextField(blank=True)
     best_time_to_visit = models.CharField(max_length=255, blank=True)
     best_for = models.CharField(max_length=255, blank=True)
+    viewport_low_lat = models.FloatField(null=True, blank=True)
+    viewport_low_lng = models.FloatField(null=True, blank=True)
+    viewport_high_lat = models.FloatField(null=True, blank=True)
+    viewport_high_lng = models.FloatField(null=True, blank=True)
 
     def __str__(self):
         return self.address
+
+    def best_for_list(self):
+        if not self.best_for:
+            return []
+        return [label.strip() for label in self.best_for.split(",") if label.strip()]
 
 
 class Activity(models.Model):
@@ -224,9 +235,16 @@ class Activity(models.Model):
     trip = models.ForeignKey(
         Trip, on_delete=models.CASCADE, related_name="activities", null=True, blank=True
     )
-    title = models.CharField(max_length=255)
+    name = models.CharField(max_length=255)
     description = models.TextField(max_length=500, blank=True)
     start_time = models.DateTimeField()
+    duration = models.DurationField(default=timedelta(minutes=30))
+    price = models.DecimalField(
+        max_digits=8,
+        decimal_places=2,
+        null=True,
+        blank=True,
+    )
     created_at = models.DateTimeField(auto_now_add=True)
     place = models.ForeignKey(
         Place, on_delete=models.PROTECT, related_name="activities"
@@ -237,7 +255,30 @@ class Activity(models.Model):
         choices=Category.choices,
         null=True,
         blank=True,
+        default=Category.OTHER,
+    )
+
+    activity_image = models.ImageField(
+        upload_to="activity_images/",
+        blank=True,
+        null=True,
     )
 
     def __str__(self):
         return f"{self.title} organized by {self.organizer.username}"
+
+    def formatted_duration(self):
+        total_seconds = int(self.duration.total_seconds())
+        days, remainder = divmod(total_seconds, 86400)
+        hours, remainder = divmod(remainder, 3600)
+        minutes = remainder // 60
+
+        parts = []
+        if days:
+            parts.append(f"{days} day{'s' if days != 1 else ''}")
+        if hours:
+            parts.append(f"{hours} hr{'s' if hours != 1 else ''}")
+        if minutes:
+            parts.append(f"{minutes} min")
+
+        return " ".join(parts) or "0 min"

@@ -1,0 +1,32 @@
+{% for item in places %}
+  {% if section == 'activities' %}
+    {% include 'rides/partials/activity_card.html' with activity=item %}
+  {% else %}
+    {% include 'rides/partials/place_card.html' with nearby_place=item %}
+  {% endif %}
+{% endfor %}
+
+{% if not places %}
+  <p class="col-span-full text-center text-base-content/60 py-12">No results match your filters.</p>
+{% endif %}
+
+{% if has_next %}
+  <div id="load-more-row" class="col-span-full flex justify-center pt-2">
+    <button class="btn btn-outline btn-wide" hx-get="{{ next_url }}" hx-target="#load-more-row" hx-swap="outerHTML" hx-indicator="#load-more-skeletons" hx-disabled-elt="this">Load more</button>
+  </div>
+
+  <div id="load-more-skeletons" class="skeleton-batch">
+    {% for _ in skeleton_range %}
+      {% include 'rides/partials/place_card_skeleton.html' %}
+    {% endfor %}
+  </div>
+
+  <style>
+    #load-more-skeletons {
+      display: none;
+    }
+    #load-more-skeletons.htmx-request {
+      display: contents;
+    }
+  </style>
+{% endif %}
