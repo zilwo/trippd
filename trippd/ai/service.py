@@ -1,4 +1,4 @@
-from ai.place_agent import get_place_chat_agent, get_place_info_agent
+from ai.place_agent import place_chat_agent, place_info_agent
 
 
 def generate_place_info(place_details):
@@ -15,7 +15,7 @@ def generate_place_info(place_details):
     If important facts are missing, don't guess.
     """
 
-    result = get_place_info_agent().run_sync(prompt)
+    result = place_info_agent.run_sync(prompt)
     print(len(result.all_messages()), "this")
 
     return result.output
@@ -34,5 +34,5 @@ def generate_place_chat_response(place, question):
     User question:{question}
     """
 
-    result = get_place_chat_agent().run_sync(prompt)
+    result = place_chat_agent.run_sync(prompt)
     return result.output

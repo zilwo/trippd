@@ -1,0 +1,80 @@
+{% extends 'rides/base.html' %}
+
+{% block content %}
+  <div class="max-w-6xl mx-auto px-6 py-8">
+    <h1 class="text-3xl font-bold mb-2">{{ section|title }}</h1>
+    <p class="text-base-content/70 mb-6">{{ place.name }}</p>
+
+    <div class="bg-base-200/50 border border-base-300 rounded-2xl p-4 mb-8">
+      <form method="get" class="flex flex-wrap items-end gap-3">
+        <div class="form-control flex-1 min-w-[180px]">
+          <label class="label py-1">
+            <span class="label-text text-xs font-medium text-base-content/60">Search</span>
+          </label>
+          <input
+            type="search"
+            name="q"
+            value="{{ filters.q }}"
+            placeholder="Search {{ section }}..."
+            class="input input-bordered input-sm w-full"
+          />
+        </div>
+
+      {% if section != "activities" %}
+
+
+          <div class="form-control">
+            <label class="label py-1">
+              <span class="label-text text-xs font-medium text-base-content/60">Rating</span>
+            </label>
+            <select name="rating" class="select select-bordered select-sm" onchange="this.form.submit()">
+              <option value="">Any rating</option>
+              <option value="4.5" {% if filters.rating == "4.5" %}selected{% endif %}>4.5+</option>
+              <option value="4" {% if filters.rating == "4" %}selected{% endif %}>4.0+</option>
+              <option value="3" {% if filters.rating == "3" %}selected{% endif %}>3.0+</option>
+            </select>
+          </div>
+
+        <div class="form-control">
+          <label class="label py-1">
+            <span class="label-text text-xs font-medium text-base-content/60">Distance</span>
+          </label>
+          <select name="distance" class="select select-bordered select-sm" onchange="this.form.submit()">
+            <option value="">Any distance</option>
+            <option value="1" {% if filters.distance == "1" %}selected{% endif %}>Within 1 km</option>
+            <option value="5" {% if filters.distance == "5" %}selected{% endif %}>Within 5 km</option>
+            <option value="10" {% if filters.distance == "10" %}selected{% endif %}>Within 10 km</option>
+          </select>
+        </div>
+
+        <div class="form-control">
+          <label class="label py-1">
+            <span class="label-text text-xs font-medium text-base-content/60">Sort</span>
+          </label>
+          <select name="sort" class="select select-bordered select-sm" onchange="this.form.submit()">
+            <option value="recommended" {% if filters.sort == "recommended" %}selected{% endif %}>Recommended</option>
+
+              <option value="rating" {% if filters.sort == "rating" %}selected{% endif %}>Top rated</option>
+            <option value="distance" {% if filters.sort == "distance" %}selected{% endif %}>Nearest</option>
+          </select>
+        </div>
+
+        <button type="submit" class="btn btn-sm btn-primary">Apply</button>
+
+        {% if filters.q or filters.rating or filters.category or filters.distance %}
+          <a href="{% url 'place_section_list' place.pk section %}"
+            class="btn btn-sm btn-ghost text-base-content/60"
+          >
+            Clear
+          </a>
+        {% endif %}
+
+        {% endif %}
+      </form>
+    </div>
+
+    <div id="places-grid" class="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+      {% include 'rides/partials/place_section_items.html' %}
+    </div>
+  </div>
+{% endblock %}

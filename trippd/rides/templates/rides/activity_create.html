@@ -2,7 +2,7 @@
 
 {% block content %}
   <div class="container mx-auto max-w-4xl px-4 py-8">
-    <form method="POST">
+    <form method="POST" enctype="multipart/form-data">
       {% csrf_token %}
 
       <div class="card bg-(--card) shadow-lg border border-(--blue-border)">
@@ -11,18 +11,31 @@
           <span class="text-base-content/60">Plan an activity for your trip and let others join.</span>
 
           <div class="grid md:grid-cols-2 gap-4 mt-6">
-            <!-- Activity Title -->
-            <div class="md:col-span-2">
-              <label class="label" for="activity_title"><span class="label-text">Activity Title</span></label>
+            <div class="md:col-span-2 grid md:grid-cols-4 gap-4">
+              <div class="md:col-span-3">
+                <label class="label" for="activity_title"><span class="label-text">Activity Title</span></label>
 
-              <input type="text" id="activity_title" name="title" value="{{ form.title.value|default:'' }}" class="input w-full" placeholder="e.g. Sunset Beach Walk" />
+                <input type="text" id="activity_title" name="name" value="{{ form.title.value|default:'' }}" class="input w-full" placeholder="e.g. Sunset Beach Walk" />
+              </div>
 
-              {% if form.title.errors %}
-                <span class="text-error text-sm">{{ form.title.errors.0 }}</span>
-              {% endif %}
+              <div>
+                <label class="label" for="category"><span class="label-text">Category</span></label>
+
+                <select id="category" name="category" class="select w-full outline-0">
+                  <option value="">Select</option>
+                  <option value="food">Food & Drinks</option>
+                  <option value="sightseeing">Sightseeing</option>
+                  <option value="nature">Nature & Outdoors</option>
+                  <option value="shopping">Shopping</option>
+                  <option value="entertainment">Entertainment</option>
+                  <option value="sports">Sports & Adventure</option>
+                  <option value="nightlife">Nightlife</option>
+                  <option value="relaxation">Relaxation</option>
+                  <option value="stay">Stay</option>
+                  <option value="other">Other</option>
+                </select>
+              </div>
             </div>
-
-            <!-- Place -->
             <div class="md:col-span-2">
               <label class="label" for="search_query"><span class="label-text">Place</span></label>
 
@@ -36,25 +49,47 @@
               {% endif %}
             </div>
 
-            <!-- Start Time -->
             <div>
               <label class="label" for="start_time"><span class="label-text">Start Time</span></label>
 
-              <input type="date" id="activity_start_time" name="start_time" value="{{ form.start_time.value|default:'' }}" placeholder="When does this activity start?" class="input w-full" />
+              <input type="datetime-local" id="activity_start_time" name="start_time" value="{{ form.start_time.value|default:'' }}" class="input w-full" />
             </div>
 
-            <!-- Maximum Participants -->
+            <div>
+              <label class="label"><span class="label-text">Duration</span></label>
+
+              <div class="grid grid-cols-2 gap-2">
+                <input type="number" min="0" name="duration_hours" class="input w-full" placeholder="Hours" />
+
+                <input type="number" min="0" max="59" name="duration_minutes" class="input w-full" placeholder="Minutes" />
+              </div>
+            </div>
+
             <div>
               <label class="label" for="max_participants"><span class="label-text">Maximum Participants</span></label>
 
-              <label class="input w-full"><input type="number" min="1" id="max_participants" name="max_participants" value="{{ form.max_participants.value|default:'' }}" placeholder="How many people can join?" /></label>
+              <input type="number" min="1" id="max_participants" name="max_participants" value="{{ form.max_participants.value|default:'' }}" class="input w-full" placeholder="How many people can join?" />
 
               {% if form.max_participants.errors %}
                 <span class="text-error text-sm">{{ form.max_participants.errors.0 }}</span>
               {% endif %}
             </div>
 
-            <!-- Description -->
+            <div>
+              <label class="label" for="price"><span class="label-text">Price</span></label>
+
+              <label class="input w-full">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-4 opacity-60">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M15 8.25H9m6 3H9m3 6-3-3h1.5a3 3 0 1 0 0-6M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+                </svg>
+                <input type="number" min="0" step="0.01" id="price" name="price" value="{{ form.price.value|default:'' }}" placeholder="Leave blank if free" />
+              </label>
+
+              {% if form.price.errors %}
+                <span class="text-error text-sm">{{ form.price.errors.0 }}</span>
+              {% endif %}
+            </div>
+
             <div class="md:col-span-2">
               <label class="label" for="activity_description"><span class="label-text">Description</span></label>
 
@@ -63,6 +98,39 @@
               {% if form.description.errors %}
                 <span class="text-error text-sm">{{ form.description.errors.0 }}</span>
               {% endif %}
+            </div>
+          </div>
+
+          <div class="divider"></div>
+          <div class="card bg-(--card)">
+            <div class="card-body">
+              <h2 class="card-title">Preview Image</h2>
+
+              <div class="flex justify-center">
+                <div id="activity-preview-wrapper" class="relative h-64 w-full max-w-md rounded-box border border-base-300 bg-base-200 overflow-hidden flex items-center justify-center">
+                  {% if activity.activity_image %}
+                    <img id="activity-preview" src="{{ activity.activity_image.url }}" alt="Activity Preview" class="h-full w-full object-cover" />
+                  {% else %}
+                    <svg id="activity-preview-placeholder" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-12 text-base-content/30">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909M2.25 5.25h19.5v13.5H2.25V5.25z" />
+                    </svg>
+
+                    <img id="activity-preview" alt="Activity Preview" class="hidden h-full w-full object-cover" />
+                  {% endif %}
+
+                  <button type="button" id="remove-image-btn" class="btn btn-circle btn-xs absolute top-2 right-2 hidden">✕</button>
+                </div>
+              </div>
+
+              <div class="mt-4">
+                <label class="label"><span class="label-text">Choose an activity image</span></label>
+
+                <input type="file" name="activity_image" id="activity-image-input" accept="image/*" class="file-input file-input-bordered w-full" />
+              </div>
+
+              <div class="alert alert-info mt-4">
+                <span>Upload a photo that represents your activity.</span>
+              </div>
             </div>
           </div>
 
@@ -80,6 +148,7 @@
 
   <script>
     let sessionToken = crypto.randomUUID()
+    let regionPrimaryType = false
 
     document.getElementById('session_token').value = sessionToken
     new TomSelect('.place-auto', {
@@ -95,7 +164,7 @@
           callback()
           return
         }
-        fetch(`/discover/autocomplete/?query=${encodeURIComponent(query)}&session_token=${encodeURIComponent(sessionToken)}`)
+        fetch(`/discover/autocomplete/?query=${encodeURIComponent(query)}&session_token=${encodeURIComponent(sessionToken)}&region_primary_type=${encodeURIComponent(regionPrimaryType)}`)
           .then((res) => res.json())
           .then((data) => callback(data.results))
           .catch(() => callback())
@@ -106,6 +175,32 @@
 
         document.getElementById('place_id').value = selected.place_id
       }
+    })
+    const fileInput = document.getElementById('activity-image-input')
+    const preview = document.getElementById('activity-preview')
+    const placeholder = document.getElementById('activity-preview-placeholder')
+    const removeBtn = document.getElementById('remove-image-btn')
+
+    fileInput.addEventListener('change', function () {
+      const file = this.files[0]
+      if (!file) return
+
+      preview.src = URL.createObjectURL(file)
+      preview.classList.remove('hidden')
+
+      if (placeholder) placeholder.classList.add('hidden')
+
+      removeBtn.classList.remove('hidden')
+    })
+
+    removeBtn.addEventListener('click', function () {
+      fileInput.value = ''
+      preview.src = ''
+      preview.classList.add('hidden')
+
+      if (placeholder) placeholder.classList.remove('hidden')
+
+      removeBtn.classList.add('hidden')
     })
   </script>
 {% endblock %}

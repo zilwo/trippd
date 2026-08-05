@@ -152,6 +152,7 @@
 
   <script>
     let sessionToken = crypto.randomUUID()
+    let regionPrimaryType = true
     document.getElementById('session_token').value = sessionToken
 
     new TomSelect('#place-search', {
@@ -168,7 +169,7 @@
           return
         }
 
-        fetch(`/discover/autocomplete/?query=${encodeURIComponent(query)}&session_token=${encodeURIComponent(sessionToken)}`)
+        fetch(`/discover/autocomplete/?query=${encodeURIComponent(query)}&session_token=${encodeURIComponent(sessionToken)}&region_primary_type=${encodeURIComponent(regionPrimaryType)}`)
           .then((r) => r.json())
           .then((data) => callback(data.results))
           .catch(() => callback())

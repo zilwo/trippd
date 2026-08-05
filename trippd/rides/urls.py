@@ -54,6 +54,11 @@ urlpatterns = [
         name="activity_create",
     ),
     path(
+        "discover/place/<int:pk>/section/<str:section>/",
+        views.PlaceSectionListView.as_view(),
+        name="place_section_list",
+    ),
+    path(
         "discover/autocomplete/",
         views.autocomplete_places_view,
         name="autocomplete_places",
@@ -74,6 +79,11 @@ urlpatterns = [
         name="discover_place",
     ),
     path(
+        "discover/place/<int:pk>/section/",
+        views.place_section,
+        name="discover_place_section",
+    ),
+    path(
         "toggle-saved-place/<int:pk>/",
         views.toggle_saved_place,
         name="toggle_saved_place",
@@ -82,6 +92,11 @@ urlpatterns = [
         "saved-places/",
         views.SavedPlaceListView.as_view(),
         name="saved_places",
+    ),
+    path(
+        "discover/search/",
+        views.PlaceSearchView.as_view(),
+        name="place_search",
     ),
     path(
         "ask-ai/<str:place_id>/",
