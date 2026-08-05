@@ -16,11 +16,14 @@
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
     <link href="{% static 'css/base.css' %}" rel="stylesheet" />
 
+
     {% block style %}
 
     {% endblock %}
   </head>
   <body hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}' >
+    <div class="interactive-grid"></div>
+
 
     <div class="drawer drawer-end ">
       <input id="my-drawer-5" type="checkbox" class="drawer-toggle" />
@@ -253,5 +256,13 @@
         notificationSocket()
       </script>
     {% endif %}
+<script>
+  document.addEventListener('mousemove', (e) => {
+  const grid = document.querySelector('.interactive-grid');
+  grid.style.setProperty('--mouse-x', `${e.clientX}px`);
+  grid.style.setProperty('--mouse-y', `${e.clientY}px`);
+});
+</script>
+
   </body>
 </html>
